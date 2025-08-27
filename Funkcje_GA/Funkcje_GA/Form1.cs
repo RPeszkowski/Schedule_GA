@@ -1147,7 +1147,7 @@ namespace Funkcje_GA
 
                 osobniki = osobnikiTemp;
 
-                if (nrIteracji % 100000 == 0)
+                if (nrIteracji % 1000 == 0)
                 {
                     for (int j = NumberOfElites; j < liczbaOsobnikow; j++)
                     {
