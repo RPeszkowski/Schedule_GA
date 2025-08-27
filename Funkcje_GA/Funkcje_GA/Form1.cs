@@ -303,7 +303,7 @@ namespace Funkcje_GA
                     return;
                 }
 
-                optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(4 * LICZBA_DNI * MAX_LICZBA_DYZUROW, handler, 100, 0.000004m, 0.00000000001m, 20000, 1000000, dyzuryGrafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji, stopienZdegenerowania));
+                optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(4 * LICZBA_DNI * MAX_LICZBA_DYZUROW, handler, 100, 0.000004m, 0.00000000001m, 10000, 1000000, dyzuryGrafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji, stopienZdegenerowania));
                 DodajFunkcje(optymalneRozwiazanie);
                 zapiszGrafik("GrafikGA.txt");
                 labelRaport.Text = labelRaport.Text + " Ukończono.";                
@@ -1147,7 +1147,7 @@ namespace Funkcje_GA
 
                 osobniki = osobnikiTemp;
 
-                if (nrIteracji % 1000 == 0)
+                if (nrIteracji % 100000 == 0)
                 {
                     for (int j = NumberOfElites; j < liczbaOsobnikow; j++)
                     {
