@@ -252,7 +252,7 @@
             this.buttonOptymalizacja.TabIndex = 12;
             this.buttonOptymalizacja.Text = "Opt";
             this.buttonOptymalizacja.UseVisualStyleBackColor = true;
-            this.buttonOptymalizacja.Click += new System.EventHandler(this.buttonOptymalizacja_Click);
+            
             // 
             // labelRaport
             // 

@@ -265,6 +265,50 @@ namespace Funkcje_GA
                 listBoxesNoc[j].DragDrop += new DragEventHandler((sender, e) => listBoxNoc_DragDrop(sender, e, iter3));
             }
 
+            buttonOptymalizacja.Click += async (o, e) =>
+            {
+                int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
+                int[] nieTriazDzien;
+                int[] nieTriazNoc;
+                int[] liczbaDyzurow = new int[2 * LICZBA_DNI];
+                bool[] optymalneRozwiazanie;
+                double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
+                decimal stopienZdegenerowania = 0.0m;
+
+                for (int i = 0; i < LICZBA_DNI; i++)
+                {
+                    listBoxesDzien[i].ResetBackColor();
+                    listBoxesNoc[i].ResetBackColor();
+                }
+
+                for (int i = 0; i < LICZBA_DNI; i++)
+                {
+                    if (listBoxesDzien[i].Items.Count > MAX_LICZBA_DYZUROW || listBoxesNoc[i].Items.Count > MAX_LICZBA_DYZUROW)
+                    {
+                        MessageBox.Show("Aby móc wykorzystać automatyczne rozdzielanie funkcji liczba dyżurów danego dnia nie może przekraczać " + MAX_LICZBA_DYZUROW.ToString() + ".");
+                        return;
+                    }
+                }
+
+                dyzuryGrafik = UtworzGrafik();
+                nieTriazDzien = ListaNieTiazDzien();
+                nieTriazNoc = ListaNieTiazNoc();
+                liczbaDyzurow = LiczbaDyzurow(dyzuryGrafik);
+                oczekiwanaLiczbaFunkcji = OczekiwanaLiczbaFunkcji(osoby);
+                stopienZdegenerowania = StopienZdegenerowania(liczbaDyzurow, nieTriazDzien, nieTriazNoc, dyzuryGrafik);
+
+                if (liczbaDyzurow.Contains(1) || liczbaDyzurow.Contains(2))
+                {
+                    MessageBox.Show("Niepoprawny grafik. Sprawdź, czy do każdego dnia przypisane są co najmniej 3 osoby.");
+                    return;
+                }
+
+                optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(4 * LICZBA_DNI * MAX_LICZBA_DYZUROW, handler, 100, 0.000004m, 0.00000000001m, 20000, 1000000, dyzuryGrafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji, stopienZdegenerowania));
+                DodajFunkcje(optymalneRozwiazanie);
+                zapiszGrafik("GrafikGA.txt");
+                labelRaport.Text = labelRaport.Text + " Ukończono.";                
+            };
+
             #endregion
 
             #region Pytanie o wczytanie grafiku
