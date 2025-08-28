@@ -682,7 +682,7 @@ namespace Funkcje_GA
                 return;
             }
 
-            optymalneRozwiazanie = OptymalizacjaGA(4*LICZBA_DNI*MAX_LICZBA_DYZUROW, handler, 100, 0.000004m, 0.00000000001m, 20000, 1000000, dyzuryGrafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji, stopienZdegenerowania);
+            optymalneRozwiazanie = OptymalizacjaGA(4*LICZBA_DNI*MAX_LICZBA_DYZUROW, handler, 100, 0.000003m, 0.00000000001m, 20000, 1000000, dyzuryGrafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji, stopienZdegenerowania);
             DodajFunkcje(optymalneRozwiazanie);
             zapiszGrafik("GrafikGA.txt");
             labelRaport.Text = labelRaport.Text + " Ukończono.";
@@ -834,19 +834,19 @@ namespace Funkcje_GA
             for (int i = 0; i < siz / 2; i++)
             {
                 nrDnia = Convert.ToInt32(Math.Floor(Convert.ToDouble(i) / MAX_LICZBA_DYZUROW));
-                if (funkcje[i] && !funkcje[i + siz / 2] && grafik[i] != 0)
+                if (funkcje[i] && !funkcje[i + siz / 2] && grafik[i] != 0 && i < siz / 4)
                 {
                     liczbaTriazyData[nrDnia]++;
-                    if (i < siz / 4)
-                    {
-                        liczbaFunkcjiDzien[grafik[i] - 1]++;
-                        liczbaTriazyOsobaDzien[grafik[i] - 1]++;
-                    }
+                    liczbaFunkcjiDzien[grafik[i] - 1]++;
+                    liczbaTriazyOsobaDzien[grafik[i] - 1]++;
 
-                    else
+                    for (int j = 0; j < nieTriazDzien.Length; j++)
                     {
-                        liczbaFunkcjiNoc[grafik[i] - 1]++;
-                        liczbaTriazyOsobaNoc[grafik[i] - 1]++;
+                        if (grafik[i] == nieTriazDzien[j])
+                        {
+                            a = a + 100.0m;
+                            break;
+                        }
                     }
 
                     for (int j = 0; j < nieTriazNoc.Length; j++)
@@ -859,20 +859,35 @@ namespace Funkcje_GA
                     }
                 }
 
-                if (!funkcje[i] && funkcje[i + siz / 2] && grafik[i] != 0)
+                else if (funkcje[i] && !funkcje[i + siz / 2] && grafik[i] != 0 && i >= siz / 4)
+                {
+                    liczbaTriazyData[nrDnia]++;
+                    liczbaFunkcjiNoc[grafik[i] - 1]++;
+                    liczbaTriazyOsobaNoc[grafik[i] - 1]++;
+
+                    for (int j = 0; j < nieTriazNoc.Length; j++)
+                    {
+                        if (grafik[i] == nieTriazNoc[j])
+                        {
+                            liczbaStazystowNaTriazu[nrDnia]++;
+                            a = a + 100.0m;
+                            break;
+                        }
+                    }
+                }
+
+                if (!funkcje[i] && funkcje[i + siz / 2] && grafik[i] != 0 && i < siz / 4)
                 {
                     liczbaSalData[nrDnia]++;
-                    if (i < siz / 4)
-                    {
-                        liczbaFunkcjiDzien[grafik[i] - 1]++;
-                        liczbaSalOsobaDzien[grafik[i] - 1]++;
-                    }
+                    liczbaFunkcjiDzien[grafik[i] - 1]++;
+                    liczbaSalOsobaDzien[grafik[i] - 1]++;
+                }
 
-                    else
-                    {
-                        liczbaFunkcjiNoc[grafik[i] - 1]++;
-                        liczbaSalOsobaNoc[grafik[i] - 1]++;
-                    }
+                else if (!funkcje[i] && funkcje[i + siz / 2] && grafik[i] != 0 && i >= siz / 4)
+                {
+                    liczbaSalData[nrDnia]++;
+                    liczbaFunkcjiNoc[grafik[i] - 1]++;
+                    liczbaSalOsobaNoc[grafik[i] - 1]++;
                 }
 
                 if ((funkcje[i] || funkcje[i + siz / 2]) && grafik[i] == 0)
@@ -880,24 +895,6 @@ namespace Funkcje_GA
 
                 if ((funkcje[i] && funkcje[i + siz / 2]))
                     a = a + 1000000.0m;
-
-                for (int j = 0; j < nieTriazDzien.Length; j++)
-                {
-                    if (funkcje[i] && !funkcje[i + siz / 2] && (i < siz / 4) && grafik[i] == nieTriazDzien[j])
-                    {
-                        a = a + 100.0m;
-                        break;
-                    }
-                }
-
-                for (int j = 0; j < nieTriazNoc.Length; j++)
-                {
-                    if (funkcje[i] && !funkcje[i + siz / 2] && (i >= siz / 4) && grafik[i] == nieTriazNoc[j])
-                    {
-                        a = a + 100.0m;
-                        break;
-                    }
-                }
 
             }
 
@@ -975,7 +972,7 @@ namespace Funkcje_GA
             Osobnik[] osobnikiTemp = new Osobnik[liczbaOsobnikow];
 
             double SZANSA_MUTACJA = 0.006;
-            int MAX_LICZBA_PROB = 3;
+            int MAX_LICZBA_PROB = 2;
             double FRACTION_OF_ELITES = 0.01;
             double FRACTION_OF_REPRODUCING = 0.25;
 
@@ -1028,7 +1025,7 @@ namespace Funkcje_GA
             Array.Sort(osobniki, OsComp);
             cel = osobniki[0].wartosc;
 
-            while ((nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji) || (cel > stopienZdegenerowania + tol))
+            while ((nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji) && (cel > stopienZdegenerowania + tol))
             {
                 for (int i = 0; i < NumberOfElites; i++)
                     osobnikiTemp[i] = osobniki[i];
@@ -1065,13 +1062,16 @@ namespace Funkcje_GA
                         }
 
                         attraction[liczbaProbKrzyzowania] = 0.0;
-                        for (int k = 0; k < siz; k++)
+                        for (int k = 0; k < siz / 2; k++)
                         {
-                            if (osobnikiTemp[temp3].genotyp[k] != osobnikiTemp[temp4[liczbaProbKrzyzowania]].genotyp[k])
+                            if ((osobnikiTemp[temp3].genotyp[k] ^ osobnikiTemp[temp4[liczbaProbKrzyzowania]].genotyp[k]))
+                                attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] + 1.0;
+
+                            if (osobnikiTemp[temp3].genotyp[k + siz / 2] ^ osobnikiTemp[temp4[liczbaProbKrzyzowania]].genotyp[k + siz / 2])
                                 attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] + 1.0;
                         }
 
-                        attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] / Convert.ToDouble(siz);
+                        attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] / Convert.ToDouble(siz / 2);
                         temp = rnd.NextDouble();
                         if (temp <= attraction[liczbaProbKrzyzowania])
                             break;
@@ -1164,12 +1164,11 @@ namespace Funkcje_GA
                 }
 
                 
-
-                for (int i = NumberOfElites; i < liczbaOsobnikow; i++)
+                Parallel.For(NumberOfElites, liczbaOsobnikow, i =>
                 {
                     osobniki[i].wartosc = fCelu(osobniki[i].genotyp, grafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji);
                     liczbaWywolanFunkcjiCelu++;
-                }
+                });
 
                 nrIteracji++;
                 prevCel = cel;
@@ -1184,8 +1183,20 @@ namespace Funkcje_GA
 
                 if (nrIteracji % 100 == 0 || nrKonsekwentnejIteracji == maxKonsekwentnychIteracji)
                 {
-                    labelRaport.Text = "Wartość f. celu: " + cel.ToString() + " Nr. Iteracji: " + nrIteracji.ToString() + " Liczba konsekwentnych iteracji: " + nrKonsekwentnejIteracji.ToString() + " Liczba wywołań: " + liczbaWywolanFunkcjiCelu.ToString() + " Cel: " + (stopienZdegenerowania + tol).ToString() + ".";
-                    labelRaport.Refresh();
+                    if (labelRaport.InvokeRequired)
+                    {
+                        labelRaport.Invoke(new Action(() =>
+                        {
+                            labelRaport.Text = "Wartość f. celu: " + cel.ToString() + " Nr. Iteracji: " + nrIteracji.ToString() + " Liczba konsekwentnych iteracji: " + nrKonsekwentnejIteracji.ToString() + " Liczba wywołań: " + liczbaWywolanFunkcjiCelu.ToString() + " Cel: " + (stopienZdegenerowania + tol).ToString() + ".";
+                            labelRaport.Refresh();
+                        }));
+                    }
+
+                    else
+                    {
+                        labelRaport.Text = "Wartość f. celu: " + cel.ToString() + " Nr. Iteracji: " + nrIteracji.ToString() + " Liczba konsekwentnych iteracji: " + nrKonsekwentnejIteracji.ToString() + " Liczba wywołań: " + liczbaWywolanFunkcjiCelu.ToString() + " Cel: " + (stopienZdegenerowania + tol).ToString() + ".";
+                        labelRaport.Refresh();
+                    }
                 }
             }
             return osobniki[0].genotyp;
