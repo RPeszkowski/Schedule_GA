@@ -8,6 +8,6 @@ The program was designed to provide a way of assinging functions for employees a
 
 What I learned while working on this project?
 
-The most important realization was to discover that genetic algorithms work best when they are designed for specific task. For example, as happens in my case, two bits are used to code a specific information (00 means no function, 10 means triage and 01 means orderly nurse) the crossover operation must take that into consideration, as standard one point crossover or randomized crossover would lead to possible loss of data, therefore making search too random.
+The most important realization was to discover that genetic algorithms work best when they are designed for specific task. For example, as happens in my case, two bits are used to code a specific information (00 means no function, 10 means triage and 01 means orderly nurse) the crossover operation must take that into consideration, as standard one point crossover or uniform crossover would lead to possible loss of data, therefore making search too random.
 
 For additional information about the app and GA optimization visit the Wiki.
