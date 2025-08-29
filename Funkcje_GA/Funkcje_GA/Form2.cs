@@ -29,10 +29,7 @@ namespace Funkcje_GA
             }
         }
 
-        private void Form2_Load(object sender, EventArgs e)
-        {
-            
-        }
+        private void Form2_Load(object sender, EventArgs e) {}
 
         private void listBoxNumerOsoby_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -65,7 +62,7 @@ namespace Funkcje_GA
                             wolnyNumer = i;
                     }
 
-                    Form1.Osoba newOsoba = new Form1.Osoba(wolnyNumer + 1, textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                    Osoba newOsoba = new Osoba(wolnyNumer + 1, textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
                     Form1.osoby[wolnyNumer] = newOsoba;
                     listBoxNumerOsoby.Items.Clear();
                     for (int i = 0; i < Form1.MAX_LICZBA_OSOB; i++)
@@ -125,16 +122,8 @@ namespace Funkcje_GA
 
         private void buttonSaveAndQuit_Click(object sender, EventArgs e)
         {
-            File.WriteAllText("Pracownicy.txt", "");
-            for (int i = 0; i < Form1.MAX_LICZBA_OSOB; i ++)
-            {
-                if (Form1.osoby[i] != null)
-                {
-                    string danePracownika = Form1.osoby[i].numer.ToString() + " " + Form1.osoby[i].imie + " " + Form1.osoby[i].nazwisko + " " + Form1.osoby[i].zaleglosci.ToString() + " " + Form1.osoby[i].czyTriazDzien.ToString() + " " + Form1.osoby[i].czyTriazNoc.ToString() + "\n";
-                    File.AppendAllText("Pracownicy.txt", danePracownika);
-                }
-            }
-
+            FileOperations fileOperator = new FileOperations();
+            fileOperator.ZapiszPracownikow("Pracownicy.txt");
             this.Close();
         }
 
