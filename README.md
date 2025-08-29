@@ -4,7 +4,7 @@ To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
 
 About the project
 
-The program was designed to provide a way of assinging functions for employees at hospital emergency department. The app allows for adding, editing and deleting information about current staff, manually creating a schedule or loading it from a text file and assigning functions. Core of an app consist of genetic optimization algorithm (GA) designed scecifically for the task of assigning functions. Depending of the number of days in a month and the number of shifts during the day there may be over 800 binary variables in an optimization problem. The standard algorithm was therefore modified to cope with the task of finding a solution fast. Computations take up to 6-7 minutes on a very slow/heavily loaded processor and may take under 2 minutes on a more efficient one.
+The program was designed to provide a way of assinging functions for employees at hospital emergency department. The app allows for adding, editing and deleting information about current staff, manually creating a schedule or loading it from a text file and assigning functions. Core of an app consist of genetic optimization algorithm (GA) designed scecifically for the task of assigning functions. Depending of the number of days in a month and the number of shifts during the day there may be over 800 binary variables in an optimization problem. The standard algorithm was therefore modified to cope with the task of finding a solution fast. Algorithm usually needs between 17000 - 40000 iterations, but tests have shown that this number may sometimes spike up to 60000 iterations.
 
 What I learned while working on this project?
 
