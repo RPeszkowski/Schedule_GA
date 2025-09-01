@@ -1,6 +1,6 @@
 # Schedule_GA
 
-<p align = "center">To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
+<p align="justify">To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
 
 About the project
 
