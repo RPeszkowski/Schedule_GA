@@ -1,6 +1,6 @@
 # Schedule_GA
 
-To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
+<p align = "center">To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
 
 About the project
 
@@ -10,4 +10,4 @@ What I learned while working on this project?
 
 I think, taht the most important realization whas that genetic algorithms are to be designed speciffically for a given task and should consider data format and way of coding information into genes in order not to accidentally mess the data of the same gene from two parents and as a result of this loose information.
 
-For additional information about the app and GA optimization please consider visiting Wiki.
+For additional information about the app and GA optimization please consider visiting Wiki.</p>
