@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Drawing.Text;
@@ -195,7 +196,7 @@ namespace Funkcje_GA
                 {
                     if (osoby[i] != null)
                     {
-                        oczekiwanaLiczbaFunkcji[i] = Math.Min(Math.Max(((3 * liczbaDniRoboczych * osoby[i].wymiarEtatu / sumaEtatow) - 0.8 * osoby[i].zaleglosci), 0), MAX_LICZBA_FUNKCJI);
+                        oczekiwanaLiczbaFunkcji[i] = Math.Min(Math.Max(((3 * liczbaDniRoboczych * osoby[i].wymiarEtatu / sumaEtatow) - osoby[i].zaleglosci), 0), MAX_LICZBA_FUNKCJI);
                         if (osoby[i].wymiarEtatu > 0.1)
                         {
                             oczekiwanaLiczbaFunkcji[i] = Math.Max(oczekiwanaLiczbaFunkcji[i], MIN_LICZBA_FUNKCJI);
@@ -247,7 +248,8 @@ namespace Funkcje_GA
 
         public const int MAX_LICZBA_OSOB = 45;
         public const int LICZBA_DNI = 31;
-        private const int MAX_LICZBA_DYZUROW = 7;
+        private const int MAX_LICZBA_DYZUROW = 8;
+        private const int MAX_LICZBA_BITOW = 3;
         public static int liczbaOsob = 0;
         public static Osoba[] osoby = new Osoba[MAX_LICZBA_OSOB];
         FileOperations fileOperator = new FileOperations();
@@ -367,7 +369,13 @@ namespace Funkcje_GA
                     return;
                 }
 
-                optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(4 * LICZBA_DNI * MAX_LICZBA_DYZUROW, handler, 100, 0.000003m, 0.00000000001m, 15000, 70000, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
+                DateTime start = DateTime.Now;
+                {
+                    optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW, handler, 100, 0.000003m, 0.00000000001m, 40000, 200000, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
+                }
+                TimeSpan t = DateTime.Now - start;
+                MessageBox.Show(t.ToString());  
+                
                 DodajFunkcje(optymalneRozwiazanie);
                 fileOperator.zapiszGrafik("GrafikGA.txt");
                 labelRaport.Text = labelRaport.Text + " Ukończono.";
@@ -698,124 +706,149 @@ namespace Funkcje_GA
         {
             decimal W = 0.0m;
             decimal a = 0.0m;
-            int[] liczbaSalData = new int[2 * LICZBA_DNI];
-            int[] liczbaTriazyData = new int[2 * LICZBA_DNI];
-            int[] liczbaFunkcyjnychStazystow = new int[2 * LICZBA_DNI];
             int[] liczbaStazystowNaTriazu = new int[2 * LICZBA_DNI];
-            int[] liczbaFunkcjiDzien = new int[MAX_LICZBA_OSOB];
-            int[] liczbaFunkcjiNoc = new int[MAX_LICZBA_OSOB];
             int[] liczbaSalOsobaDzien = new int[MAX_LICZBA_OSOB];
             int[] liczbaSalOsobaNoc = new int[MAX_LICZBA_OSOB];
             int[] liczbaTriazyOsobaDzien = new int[MAX_LICZBA_OSOB];
             int[] liczbaTriazyOsobaNoc = new int[MAX_LICZBA_OSOB];
-            int siz = funkcje.Length;
-            int nrDnia;
             bool flagStazDzien = false;
             bool flagStazNoc = false;
+            bool[] numerOsoby = new bool[MAX_LICZBA_BITOW];
+            int nrOsobySala;
+            int nrOsobyTriaz1;
+            int nrOsobyTriaz2;
 
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
-                liczbaTriazyData[i] = 0;
-                liczbaSalData[i] = 0;
                 liczbaStazystowNaTriazu[i] = 0;
             }
 
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
-                liczbaFunkcjiDzien[i] = 0;
-                liczbaFunkcjiNoc[i] = 0;
                 liczbaSalOsobaDzien[i] = 0;
                 liczbaSalOsobaNoc[i] = 0;
                 liczbaTriazyOsobaDzien[i] = 0;
                 liczbaTriazyOsobaNoc[i] = 0;
             }
 
-            for (int i = 0; i < siz / 2; i++)
+            for (int i = 0; i < LICZBA_DNI; i++)
             {
-                nrDnia = Convert.ToInt32(Math.Floor(Convert.ToDouble(i) / MAX_LICZBA_DYZUROW));
-                if (funkcje[i] && !funkcje[i + siz / 2] && grafik[i] != 0 && i < siz / 4)
-                {
-                    liczbaTriazyData[nrDnia]++;
-                    liczbaFunkcjiDzien[grafik[i] - 1]++;
-                    liczbaTriazyOsobaDzien[grafik[i] - 1]++;
+                // Dzien
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + j];
 
-                    for (int j = 0; j < nieTriazDzien.Length; j++)
-                    {
-                        if (grafik[i] == nieTriazDzien[j])
-                        {
-                            a = a + 100.0m;
-                            break;
-                        }
-                    }
+                nrOsobySala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                    for (int j = 0; j < nieTriazNoc.Length; j++)
-                    {
-                        if (grafik[i] == nieTriazNoc[j])
-                        {
-                            liczbaStazystowNaTriazu[nrDnia]++;
-                            break;
-                        }
-                    }
-                }
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j];
 
-                else if (funkcje[i] && !funkcje[i + siz / 2] && grafik[i] != 0 && i >= siz / 4)
-                {
-                    liczbaTriazyData[nrDnia]++;
-                    liczbaFunkcjiNoc[grafik[i] - 1]++;
-                    liczbaTriazyOsobaNoc[grafik[i] - 1]++;
+                nrOsobyTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                    for (int j = 0; j < nieTriazNoc.Length; j++)
-                    {
-                        if (grafik[i] == nieTriazNoc[j])
-                        {
-                            liczbaStazystowNaTriazu[nrDnia]++;
-                            a = a + 100.0m;
-                            break;
-                        }
-                    }
-                }
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j];
 
-                if (!funkcje[i] && funkcje[i + siz / 2] && grafik[i] != 0 && i < siz / 4)
-                {
-                    liczbaSalData[nrDnia]++;
-                    liczbaFunkcjiDzien[grafik[i] - 1]++;
-                    liczbaSalOsobaDzien[grafik[i] - 1]++;
-                }
+                nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                else if (!funkcje[i] && funkcje[i + siz / 2] && grafik[i] != 0 && i >= siz / 4)
-                {
-                    liczbaSalData[nrDnia]++;
-                    liczbaFunkcjiNoc[grafik[i] - 1]++;
-                    liczbaSalOsobaNoc[grafik[i] - 1]++;
-                }
+                if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
+                    a = a + 1000000.0m;
+                else
+                    liczbaSalOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
 
-                if ((funkcje[i] || funkcje[i + siz / 2]) && grafik[i] == 0)
+                if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
+                    a = a + 1000000.0m;
+                else
+                    liczbaTriazyOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+
+                if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
+                    a = a + 1000000.0m;
+                else
+                    liczbaTriazyOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+
+                if (nrOsobySala == nrOsobyTriaz1)
                     a = a + 1000000.0m;
 
-                if ((funkcje[i] && funkcje[i + siz / 2]))
+                if (nrOsobySala == nrOsobyTriaz2)
                     a = a + 1000000.0m;
 
+                if (nrOsobyTriaz1 == nrOsobyTriaz2)
+                    a = a + 1000000.0m;
+
+                for (int j = 0; j < nieTriazDzien.Length; j++)
+                    {
+                        if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazDzien[j] || grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazDzien[j])
+                            a = a + 100.0m;
+                    }
+
+                for (int j = 0; j < nieTriazNoc.Length; j++)
+                {
+                    if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
+                        liczbaStazystowNaTriazu[i]++;
+                }
+            
+                //Noc
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + j];
+
+                nrOsobySala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j];
+
+                nrOsobyTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j];
+
+                nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
+                    a = a + 1000000.0m;
+                else
+                    liczbaSalOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
+
+                if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
+                    a = a + 1000000.0m;
+                else
+                    liczbaTriazyOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+
+                if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
+                    a = a + 1000000.0m;
+                else 
+                    liczbaTriazyOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+
+                if (nrOsobySala == nrOsobyTriaz1)
+                    a = a + 1000000.0m;
+
+                if (nrOsobySala == nrOsobyTriaz2)
+                    a = a + 1000000.0m;
+
+                if (nrOsobyTriaz1 == nrOsobyTriaz2)
+                    a = a + 1000000.0m;
+
+                for (int j = 0; j < nieTriazNoc.Length; j++)
+                {
+                    if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
+                    {
+                            liczbaStazystowNaTriazu[(i + LICZBA_DNI)]++;
+                            a = a + 100.0m;
+                    }
+                }
             }
 
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
-                if (liczbaDyzurow[i] >= 3)
-                {
-                    a = a + 10000.0m * Math.Abs(liczbaTriazyData[i] - 2);
-                    a = a + 10000.0m * Math.Abs(liczbaSalData[i] - 1);
-                }
-
                 if (liczbaStazystowNaTriazu[i] >= 2)
                     a = a + 10000.0m;
             }
 
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
-                if (Math.Abs(liczbaFunkcjiDzien[i] + liczbaFunkcjiNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1.99)
-                    W = W + 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaFunkcjiDzien[i] + liczbaFunkcjiNoc[i] - oczekiwanaLiczbaFunkcji[i])));
+                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1.99)
+                    W = W + 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
-                else if (Math.Abs(liczbaFunkcjiDzien[i] + liczbaFunkcjiNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 0.99)
-                    W = W + 0.000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaFunkcjiDzien[i] + liczbaFunkcjiNoc[i] - oczekiwanaLiczbaFunkcji[i])));
+                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 0.99)
+                    W = W + 0.000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
                 flagStazDzien = false;
                 for (int j = 0; j < nieTriazDzien.Length; j++)
@@ -849,10 +882,10 @@ namespace Funkcje_GA
                 else if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) == 2 && flagStazNoc)
                     W = W + 0.0000000002m;
 
-                if (Math.Abs(liczbaFunkcjiDzien[i] - liczbaFunkcjiNoc[i]) > 2)
-                    W = W + 1.0m * Convert.ToDecimal(Math.Abs(liczbaFunkcjiDzien[i] - liczbaFunkcjiNoc[i]));
+                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) > 2)
+                    W = W + 1.0m * Convert.ToDecimal(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])));
 
-                else if (Math.Abs(liczbaFunkcjiDzien[i] - liczbaFunkcjiNoc[i]) == 2)
+                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) == 2)
                     W = W + 0.0002m;
             }
 
@@ -871,28 +904,23 @@ namespace Funkcje_GA
             Osobnik[] osobnikiTemp = new Osobnik[liczbaOsobnikow];
 
             const double SZANSA_MUTACJA = 0.006;
-            const int MAX_LICZBA_PROB = 2;
+            const double SZANSA_KRZYZOWANIE = 0.5;
             const double FRACTION_OF_ELITES = 0.01;
             const double FRACTION_OF_REPRODUCING = 0.25;
-            const int GENERATIONS_BETWEEN_MIGRATION = 1000;
 
             int nrKonsekwentnejIteracji = 1;
             int nrIteracji = 1;
             int liczbaWywolanFunkcjiCelu = 0;
             decimal prevCel = 0;
             decimal cel = 0;
-            int liczbaProbKrzyzowania = 0;
-            double temp;
-            int temp3 = 0;
-            int[] temp4 = new int[MAX_LICZBA_PROB];
-            double[] attraction = new double[MAX_LICZBA_PROB];
+            double temp, czyKrzyzowanie, czyZastapieniePrzodkiem;
+            int nrPrzodka1 = 0;
+            int nrPrzodka2 = 0;
             double liczbaReprodukujacych = Math.Floor(FRACTION_OF_REPRODUCING * Convert.ToDouble(liczbaOsobnikow));
-            int NumberOfElites = Convert.ToInt32(Math.Max(Convert.ToInt32(Math.Floor(FRACTION_OF_ELITES * Convert.ToDouble(liczbaOsobnikow))), 1));
+            int liczbaElitarnych = Convert.ToInt32(Math.Max(Convert.ToInt32(Math.Floor(FRACTION_OF_ELITES * Convert.ToDouble(liczbaOsobnikow))), 1));
             double sumaSzans = 0.0;
             double[] szansa = new double[Convert.ToInt32(liczbaReprodukujacych)];
-            bool[] gen = new bool[siz];
-            
-
+     
             for (int i = 0; i < liczbaReprodukujacych; i++)
                 sumaSzans = sumaSzans + (i + 1);
 
@@ -903,18 +931,24 @@ namespace Funkcje_GA
             for (int j = 0; j < liczbaOsobnikow; j++)
             {
                 bool[] bools = new bool[siz];
+                bool[] bools2 = new bool[siz];
                 for (int i = 0; i < siz; i++)
                 {
                     temp = rnd.NextDouble();
                     if (temp < 0.5)
+                    {
                         bools[i] = false;
+                        bools2[i] = false;
+                    }
 
                     else
+                    {
                         bools[i] = true;
+                        bools2[i] = true;
+                    }
                 }
-                Osobnik newOsobnik = new Osobnik(bools, 0.0m);
-                osobniki[j] = newOsobnik;
-                osobnikiTemp[j] = newOsobnik;
+                osobniki[j] = new Osobnik(bools, 0.0m);
+                osobnikiTemp[j] = new Osobnik(bools2, 0.0m);
             }
 
             for (int i = 0; i < liczbaOsobnikow; i++)
@@ -928,164 +962,134 @@ namespace Funkcje_GA
 
             while ((nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji) && (cel > stopienZdegenerowania + tol))
             {
-                for (int i = 0; i < NumberOfElites; i++)
-                    osobnikiTemp[i] = osobniki[i];
+                nrIteracji++;
+                nrKonsekwentnejIteracji++;
+                for (int i = 0; i < liczbaOsobnikow; i++)
+                    osobnikiTemp[i].genotyp = osobniki[i].genotyp;
+
                 //
                 // Krzyzowanie
                 //
-                for (int i = NumberOfElites; i < liczbaOsobnikow; i++)
+
+                for (int i =  liczbaOsobnikow - 1; i >= liczbaElitarnych; i--)
                 {
                     temp = rnd.NextDouble();
                     for (int j = Convert.ToInt32(liczbaReprodukujacych) - 1; j > 0; j--)
                     {
                         if (szansa[j] <= temp)
                         {
-                            temp3 = j;
+                            nrPrzodka1 = j;
                             break;
                         }
                     }
 
-                    liczbaProbKrzyzowania = 0;
-                    for (int j = 0; j < MAX_LICZBA_PROB; j++)
+                    temp = rnd.NextDouble();
+                    for (int j = Convert.ToInt32(liczbaReprodukujacych) - 1; j > 0; j--)
                     {
-                        attraction[j] = 0.0;
-                        temp4[j] = 0;
+                        if (szansa[j] <= temp)
+                        {
+                            nrPrzodka2 = j;
+                            break;
+                        }
                     }
 
-                    while (liczbaProbKrzyzowania < MAX_LICZBA_PROB)
+                    czyKrzyzowanie = rnd.NextDouble();
+                    czyZastapieniePrzodkiem = rnd.NextDouble();
+
+                    if (czyKrzyzowanie < SZANSA_KRZYZOWANIE)
                     {
-                        temp = rnd.NextDouble();
-                        for (int j = Convert.ToInt32(liczbaReprodukujacych) - 1; j > 0; j--)
-                        {
-                            if (szansa[j] <= temp)
-                            {
-                                temp4[liczbaProbKrzyzowania] = j;
-                                break;
-                            }
-                        }
-
-                        for (int k = 0; k < siz / 2; k++)
-                        {
-                            if ((osobnikiTemp[temp3].genotyp[k] ^ osobnikiTemp[temp4[liczbaProbKrzyzowania]].genotyp[k]))
-                                attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] + 1.0;
-
-                            if (osobnikiTemp[temp3].genotyp[k + siz / 2] ^ osobnikiTemp[temp4[liczbaProbKrzyzowania]].genotyp[k + siz / 2])
-                                attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] + 1.0;
-                        }
-                        attraction[liczbaProbKrzyzowania] = attraction[liczbaProbKrzyzowania] / Convert.ToDouble(siz / 2);
                         
-                        temp = rnd.NextDouble();
-                        if (temp < attraction[liczbaProbKrzyzowania])
-                            break;
-
-                        else
-                            liczbaProbKrzyzowania++;
-                    }
-
-                    if (liczbaProbKrzyzowania < MAX_LICZBA_PROB)
-                    {
-                        temp = rnd.NextDouble();
-                        for (int k = 0; k < siz / 2; k++)
-                        {
-                            if (temp < 0.5)
-                            {
-                                osobnikiTemp[i].genotyp[k] = osobniki[temp3].genotyp[k];
-                                osobnikiTemp[i].genotyp[k + siz / 2] = osobniki[temp3].genotyp[k + siz / 2];
-                            }
-
-                            else
-                            {
-                                osobnikiTemp[i].genotyp[k] = osobniki[temp4[liczbaProbKrzyzowania]].genotyp[k];
-                                osobnikiTemp[i].genotyp[k + siz / 2] = osobniki[temp4[liczbaProbKrzyzowania]].genotyp[k + siz / 2];
-                            }
-                        }
-                    }
-
-                    else
-                    {
-                        temp = rnd.NextDouble();
-                        for (int k = 0; k < siz / 2; k++)
-                        {
-                            if (temp < 0.5)
-                            {
-                                osobnikiTemp[i].genotyp[k] = osobniki[temp3].genotyp[k];
-                                osobnikiTemp[i].genotyp[k + siz / 2] = osobniki[temp3].genotyp[k + siz / 2];
-                            }
-
-                            else
-                            {
-                                osobnikiTemp[i].genotyp[k] = osobniki[Array.IndexOf(attraction, attraction.Max())].genotyp[k];
-                                osobnikiTemp[i].genotyp[k + siz / 2] = osobniki[Array.IndexOf(attraction, attraction.Max())].genotyp[k + siz / 2];
-                            }
-                        }
-                    }
-                }
-                //
-                // Mutacje
-                //
-                for (int i = NumberOfElites; i < liczbaOsobnikow; i++)
-                {
-
-                    for (int j = 0; j < siz / 2; j++)
-                    {
-                        temp = rnd.NextDouble();
-                        if (temp <= 0.3333 * SZANSA_MUTACJA)
-                        {
-                            osobnikiTemp[i].genotyp[j] = false;
-                            osobnikiTemp[i].genotyp[j + siz / 2] = false;
-                        }
-
-                        else if (temp <= 0.6666 * SZANSA_MUTACJA)
-                        {
-                            osobnikiTemp[i].genotyp[j] = true;
-                            osobnikiTemp[i].genotyp[j + siz / 2] = false;
-                        }
-
-                        else if (temp <= SZANSA_MUTACJA)
-                        {
-                            osobnikiTemp[i].genotyp[j] = false;
-                            osobnikiTemp[i].genotyp[j + siz / 2] = true;
-                        }
-                    }
-                }
-                osobniki = osobnikiTemp;
-                //
-                // Migracja
-                //
-                if (nrIteracji % GENERATIONS_BETWEEN_MIGRATION == 0)
-                {
-                    for (int j = NumberOfElites; j < liczbaOsobnikow; j++)
-                    {
-                        for (int i = 0; i < siz; i++)
+                        for (int k = 0; k < siz / MAX_LICZBA_BITOW; k++)
                         {
                             temp = rnd.NextDouble();
                             if (temp < 0.5)
-                                osobniki[j].genotyp[i] = false;
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka1].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
 
                             else
-                                osobniki[j].genotyp[i] = true;
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka2].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
+                        }
+                    }
+
+                    else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE && czyZastapieniePrzodkiem < 0.5)
+                    {
+                        temp = rnd.NextDouble();
+                        for (int k = 0; k < siz / MAX_LICZBA_BITOW; k++)
+                        {
+                            
+                            if (temp < 0.5)
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka1].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
+
+                            else
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                     osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka2].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
+                        }
+                    }
+
+                    else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE && czyZastapieniePrzodkiem >= 0.5)
+                    {
+                        temp = rnd.NextDouble();
+                        for (int k = 0; k < siz / MAX_LICZBA_BITOW; k++)
+                        {
+                            if (temp < 0.5)
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[0].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
+
+                            else
+                            {
+                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[1].genotyp[k * MAX_LICZBA_BITOW + m];
+                            }
                         }
                     }
                 }
+
+                //
+                // Mutacje
+                //
+
+                for (int i = liczbaElitarnych; i < liczbaOsobnikow; i++)
+                {
+
+                    for (int j = 0; j < siz; j++)
+                    {
+                        temp = rnd.NextDouble();
+                        if (temp <= SZANSA_MUTACJA)
+                        {
+                            osobniki[i].genotyp[j] = !osobniki[i].genotyp[j];
+                        }
+                    }
+                }
+
                 //
                 // Obliczanie funkcji celu
                 //
-                Parallel.For(NumberOfElites, liczbaOsobnikow, i =>
+
+                Parallel.For(liczbaElitarnych, liczbaOsobnikow, i =>
                 {
                     osobniki[i].wartosc = fCelu(osobniki[i].genotyp, grafik, nieTriazDzien, nieTriazNoc, liczbaDyzurow, oczekiwanaLiczbaFunkcji);
                     liczbaWywolanFunkcjiCelu++;
                 });
 
-                nrIteracji++;
+                
                 Array.Sort(osobniki, OsComp);
                 prevCel = cel;
                 cel = osobniki[0].wartosc;
 
-                if (Math.Abs(prevCel - cel) < tolX)
-                    nrKonsekwentnejIteracji++;
-
-                else
-                    nrKonsekwentnejIteracji = 1;
+                if (Math.Abs(prevCel - cel) > tolX)
+                    nrKonsekwentnejIteracji = 0;
 
                 if (nrIteracji % 100 == 0)
                 {
@@ -1126,31 +1130,50 @@ namespace Funkcje_GA
 
         private void DodajFunkcje(bool[] optymalneRozwiazanie)
         {
-            for (int i = 0; i < MAX_LICZBA_DYZUROW * LICZBA_DNI; i++)
+            int nrSala;
+            int nrTriaz1;
+            int nrTriaz2;
+            bool[] numerOsoby = new bool[MAX_LICZBA_BITOW];
+            for (int i = 0; i < LICZBA_DNI; i++)
             {
-                int nrListBoxa = Convert.ToInt32(Math.Floor(Convert.ToDouble(i) / MAX_LICZBA_DYZUROW));
-                if (listBoxesDzien[nrListBoxa].Items.Count > i % MAX_LICZBA_DYZUROW)
-                {
-                    listBoxesDzien[nrListBoxa].ToBezFunkcji(i % MAX_LICZBA_DYZUROW);
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * i + j];
 
-                    if (optymalneRozwiazanie[i] && !optymalneRozwiazanie[i + 2 * MAX_LICZBA_DYZUROW * LICZBA_DNI])
-                        listBoxesDzien[nrListBoxa].ToTriaz(i % MAX_LICZBA_DYZUROW);
+                nrSala = numerOsoby.Aggregate(0, (sum, val) => (sum*2) + (val ? 1 : 0));
 
-                    else if (!optymalneRozwiazanie[i] && optymalneRozwiazanie[i + 2 * MAX_LICZBA_DYZUROW * LICZBA_DNI])
-                        listBoxesDzien[nrListBoxa].ToSala(i % MAX_LICZBA_DYZUROW);
-                }
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * i + MAX_LICZBA_BITOW + j];
 
-                if (listBoxesNoc[nrListBoxa].Items.Count > i % MAX_LICZBA_DYZUROW)
-                {
-                    listBoxesNoc[nrListBoxa].ToBezFunkcji(i % MAX_LICZBA_DYZUROW);
+                nrTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                    if (optymalneRozwiazanie[i + MAX_LICZBA_DYZUROW * LICZBA_DNI] && !optymalneRozwiazanie[i + 3 * MAX_LICZBA_DYZUROW * LICZBA_DNI])
-                        listBoxesNoc[nrListBoxa].ToTriaz(i % MAX_LICZBA_DYZUROW);
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * i + 2 * MAX_LICZBA_BITOW + j];
 
-                    else if (!optymalneRozwiazanie[i + MAX_LICZBA_DYZUROW * LICZBA_DNI] && optymalneRozwiazanie[i + 3 * MAX_LICZBA_DYZUROW * LICZBA_DNI])
-                        listBoxesNoc[nrListBoxa].ToSala(i % MAX_LICZBA_DYZUROW);
-                }
-            }
+                nrTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                listBoxesDzien[i].ToSala(nrSala);
+                listBoxesDzien[i].ToTriaz(nrTriaz1);
+                listBoxesDzien[i].ToTriaz(nrTriaz2);
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * (i + LICZBA_DNI) + j];
+
+                nrSala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * (i + LICZBA_DNI) + MAX_LICZBA_BITOW + j];
+
+                nrTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                for (int j = 0; j < MAX_LICZBA_BITOW; j++)
+                    numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * (i + LICZBA_DNI) + 2 * MAX_LICZBA_BITOW + j];
+
+                nrTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+
+                listBoxesNoc[i].ToSala(nrSala);
+                listBoxesNoc[i].ToTriaz(nrTriaz1);
+                listBoxesNoc[i].ToTriaz(nrTriaz2);
+            }          
         }
 
         #endregion
