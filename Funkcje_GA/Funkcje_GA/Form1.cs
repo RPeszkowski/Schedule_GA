@@ -903,7 +903,7 @@ namespace Funkcje_GA
             Osobnik[] osobniki = new Osobnik[liczbaOsobnikow];
             Osobnik[] osobnikiTemp = new Osobnik[liczbaOsobnikow];
 
-            const double SZANSA_MUTACJA = 0.006;
+            const double SZANSA_MUTACJA = 0.004;
             const double SZANSA_KRZYZOWANIE = 0.5;
             const double FRACTION_OF_ELITES = 0.01;
             const double FRACTION_OF_REPRODUCING = 0.25;
@@ -1005,13 +1005,17 @@ namespace Funkcje_GA
                             if (temp < 0.5)
                             {
                                 for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                {
                                     osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka1].genotyp[k * MAX_LICZBA_BITOW + m];
+                                }
                             }
 
                             else
                             {
                                 for (int m = 0; m < MAX_LICZBA_BITOW; m++)
+                                {
                                     osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka2].genotyp[k * MAX_LICZBA_BITOW + m];
+                                }
                             }
                         }
                     }
