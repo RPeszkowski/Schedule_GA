@@ -243,14 +243,16 @@ namespace Funkcje_GA
             }
         }
 
-        private delegate decimal Callback(bool[] funkcje, int[] grafik, int[] nieTriazDzien, int[] nieTriazNoc, int[] liczbaDyzurow, double[] oczekiwanaLiczbaFunkcji);
-        Callback handler = FunkcjaCelu;
+        private delegate decimal FunkcjaCeluUchwyt(bool[] funkcje, int[] grafik, int[] nieTriazDzien, int[] nieTriazNoc, int[] liczbaDyzurow, double[] oczekiwanaLiczbaFunkcji);
+        FunkcjaCeluUchwyt handler = FunkcjaCelu;
 
         public const int MAX_LICZBA_OSOB = 45;
         public const int LICZBA_DNI = 31;
         private const int MAX_LICZBA_DYZUROW = 8;
         private const int MAX_LICZBA_BITOW = 3;
         public static int liczbaOsob = 0;
+        private DateTime start;
+        private TimeSpan t;
         public static Osoba[] osoby = new Osoba[MAX_LICZBA_OSOB];
         FileOperations fileOperator = new FileOperations();
 
@@ -341,44 +343,61 @@ namespace Funkcje_GA
 
             buttonOptymalizacja.Click += async (o, e) =>
             {
-                int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
-                int[] liczbaDyzurow = new int[2 * LICZBA_DNI];
-                bool[] optymalneRozwiazanie;
-                double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
-
-                for (int i = 0; i < LICZBA_DNI; i++)
+                buttonOptymalizacja.Enabled = false;
+                try
                 {
-                    listBoxesDzien[i].ResetBackColor();
-                    listBoxesNoc[i].ResetBackColor();
-                }
+                    int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
+                    int[] liczbaDyzurow = new int[2 * LICZBA_DNI];
+                    bool[] optymalneRozwiazanie;
+                    double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
+                    decimal optymalnaWartosc;
 
-                for (int i = 0; i < LICZBA_DNI; i++)
-                {
-                    if (listBoxesDzien[i].Items.Count > MAX_LICZBA_DYZUROW || listBoxesNoc[i].Items.Count > MAX_LICZBA_DYZUROW)
+                    for (int i = 0; i < LICZBA_DNI; i++)
                     {
-                        MessageBox.Show("Aby móc wykorzystać automatyczne rozdzielanie funkcji liczba dyżurów danego dnia nie może przekraczać " + MAX_LICZBA_DYZUROW.ToString() + ".");
+                        listBoxesDzien[i].ResetBackColor();
+                        listBoxesNoc[i].ResetBackColor();
+                    }
+
+                    for (int i = 0; i < LICZBA_DNI; i++)
+                    {
+                        if (listBoxesDzien[i].Items.Count > MAX_LICZBA_DYZUROW || listBoxesNoc[i].Items.Count > MAX_LICZBA_DYZUROW)
+                        {
+                            MessageBox.Show("Aby móc wykorzystać automatyczne rozdzielanie funkcji liczba dyżurów danego dnia nie może przekraczać " + MAX_LICZBA_DYZUROW.ToString() + ".");
+                            return;
+                        }
+                    }
+                    PrepareOptimization optimizationPreparer = new PrepareOptimization();
+                    optimizationPreparer.Prepare();
+
+                    if (optimizationPreparer.liczbaDyzurow.Contains(1) || optimizationPreparer.liczbaDyzurow.Contains(2))
+                    {
+                        MessageBox.Show("Niepoprawny grafik. Sprawdź, czy do każdego dnia przypisane są co najmniej 3 osoby.");
                         return;
                     }
-                }
-                PrepareOptimization optimizationPreparer = new PrepareOptimization();
-                optimizationPreparer.Prepare();
 
-                if (optimizationPreparer.liczbaDyzurow.Contains(1) || optimizationPreparer.liczbaDyzurow.Contains(2))
-                {
-                    MessageBox.Show("Niepoprawny grafik. Sprawdź, czy do każdego dnia przypisane są co najmniej 3 osoby.");
-                    return;
-                }
+                    start = DateTime.Now;
+                    {
+                        optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW, handler, 100, 0.000003m, 0.00000000001m, 40000, 200000, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
+                    }
+                    t = DateTime.Now - start;
 
-                DateTime start = DateTime.Now;
-                {
-                    optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW, handler, 100, 0.000003m, 0.00000000001m, 40000, 200000, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
+                    optymalnaWartosc = FunkcjaCelu(optymalneRozwiazanie, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji);
+                    DodajFunkcje(optymalneRozwiazanie);
+                    fileOperator.zapiszGrafik("GrafikGA.txt");
+                    labelRaport.Text = labelRaport.Text + " Ukończono.";
+
+                    if (optymalnaWartosc > optimizationPreparer.stopienZdegenerowania + 0.000003m)
+                        MessageBox.Show("Przydzielanie funkcji ukończone w: " + t.ToString() + ". Cel nie został osiągnięty. Rozważ ponowne rozdzielenie funkcji.");
+
+                    else
+                        MessageBox.Show("Przydzielanie funkcji ukończone w: " + t.ToString() + ".");
                 }
-                TimeSpan t = DateTime.Now - start;
-                MessageBox.Show(t.ToString());  
-                
-                DodajFunkcje(optymalneRozwiazanie);
-                fileOperator.zapiszGrafik("GrafikGA.txt");
-                labelRaport.Text = labelRaport.Text + " Ukończono.";
+                catch { }
+
+                finally
+                {
+                    buttonOptymalizacja.Enabled = true;
+                }
             };
         }
 
@@ -844,10 +863,10 @@ namespace Funkcje_GA
 
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
-                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1.99)
+                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 2)
                     W = W + 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
-                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 0.99)
+                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1)
                     W = W + 0.000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
                 flagStazDzien = false;
@@ -876,10 +895,10 @@ namespace Funkcje_GA
                 else if (Math.Abs(2 * (liczbaSalOsobaDzien[i] + liczbaSalOsobaNoc[i]) - (liczbaTriazyOsobaDzien[i] + liczbaTriazyOsobaNoc[i])) == 2 && !flagStazDzien && !flagStazNoc)
                     W = W + 0.0000000002m;
 
-                if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) > 2 && flagStazNoc)
+                if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) > 2 && flagStazNoc && !flagStazDzien)
                     W = W + 0.00000001m * Convert.ToDecimal(Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]));
 
-                else if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) == 2 && flagStazNoc)
+                else if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) == 2 && flagStazNoc && !flagStazDzien)
                     W = W + 0.0000000002m;
 
                 if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) > 2)
@@ -893,7 +912,7 @@ namespace Funkcje_GA
             return W;
         }
 
-        private bool[] OptymalizacjaGA(int siz, Callback fCelu, int liczbaOsobnikow, decimal tol, decimal tolX, int maxKonsekwentnychIteracji, int maxIteracji, int[] grafik, int[] nieTriazDzien, int[] nieTriazNoc, int[] liczbaDyzurow, double[] oczekiwanaLiczbaFunkcji, decimal stopienZdegenerowania)
+        private bool[] OptymalizacjaGA(int siz, FunkcjaCeluUchwyt fCelu, int liczbaOsobnikow, decimal tol, decimal tolX, int maxKonsekwentnychIteracji, int maxIteracji, int[] grafik, int[] nieTriazDzien, int[] nieTriazNoc, int[] liczbaDyzurow, double[] oczekiwanaLiczbaFunkcji, decimal stopienZdegenerowania)
         {
             if (liczbaOsobnikow < 10)
                 liczbaOsobnikow = 10;
@@ -913,7 +932,7 @@ namespace Funkcje_GA
             int liczbaWywolanFunkcjiCelu = 0;
             decimal prevCel = 0;
             decimal cel = 0;
-            double temp, czyKrzyzowanie, czyZastapieniePrzodkiem;
+            double temp, czyKrzyzowanie;
             int nrPrzodka1 = 0;
             int nrPrzodka2 = 0;
             double liczbaReprodukujacych = Math.Floor(FRACTION_OF_REPRODUCING * Convert.ToDouble(liczbaOsobnikow));
@@ -994,7 +1013,6 @@ namespace Funkcje_GA
                     }
 
                     czyKrzyzowanie = rnd.NextDouble();
-                    czyZastapieniePrzodkiem = rnd.NextDouble();
 
                     if (czyKrzyzowanie < SZANSA_KRZYZOWANIE)
                     {
@@ -1020,7 +1038,7 @@ namespace Funkcje_GA
                         }
                     }
 
-                    else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE && czyZastapieniePrzodkiem < 0.5)
+                    else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE)
                     {
                         temp = rnd.NextDouble();
                         for (int k = 0; k < siz / MAX_LICZBA_BITOW; k++)
@@ -1036,25 +1054,6 @@ namespace Funkcje_GA
                             {
                                 for (int m = 0; m < MAX_LICZBA_BITOW; m++)
                                      osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka2].genotyp[k * MAX_LICZBA_BITOW + m];
-                            }
-                        }
-                    }
-
-                    else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE && czyZastapieniePrzodkiem >= 0.5)
-                    {
-                        temp = rnd.NextDouble();
-                        for (int k = 0; k < siz / MAX_LICZBA_BITOW; k++)
-                        {
-                            if (temp < 0.5)
-                            {
-                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
-                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[0].genotyp[k * MAX_LICZBA_BITOW + m];
-                            }
-
-                            else
-                            {
-                                for (int m = 0; m < MAX_LICZBA_BITOW; m++)
-                                    osobniki[i].genotyp[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[1].genotyp[k * MAX_LICZBA_BITOW + m];
                             }
                         }
                     }
