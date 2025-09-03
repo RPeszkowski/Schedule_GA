@@ -8,6 +8,6 @@ About the project
 
 What I learned while working on this project? 
 
-<p align="justify">I think, taht the most important realization whas that genetic algorithms are to be designed speciffically for a given task and should consider data format and way of coding information into genes in order not to accidentally mess the data of the same gene from two parents and as a result of this loose information. Writing the code was also an oppurtunity to learn C# concepts such as delegates, lambda expressions and basics of asynchronous programming.</p>
+<p align="justify">I think that the most important realization whas that genetic algorithms are to be designed speciffically for a given task and should consider data format as well as way of coding information into genes in order not to mix the data of the same gene from two parents and as a result of this loose information. Writing the code was also an oppurtunity to learn C# concepts such as delegates, lambda expressions and basics of asynchronous programming.</p>
 
 For additional information about the app and GA optimization please consider visiting Wiki.
