@@ -35,14 +35,14 @@ namespace Funkcje_GA
                 genotyp = gen;
                 wartosc = war;
             }
-        }
+        }                   //Obiekty tej klasy są wykorzystywane jako osobniki w algorytmie optymalizacji genetycznej.
         private class OsobnikComparer : IComparer
         {
             public int Compare(object x, object y)
             {
                 return (new CaseInsensitiveComparer()).Compare(((Osobnik)x).wartosc, ((Osobnik)y).wartosc);
             }
-        }
+        }          //Obiekt tej klasy jest wykorzystywany do porównywania wartości f. celu dwóch osobników w problemie optymalizacji.
         private class PrepareOptimization
         {
             public int[] dyzuryGrafik;
@@ -241,26 +241,26 @@ namespace Funkcje_GA
                 }
                 return stopienZdegenerowania;
             }
-        }
+        }       //Obiekt tej klasy jest odpowiedzialny za przygotowanie danych do zadania optymalizacji.
 
         private delegate decimal FunkcjaCeluUchwyt(bool[] funkcje, int[] grafik, int[] nieTriazDzien, int[] nieTriazNoc, int[] liczbaDyzurow, double[] oczekiwanaLiczbaFunkcji);
-        FunkcjaCeluUchwyt handler = FunkcjaCelu;
+        FunkcjaCeluUchwyt handler = new FunkcjaCeluUchwyt(FunkcjaCelu);     //Deklaracja i stworzenie delegata do funkcji celu, wykorzystywanego jako argument do funkcji optymalizacji.
 
-        public const int MAX_LICZBA_OSOB = 45;
-        public const int LICZBA_DNI = 31;
-        private const int MAX_LICZBA_DYZUROW = 8;
-        private const int MAX_LICZBA_BITOW = 3;
-        public static int liczbaOsob = 0;
-        private DateTime start;
-        private TimeSpan t;
-        public static Osoba[] osoby = new Osoba[MAX_LICZBA_OSOB];
-        FileOperations fileOperator = new FileOperations();
+        public const int MAX_LICZBA_OSOB = 45;                              //Maksymalna liczba pracowników w systemie.
+        public const int LICZBA_DNI = 31;                                   //Największa liczba dni w miesiącu.
+        private const int MAX_LICZBA_DYZUROW = 8;                           //Maksymalna liczba dyżurów jednego dnia.
+        private const int MAX_LICZBA_BITOW = 3;                             //Liczba bitów potrzebna do zakodowania jednej osoby (log2(MAX_LICZBA_DYZUROW)).
+        public static int liczbaOsob = 0;                                   //Aktualna liczba pracowników w systemie.       
+        private DateTime start;                                             //Pomiar czasu działanai algorytmu optymalizacji.
+        private TimeSpan t;                                                 //Pomiar czasu działanai algorytmu optymalizacji.
+        public static Osoba[] osoby = new Osoba[MAX_LICZBA_OSOB];           //Stworzenie listy pracowników.
+        FileOperations fileOperator = new FileOperations();                 //Stworzenie obiektu odpowiedzialnego za operacje na plikach.
 
-        public static System.Windows.Forms.Label[] labels = new System.Windows.Forms.Label[MAX_LICZBA_OSOB];
-        public static System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];
-        public static System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];
-        public static myListBox[] listBoxesDzien = new myListBox[LICZBA_DNI];
-        public static myListBox[] listBoxesNoc = new myListBox[LICZBA_DNI];
+        public static System.Windows.Forms.Label[] labels = new System.Windows.Forms.Label[MAX_LICZBA_OSOB];    //Tworzenie etykiet wyświetlających dane pracowników.
+        public static System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];    //Tworzenie etykiet wyświetlających numer dziennej zmiany.
+        public static System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];      //Tworzenie etykiet wyświetlających numer nocnej zmiany.
+        public static myListBox[] listBoxesDzien = new myListBox[LICZBA_DNI];                                   //Tworzenie listboxów odpowiadających dziennej zmianie.
+        public static myListBox[] listBoxesNoc = new myListBox[LICZBA_DNI];                                     //Tworzenie listboxów odpowiadających nocnej zmianie.
         #endregion
 
         #region Form1 konstruktor, load
@@ -341,7 +341,7 @@ namespace Funkcje_GA
                 listBoxesNoc[j].DragDrop += new DragEventHandler((sender, e) => listBoxNoc_DragDrop(sender, e, iter3));
             }
 
-            buttonOptymalizacja.Click += async (o, e) =>
+            buttonOptymalizacja.Click += async (sender, e) =>
             {
                 buttonOptymalizacja.Enabled = false;
                 try
