@@ -171,8 +171,8 @@ namespace Funkcje_GA
 
             private double[] OczekiwanaLiczbaFunkcji(Osoba[] osoby)
             {
-                const double MAX_LICZBA_FUNKCJI = 8.0;
-                const double MIN_LICZBA_FUNKCJI = 2.0;
+                const double MAX_LICZBA_FUNKCJI = 8.5;
+                const double MIN_LICZBA_FUNKCJI = 2.5;
                 double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
                 int liczbaDniRoboczych = 0;
                 double sumaEtatow = 0.0;
@@ -343,7 +343,12 @@ namespace Funkcje_GA
 
             buttonOptymalizacja.Click += async (sender, e) =>
             {
-                buttonOptymalizacja.Enabled = false;
+                foreach (Control iter in this.Controls)
+                {
+                    if(iter != labelRaport)
+                    iter.Enabled = false;
+                }
+
                 try
                 {
                     int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
@@ -351,6 +356,11 @@ namespace Funkcje_GA
                     bool[] optymalneRozwiazanie;
                     double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
                     decimal optymalnaWartosc;
+                    decimal tol = 0.0000005m;
+                    decimal tolX = 0.00000000001m;
+                    int maxIterations = 200000;
+                    int maxConsIterations = 40000;
+                    int liczbaOsobnikow = 100;
 
                     for (int i = 0; i < LICZBA_DNI; i++)
                     {
@@ -377,7 +387,7 @@ namespace Funkcje_GA
 
                     start = DateTime.Now;
                     {
-                        optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW, handler, 100, 0.000003m, 0.00000000001m, 40000, 200000, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
+                        optymalneRozwiazanie = await Task.Run(() => OptymalizacjaGA(2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW, handler, liczbaOsobnikow, tol, tolX, maxConsIterations, maxIterations, optimizationPreparer.dyzuryGrafik, optimizationPreparer.nieTriazDzien, optimizationPreparer.nieTriazNoc, optimizationPreparer.liczbaDyzurow, optimizationPreparer.oczekiwanaLiczbaFunkcji, optimizationPreparer.stopienZdegenerowania));
                     }
                     t = DateTime.Now - start;
 
@@ -386,7 +396,7 @@ namespace Funkcje_GA
                     fileOperator.zapiszGrafik("GrafikGA.txt");
                     labelRaport.Text = labelRaport.Text + " Ukończono.";
 
-                    if (optymalnaWartosc > optimizationPreparer.stopienZdegenerowania + 0.000003m)
+                    if ((optymalnaWartosc > optimizationPreparer.stopienZdegenerowania + tol))
                         MessageBox.Show("Przydzielanie funkcji ukończone w: " + t.ToString() + ". Cel nie został osiągnięty. Rozważ ponowne rozdzielenie funkcji.");
 
                     else
@@ -396,7 +406,11 @@ namespace Funkcje_GA
 
                 finally
                 {
-                    buttonOptymalizacja.Enabled = true;
+                    foreach (Control iter in this.Controls)
+                    {
+                        if (iter != labelRaport)
+                            iter.Enabled = true;
+                    }
                 }
             };
         }
@@ -730,12 +744,24 @@ namespace Funkcje_GA
             int[] liczbaSalOsobaNoc = new int[MAX_LICZBA_OSOB];
             int[] liczbaTriazyOsobaDzien = new int[MAX_LICZBA_OSOB];
             int[] liczbaTriazyOsobaNoc = new int[MAX_LICZBA_OSOB];
-            bool flagStazDzien = false;
-            bool flagStazNoc = false;
             bool[] numerOsoby = new bool[MAX_LICZBA_BITOW];
             int nrOsobySala;
             int nrOsobyTriaz1;
             int nrOsobyTriaz2;
+            bool[][] dyzuryRozstaw = new bool[MAX_LICZBA_OSOB][];
+            int[] nrDyzuru = new int[MAX_LICZBA_OSOB];
+            int liczbaKonsekwentnychBezFunkcji = 0;
+
+            for (int i = 0; i < MAX_LICZBA_OSOB; i++)
+            {
+                if (osoby[i] != null)
+                    dyzuryRozstaw[i] = new bool[Convert.ToInt32(osoby[i].wymiarEtatu)];
+
+                else
+                    dyzuryRozstaw[i] = new bool[0];
+
+                nrDyzuru[i] = 0;
+            }
 
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
@@ -771,17 +797,26 @@ namespace Funkcje_GA
                 if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
                     a = a + 1000000.0m;
                 else
+                {
                     liczbaSalOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
+                    dyzuryRozstaw[grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafik[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
+                }
 
                 if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
                     a = a + 1000000.0m;
                 else
+                {
                     liczbaTriazyOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+                    dyzuryRozstaw[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
+                }
 
                 if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
                     a = a + 1000000.0m;
                 else
+                {
                     liczbaTriazyOsobaDzien[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+                    dyzuryRozstaw[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
+                }
 
                 if (nrOsobySala == nrOsobyTriaz1)
                     a = a + 1000000.0m;
@@ -802,6 +837,12 @@ namespace Funkcje_GA
                 {
                     if (grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafik[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
                         liczbaStazystowNaTriazu[i]++;
+                }
+
+                for (int j = i * MAX_LICZBA_DYZUROW; j < (i + 1) * MAX_LICZBA_DYZUROW; j++)
+                {
+                    if (grafik[j] != 0)
+                    nrDyzuru[grafik[j] - 1]++;
                 }
             
                 //Noc
@@ -824,17 +865,26 @@ namespace Funkcje_GA
                 if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
                     a = a + 1000000.0m;
                 else
+                {
                     liczbaSalOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
+                    dyzuryRozstaw[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
+                }
 
                 if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
                     a = a + 1000000.0m;
                 else
+                {
                     liczbaTriazyOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+                    dyzuryRozstaw[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
+                }
 
                 if (grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
                     a = a + 1000000.0m;
-                else 
+                else
+                {
                     liczbaTriazyOsobaNoc[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+                    dyzuryRozstaw[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafik[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
+                }
 
                 if (nrOsobySala == nrOsobyTriaz1)
                     a = a + 1000000.0m;
@@ -853,6 +903,12 @@ namespace Funkcje_GA
                             a = a + 100.0m;
                     }
                 }
+
+                for (int j = (i + LICZBA_DNI) * MAX_LICZBA_DYZUROW; j < (i + LICZBA_DNI+ 1) * MAX_LICZBA_DYZUROW; j++)
+                {
+                    if (grafik[j] != 0)
+                        nrDyzuru[grafik[j] - 1]++;
+                }
             }
 
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
@@ -867,45 +923,32 @@ namespace Funkcje_GA
                     W = W + 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
                 else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1)
-                    W = W + 0.000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
-
-                flagStazDzien = false;
-                for (int j = 0; j < nieTriazDzien.Length; j++)
-                {
-                    if (i == nieTriazDzien[j] - 1)
-                    {
-                        flagStazDzien = true;
-                        break;
-                    }
-                }
-
-                flagStazNoc = false;
-                for (int j = 0; j < nieTriazNoc.Length; j++)
-                {
-                    if (i == nieTriazNoc[j] - 1)
-                    {
-                        flagStazNoc = true;
-                        break;
-                    }
-                }
-
-                if (Math.Abs(2 * (liczbaSalOsobaDzien[i] + liczbaSalOsobaNoc[i]) - (liczbaTriazyOsobaDzien[i] + liczbaTriazyOsobaNoc[i])) > 2 && !flagStazDzien && !flagStazNoc)
-                    W = W + 0.00000001m * Convert.ToDecimal(Math.Abs(2 * (liczbaSalOsobaDzien[i] + liczbaSalOsobaNoc[i]) - (liczbaTriazyOsobaDzien[i] + liczbaTriazyOsobaNoc[i])));
-
-                else if (Math.Abs(2 * (liczbaSalOsobaDzien[i] + liczbaSalOsobaNoc[i]) - (liczbaTriazyOsobaDzien[i] + liczbaTriazyOsobaNoc[i])) == 2 && !flagStazDzien && !flagStazNoc)
-                    W = W + 0.0000000002m;
-
-                if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) > 2 && flagStazNoc && !flagStazDzien)
-                    W = W + 0.00000001m * Convert.ToDecimal(Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]));
-
-                else if (Math.Abs(liczbaSalOsobaDzien[i] - liczbaTriazyOsobaDzien[i]) == 2 && flagStazNoc && !flagStazDzien)
-                    W = W + 0.0000000002m;
+                    W = W + 0.0000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
 
                 if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) > 2)
                     W = W + 1.0m * Convert.ToDecimal(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])));
 
                 else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) == 2)
                     W = W + 0.0002m;
+
+                liczbaKonsekwentnychBezFunkcji = 0;
+                for (int j = 0; j < dyzuryRozstaw[i].Length; j++)
+                {
+                    if (!dyzuryRozstaw[i][j])
+                        liczbaKonsekwentnychBezFunkcji++;
+
+                    else if (dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji > 3)
+                    {
+                        W = W + 0.00000001m * Convert.ToDecimal(liczbaKonsekwentnychBezFunkcji);
+                        liczbaKonsekwentnychBezFunkcji = 0;
+                    }
+
+                    else if (dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji <= 3)
+                        liczbaKonsekwentnychBezFunkcji = 0;
+
+                    if (j == dyzuryRozstaw[i].Length - 1 && !dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji > 3)
+                        W = W + 0.00000001m * Convert.ToDecimal(liczbaKonsekwentnychBezFunkcji);
+                }
             }
 
             W = W + a;
@@ -979,7 +1022,7 @@ namespace Funkcje_GA
             Array.Sort(osobniki, OsComp);
             cel = osobniki[0].wartosc;
 
-            while ((nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji) && (cel > stopienZdegenerowania + tol))
+            while (nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji && (cel > stopienZdegenerowania + tol))
             {
                 nrIteracji++;
                 nrKonsekwentnejIteracji++;
