@@ -15,10 +15,12 @@ namespace Funkcje_GA
 {
     public partial class Form2 : Form
     {
+        private FileOperations fileOperator = new FileOperations();
         public Form2()
         {
             InitializeComponent();
 
+            
             listBoxNumerOsoby.Items.Clear();
             for (int i = 0; i < Form1.MAX_LICZBA_OSOB; i++)
             {
@@ -122,7 +124,6 @@ namespace Funkcje_GA
 
         private void buttonSaveAndQuit_Click(object sender, EventArgs e)
         {
-            FileOperations fileOperator = new FileOperations();
             fileOperator.ZapiszPracownikow("Pracownicy.txt");
             this.Close();
         }
