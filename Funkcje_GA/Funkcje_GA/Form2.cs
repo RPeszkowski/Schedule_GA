@@ -10,32 +10,111 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static Funkcje_GA.Form1;
 
 namespace Funkcje_GA
 {
+    //Form2 do dodawania/edytowania/usuwania osób.
     public partial class Form2 : Form
-    {
-        private FileOperations fileOperator = new FileOperations();
+    {            
+
+        //Konstruktor. Aktualizacja listboxa z numerami aktywnych pracowników.
         public Form2()
         {
+            //Generuje kontrolki. Metoda stworzona przez Designera.
             InitializeComponent();
 
-            
-            listBoxNumerOsoby.Items.Clear();
-            for (int i = 0; i < Form1.MAX_LICZBA_OSOB; i++)
+            //Wyświetlamy numery istniejących w systemie osób.
+            UpdateListBoxNumerOsoby();
+        }
+
+        //Dodawanie osoby do listy i do pliku Pracownicy.txt.
+        private void buttonDodaj_Click(object sender, EventArgs e)
+        {
+            //Jeśli wszystkie warunki są spełnione to dodajemy nową osobę.
+            try
             {
-                if (Form1.osoby[i] != null)
-                {
-                    listBoxNumerOsoby.Items.Add(Form1.osoby[i].numer.ToString());
-                }
+                //Tworzymy osobę z pierwszym wolnym numerem i danymi takimi, jakie zostały wprowadzone do boxów. Dodajemy nową osobę do listy osób. Wyświetlamy numery istniejących w systemie osób.
+                Form1.EmployeeManagement.EmployeeAdd(textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                UpdateListBoxNumerOsoby();
+            }
+
+            //Sprawdzamy, czy nie została osiągnięta maksymalna liczba osób w systemie.
+            catch (TooManyEmployeesException)
+            {
+                MessageBox.Show("Maksymalna liczba pracowników to " + Form1.MAX_LICZBA_OSOB.ToString() + ".");
+                return;
+            }
+
+            //Obsługa wyjątku: niepoprawne dane.
+            catch (InvalidDataException)
+            {
+                MessageBox.Show("Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
             }
         }
 
-        private void Form2_Load(object sender, EventArgs e) {}
+        //Edycja danych pracownika.
+        private void buttonEdytujPracownika_Click(object sender, EventArgs e)
+        {
+            //Zczytujemy z listBoxa numer osoby i próbujemy edytować dane. Jeśli się udało, wyświetlamy informację.
+            try
+            {
+                int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1;
+                Form1.EmployeeManagement.EmployeeEdit(Form1.osoby[nrOsoby], textBoxImie.Text, textBoxNazwisko.Text, Form1.osoby[nrOsoby].wymiarEtatu, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                MessageBox.Show("Zmieniono dane pracownika: " + Form1.osoby[nrOsoby].numer.ToString() + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko);
+            }
 
+            //Obsługa wyjątku: osoba nie istnieje.
+            catch (NullReferenceException)
+            {
+                MessageBox.Show("Dana osoba nie istnieje");
+            }
+
+            //Obsługa wyjątku: niepoprawne dane.
+            catch (InvalidDataException)
+            {
+                MessageBox.Show("Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
+            }
+
+            //Jeśli się nie udało, to wyświetlamy informację.
+            catch
+            {
+                MessageBox.Show("Wybierz osobę, której dane chcesz zmienić.");
+            }
+        }
+
+        //Zapisujemy dane pracowników do pliku "Pracownicy.txt" i zamykamy Form2.
+        private void buttonSaveAndQuit_Click(object sender, EventArgs e)
+        {
+            Form1.FileManagementPracownicy.ZapiszPracownikow("Pracownicy.txt");
+            this.Close();
+        }
+
+        //Usuwamy wybraną osobę.
+        private void buttonUsun_Click(object sender, EventArgs e)
+        {
+            //Usuwamy osobę. Wyświetlamy numery istniejących w systemie osób.
+            try
+            {
+                Form1.EmployeeManagement.EmployeeDelete(Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1]);
+                UpdateListBoxNumerOsoby();
+            }
+
+            //Jeśli się nie udało, wyświetlamy komunikat.
+            catch 
+            {
+                MessageBox.Show("Wybierz osobę, której dane chcesz usunąć.");
+            };
+        }
+
+        //Załadowanie Form2.
+        private void Form2_Load(object sender, EventArgs e) { }
+
+        //Wyświetlamy dane wybranej osoby.
         private void listBoxNumerOsoby_SelectedIndexChanged(object sender, EventArgs e)
         {
-            try
+            //Jeśli osoba istnieje w systemie to wyświetlamy jej numer.
+            if (Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1] != null)
             {
                 textBoxImie.Text = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie;
                 textBoxNazwisko.Text = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko;
@@ -44,123 +123,18 @@ namespace Funkcje_GA
                 checkBoxCzyTriazNoc.Checked = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazNoc;
 
             }
-            catch { }
         }
 
-        private void buttonDodaj_Click(object sender, EventArgs e)
+        //Wyświetlamy numery istniejących w systemie osób.
+        private void UpdateListBoxNumerOsoby()
         {
-            if (textBoxImie.Text.Contains(' ') || textBoxNazwisko.Text.Contains(' '))
-                MessageBox.Show("Imię i nazwisko nie mogą zawierać spacji.");
-
-            else
+            //Usuń wszytskie numery. Jeśli osoba jest w systemie to dodaj jej numer.
+            listBoxNumerOsoby.Items.Clear();
+            for (int nrOsoby = 0; nrOsoby < Form1.MAX_LICZBA_OSOB; nrOsoby++)
             {
-                if (Form1.liczbaOsob < Form1.MAX_LICZBA_OSOB)
-                {
-                    int wolnyNumer = Form1.MAX_LICZBA_OSOB - 1;
-
-                    for (int i = Form1.MAX_LICZBA_OSOB - 1; i >= 0; i--)
-                    {
-                        if (Form1.osoby[i] == null)
-                            wolnyNumer = i;
-                    }
-
-                    Osoba newOsoba = new Osoba(wolnyNumer + 1, textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
-                    Form1.osoby[wolnyNumer] = newOsoba;
-                    listBoxNumerOsoby.Items.Clear();
-                    for (int i = 0; i < Form1.MAX_LICZBA_OSOB; i++)
-                    {
-                        if (Form1.osoby[i] != null)
-                        {
-                            listBoxNumerOsoby.Items.Add(Form1.osoby[i].numer.ToString());
-                        }
-                    }
-                    Form1.liczbaOsob = Form1.liczbaOsob + 1;
-                    string str = Form1.osoby[wolnyNumer].numer.ToString() + ". " + Form1.osoby[wolnyNumer].imie + " " + Form1.osoby[wolnyNumer].nazwisko + " " + Form1.osoby[wolnyNumer].wymiarEtatu.ToString() + " " + Form1.osoby[wolnyNumer].zaleglosci.ToString();
-                    Form1.labels[wolnyNumer].Text = str;
-                    if (!(Form1.osoby[wolnyNumer].czyTriazDzien && Form1.osoby[wolnyNumer].czyTriazNoc))
-                        Form1.labels[wolnyNumer].ForeColor = Color.Orange;
-
-                    else
-                        Form1.labels[wolnyNumer].ForeColor = Color.Black;
-                }
-                else
-                {
-                    MessageBox.Show("Maksymalna liczba pracowników to " + Form1.MAX_LICZBA_OSOB.ToString() + ".");
-                }
+                if (Form1.osoby[nrOsoby] != null)
+                    listBoxNumerOsoby.Items.Add(Form1.osoby[nrOsoby].numer.ToString());
             }
-        }
-
-        private void buttonEdytujPracownika_Click(object sender, EventArgs e)
-        {
-            if (textBoxImie.Text.Contains(' ') || textBoxNazwisko.Text.Contains(' '))
-                MessageBox.Show("Imię i nazwisko nie mogą zawierać spacji.");
-
-            else
-            {
-                try
-                {
-                    Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie = textBoxImie.Text;
-                    Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko = textBoxNazwisko.Text;
-                    Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].zaleglosci = Convert.ToInt32(numericUpDownZaleglosci.Value);
-                    Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazDzien = checkBoxCzyTriazDzien.Checked;
-                    Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazNoc = checkBoxCzyTriazNoc.Checked;
-
-                    string str = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].numer.ToString() + ". " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].wymiarEtatu.ToString() + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].zaleglosci.ToString();
-                    Form1.labels[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].Text = str;
-                    if (!(Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazDzien && Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazNoc))
-                        Form1.labels[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].ForeColor = Color.Orange;
-
-                    else
-                        Form1.labels[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].ForeColor = Color.Black;
-
-                    MessageBox.Show("Zmieniono dane pracownika: " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].numer.ToString() + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko);
-                }
-                catch
-                {
-                    MessageBox.Show("Wybierz osobę, której dane chcesz zmienić.");
-                }
-            }
-        }
-
-        private void buttonSaveAndQuit_Click(object sender, EventArgs e)
-        {
-            fileOperator.ZapiszPracownikow("Pracownicy.txt");
-            this.Close();
-        }
-
-        private void buttonUsun_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                int nrUsunietejosoby = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].numer;
-                Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1] = null;
-                Form1.labels[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].Text = "";
-                listBoxNumerOsoby.Items.Remove(listBoxNumerOsoby.SelectedItem); 
-                Form1.liczbaOsob--;
-                for (int i = 0; i < Form1.LICZBA_DNI; i++)
-                {
-                    for(int j = 0; j < Form1.listBoxesDzien[i].Items.Count; j++)
-                    {
-                        
-                        if (Form1.listBoxesDzien[i].GetNumber(j) == nrUsunietejosoby)
-                        {
-                            Form1.listBoxesDzien[i].Items.RemoveAt(j);
-                            Form1.listBoxesDzien[i].Refresh();
-                        }
-                    }
-
-                    for (int j = 0; j < Form1.listBoxesNoc[i].Items.Count; j++)
-                    {
-                        if (Form1.listBoxesNoc[i].GetNumber(j) == nrUsunietejosoby)
-                        {
-                            Form1.listBoxesNoc[i].Items.RemoveAt(j);
-                            Form1.listBoxesNoc[i].Refresh();
-                        }
-                    }
-                }
-                MessageBox.Show("Usunięto dane pracownika.");
-            }
-            catch { }
         }
     }
 }

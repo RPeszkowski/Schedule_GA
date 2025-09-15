@@ -40,7 +40,7 @@
             this.buttonZapiszGrafik = new System.Windows.Forms.Button();
             this.buttonWczytajGrafik = new System.Windows.Forms.Button();
             this.buttonOptymalizacja = new System.Windows.Forms.Button();
-            this.labelRaport = new System.Windows.Forms.Label();
+            labelRaport = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -252,23 +252,23 @@
             this.buttonOptymalizacja.TabIndex = 12;
             this.buttonOptymalizacja.Text = "Opt";
             this.buttonOptymalizacja.UseVisualStyleBackColor = true;
-            
             // 
             // labelRaport
             // 
-            this.labelRaport.AutoSize = true;
-            this.labelRaport.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelRaport.Location = new System.Drawing.Point(12, 448);
-            this.labelRaport.Name = "labelRaport";
-            this.labelRaport.Size = new System.Drawing.Size(0, 19);
-            this.labelRaport.TabIndex = 13;
+            labelRaport.AutoSize = true;
+            labelRaport.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            labelRaport.Location = new System.Drawing.Point(12, 448);
+            labelRaport.Name = "labelRaport";
+            labelRaport.Size = new System.Drawing.Size(0, 19);
+            labelRaport.TabIndex = 13;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1604, 881);
-            this.Controls.Add(this.labelRaport);
+            this.Controls.Add(labelRaport);
             this.Controls.Add(this.buttonOptymalizacja);
             this.Controls.Add(this.buttonWczytajGrafik);
             this.Controls.Add(this.buttonZapiszGrafik);
@@ -282,7 +282,7 @@
             this.Controls.Add(this.buttonDodajOsoby);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Przydzielanie funkcji";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Click += new System.EventHandler(this.formClick);
             this.ResumeLayout(false);
@@ -304,7 +304,7 @@
         private System.Windows.Forms.Button buttonZapiszGrafik;
         private System.Windows.Forms.Button buttonWczytajGrafik;
         private System.Windows.Forms.Button buttonOptymalizacja;
-        private System.Windows.Forms.Label labelRaport;
+        private static System.Windows.Forms.Label labelRaport;
     }
 }
 
