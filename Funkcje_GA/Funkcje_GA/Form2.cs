@@ -35,15 +35,14 @@ namespace Funkcje_GA
             try
             {
                 //Tworzymy osobę z pierwszym wolnym numerem i danymi takimi, jakie zostały wprowadzone do boxów. Dodajemy nową osobę do listy osób. Wyświetlamy numery istniejących w systemie osób.
-                Form1.EmployeeManagement.EmployeeAdd(textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                employeeManager.EmployeeAdd(textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
                 UpdateListBoxNumerOsoby();
             }
 
             //Sprawdzamy, czy nie została osiągnięta maksymalna liczba osób w systemie.
             catch (TooManyEmployeesException)
             {
-                MessageBox.Show("Maksymalna liczba pracowników to " + Form1.MAX_LICZBA_OSOB.ToString() + ".");
-                return;
+                MessageBox.Show("Maksymalna liczba pracowników to " + MAX_LICZBA_OSOB.ToString() + ".");
             }
 
             //Obsługa wyjątku: niepoprawne dane.
@@ -59,9 +58,9 @@ namespace Funkcje_GA
             //Zczytujemy z listBoxa numer osoby i próbujemy edytować dane. Jeśli się udało, wyświetlamy informację.
             try
             {
-                int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1;
-                Form1.EmployeeManagement.EmployeeEdit(Form1.osoby[nrOsoby], textBoxImie.Text, textBoxNazwisko.Text, Form1.osoby[nrOsoby].wymiarEtatu, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
-                MessageBox.Show("Zmieniono dane pracownika: " + Form1.osoby[nrOsoby].numer.ToString() + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie + " " + Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko);
+                int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
+                employeeManager.EmployeeEdit(employeeManager.GetEmployeeById(nrOsoby).First(), textBoxImie.Text, textBoxNazwisko.Text, employeeManager.GetEmployeeById(nrOsoby).First().WymiarEtatu, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                MessageBox.Show("Zmieniono dane pracownika: " + employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString() + " " + employeeManager.GetEmployeeById(nrOsoby).First().Imie + " " + employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko);
             }
 
             //Obsługa wyjątku: osoba nie istnieje.
@@ -86,17 +85,19 @@ namespace Funkcje_GA
         //Zapisujemy dane pracowników do pliku "Pracownicy.txt" i zamykamy Form2.
         private void buttonSaveAndQuit_Click(object sender, EventArgs e)
         {
-            Form1.FileManagementPracownicy.ZapiszPracownikow("Pracownicy.txt");
+            FileManagementPracownicy.ZapiszPracownikow("Pracownicy.txt");
             this.Close();
         }
 
         //Usuwamy wybraną osobę.
         private void buttonUsun_Click(object sender, EventArgs e)
         {
+            int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
+
             //Usuwamy osobę. Wyświetlamy numery istniejących w systemie osób.
             try
             {
-                Form1.EmployeeManagement.EmployeeDelete(Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1]);
+                employeeManager.EmployeeDelete(employeeManager.GetEmployeeById(nrOsoby).First());
                 UpdateListBoxNumerOsoby();
             }
 
@@ -113,14 +114,16 @@ namespace Funkcje_GA
         //Wyświetlamy dane wybranej osoby.
         private void listBoxNumerOsoby_SelectedIndexChanged(object sender, EventArgs e)
         {
+            int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
+
             //Jeśli osoba istnieje w systemie to wyświetlamy jej numer.
-            if (Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1] != null)
+            if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
             {
-                textBoxImie.Text = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].imie;
-                textBoxNazwisko.Text = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].nazwisko;
-                numericUpDownZaleglosci.Value = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].zaleglosci;
-                checkBoxCzyTriazDzien.Checked = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazDzien;
-                checkBoxCzyTriazNoc.Checked = Form1.osoby[Convert.ToInt32(listBoxNumerOsoby.SelectedItem) - 1].czyTriazNoc;
+                textBoxImie.Text = employeeManager.GetEmployeeById(nrOsoby).First().Imie;
+                textBoxNazwisko.Text = employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko;
+                numericUpDownZaleglosci.Value = employeeManager.GetEmployeeById(nrOsoby).First().Zaleglosci;
+                checkBoxCzyTriazDzien.Checked = employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazDzien;
+                checkBoxCzyTriazNoc.Checked = employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazNoc;
 
             }
         }
@@ -130,10 +133,11 @@ namespace Funkcje_GA
         {
             //Usuń wszytskie numery. Jeśli osoba jest w systemie to dodaj jej numer.
             listBoxNumerOsoby.Items.Clear();
-            for (int nrOsoby = 0; nrOsoby < Form1.MAX_LICZBA_OSOB; nrOsoby++)
+            for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
             {
-                if (Form1.osoby[nrOsoby] != null)
-                    listBoxNumerOsoby.Items.Add(Form1.osoby[nrOsoby].numer.ToString());
+                if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+                    listBoxNumerOsoby.Items.Add(employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString());
+
             }
         }
     }

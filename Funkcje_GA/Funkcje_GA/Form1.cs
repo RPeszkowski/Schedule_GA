@@ -15,6 +15,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,16 +24,76 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using static Funkcje_GA.Form1;
 
-namespace Funkcje_GA
+namespace Funkcje_GA          
 
 {
     public partial class Form1 : Form
     {
-        //Ta klasa odpowiada za dodawanie, usuwanie i edytowanie danych o pracownikach.
-        public class EmployeeManagement
+        //Ten interfejs odpowiada za połączenie klasy EmployeeManagement z resztą kodu.
+        public interface IEmployees
         {
+            IEnumerable<Employee> GetAllEmployees();
+            IEnumerable<Employee> GetAllEmployeesNotNull();
+            IEnumerable<Employee> GetEmployeeById(int numer);
+        }
+
+        //Ten interfejs odpowiada za połączenie klasy ShiftManagement z resztą kodu.
+        public interface IShift
+        {
+            IEnumerable<Shift> GetShiftById(int id);
+        }
+
+        //Obiekty tej klasy to pracownicy.
+        public class Employee
+        {
+            public int Numer { get; set; }                  //Numer osoby.
+            public string Imie { get; set; }                //Imię osoby.
+            public string Nazwisko { get; set; }            //Nazwisko osoby.
+            public double WymiarEtatu { get; set; }         //Wymiar etatu osoby.
+            public int Zaleglosci { get; set; }             //Zaległości osoby.
+            public bool CzyTriazDzien { get; set; }         //Czy osobie można przydzielać triaż na dziennej zmianie?
+            public bool CzyTriazNoc { get; set; }           //Czy osobie można przydzielać triaż na nocnej zmianie?
+
+            //Konstruktor
+            public Employee(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
+            {
+                this.Numer = numer;
+                this.Imie = imie;
+                this.Nazwisko = nazwisko;
+                this.WymiarEtatu = wymiarEtatu;
+                this.Zaleglosci = zaleglosci;
+                this.CzyTriazDzien = czyTriazDzien;
+                this.CzyTriazNoc = czyTriazNoc;
+            }
+        }
+
+        //Ta klasa odpowiada za zarządzanie pracownikami.
+        public class EmployeeManagement : IEmployees
+        {
+            private readonly List<Employee>  employees;          //Deklaracja listy pracowników.
+
+            //Konstruktor.
+            public EmployeeManagement()
+            {
+                //Tworzymy listę i wypełniamy wartościami null.
+                employees = new List<Employee>(MAX_LICZBA_OSOB);            //Lista pracowników.
+                for (int i = 0; i < MAX_LICZBA_OSOB; i++)
+                {
+                    employees.Add(null);
+                }
+            }
+
+            //Interfejs do wybierani wszystkich pracowników.
+            public IEnumerable<Employee> GetAllEmployees() => employees;
+
+            //Interfejs do wybierani wszystkich pracowników (tylko pola niepuste).
+            public IEnumerable<Employee> GetAllEmployeesNotNull() => employees.Where(emp => emp != null);
+
+            //Interfejs do wybierania pracowników.
+            public IEnumerable<Employee> GetEmployeeById(int numer) => employees.Where(emp => (emp != null && emp.Numer == numer));
+
             //Usuwanie pracownika.
-            public static void EmployeeDelete(Osoba osoba)
+            public void EmployeeDelete(Employee employee)
             {
                 //Próbujemy usunąć osobę z grafiku.
                 try
@@ -44,7 +105,7 @@ namespace Funkcje_GA
                         for (int j = 0; j < listBoxesDzien[i].Items.Count; j++)
                         {
 
-                            if (listBoxesDzien[i].GetNumber(j) == osoba.numer)
+                            if (listBoxesDzien[i].GetNumber(j) == employee.Numer)
                             {
                                 listBoxesDzien[i].Items.RemoveAt(j);
                                 listBoxesDzien[i].Refresh();
@@ -54,7 +115,7 @@ namespace Funkcje_GA
                         //Usuwamy dyżury nocne.
                         for (int j = 0; j < listBoxesNoc[i].Items.Count; j++)
                         {
-                            if (listBoxesNoc[i].GetNumber(j) == osoba.numer)
+                            if (listBoxesNoc[i].GetNumber(j) == employee.Numer)
                             {
                                 listBoxesNoc[i].Items.RemoveAt(j);
                                 listBoxesNoc[i].Refresh();
@@ -62,10 +123,9 @@ namespace Funkcje_GA
                         }
                     }
 
-                    //Usuwamy etykietę, dekrementujemy ilość osób, usuwamy osobę, na koniec wyświetlamy komunikat.
-                    labelsPracownicy[osoba.numer - 1].Text = "";
-                    liczbaOsob--;
-                    osoby[osoba.numer - 1] = null;
+                    //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
+                    labelsPracownicy[employee.Numer - 1].Text = "";
+                    employees[employee.Numer - 1] = null;
                     MessageBox.Show("Usunięto dane pracownika.");
                 }
 
@@ -74,12 +134,12 @@ namespace Funkcje_GA
             }
 
             //Dodawanie nowego pracownika.
-            public static void EmployeeAdd(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
+            public void EmployeeAdd(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
             {
                 //Dodawanie pracownika o konkretnym numerze.
                 //Sprawdzamy, czy nie osiągnięto maksymalne liczby pracowników.
-                if (liczbaOsob >= MAX_LICZBA_OSOB)
-                    throw new TooManyEmployeesException("Liczba osób wynosi obecnie " + liczbaOsob.ToString() + " podczas, gdy maksimum to " + MAX_LICZBA_OSOB.ToString() + " .");
+                if (employeeManager.GetAllEmployeesNotNull().Count() >= MAX_LICZBA_OSOB)
+                    throw new TooManyEmployeesException("Liczba osób wynosi obecnie " + employeeManager.GetAllEmployeesNotNull().Count().ToString() + " podczas, gdy maksimum to " + MAX_LICZBA_OSOB.ToString() + " .");
 
                 //Sprawdzamy, czy numer osoby jest poprawny.
                 if (numer > 0 && numer >= MAX_LICZBA_OSOB)
@@ -93,18 +153,17 @@ namespace Funkcje_GA
                 else if (imie == "" || nazwisko == "")
                     throw new InvalidDataException("Imię i nazwisko nie mogą mogą być puste.");
 
-                //Tworzymy nową osobę, sprawdzamy, czy numer jest poprawny, dodajemy do tabeli, inkrementujemy liczbę osóbi pdświeżamy etykietę.
-                Osoba newOsoba = new Osoba(numer, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
-                osoby[numer - 1] = newOsoba;
-                liczbaOsob = liczbaOsob++;
-                UpdateEmployeeLabel(osoby[numer - 1]);
+                //Tworzymy nową osobę, sprawdzamy, czy numer jest poprawny, dodajemy do tabeli.
+                Employee newEmployee = new Employee(numer, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
+                employees[numer - 1] = newEmployee;
+                UpdateEmployeeLabel(employees[numer - 1]);
             }
-            public static void EmployeeAdd(string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
+            public void EmployeeAdd(string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
             {
                 //Dodawanie pracownika o pierwszym wolnym numerze.
                 //Sprawdzamy, czy nie osiągnięto maksymalne liczby pracowników.
-                if (liczbaOsob >= MAX_LICZBA_OSOB)
-                    throw new TooManyEmployeesException("Liczba osób wynosi obecnie " + liczbaOsob.ToString() + " podczas, gdy maksimum to " + MAX_LICZBA_OSOB.ToString() + " .");
+                if (employeeManager.GetAllEmployeesNotNull().Count() >= MAX_LICZBA_OSOB)
+                    throw new TooManyEmployeesException("Liczba osób wynosi obecnie " + employeeManager.GetAllEmployeesNotNull().Count().ToString() + " podczas, gdy maksimum to " + MAX_LICZBA_OSOB.ToString() + " .");
 
                 //Sprawdzamy, czy imię i nazwisko nie zawierają spacji.
                 if (imie.Contains(' ') || nazwisko.Contains(' '))
@@ -118,43 +177,43 @@ namespace Funkcje_GA
                 int wolnyNumer = MAX_LICZBA_OSOB - 1;
                 for (int i = MAX_LICZBA_OSOB - 1; i >= 0; i--)
                 {
-                    if (osoby[i] == null)
+                    if (employees[i] == null)
                         wolnyNumer = i;
                 }
 
-                //Tworzymy nową osobę, sprawdzamy, dodajemy do tabeli, inkrementujemy liczbę osób i pdświeżamy etykietę.
-                Osoba newOsoba = new Osoba(wolnyNumer + 1, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
-                osoby[wolnyNumer] = newOsoba;
-                liczbaOsob = liczbaOsob++;
-                UpdateEmployeeLabel(osoby[wolnyNumer]);
+                //Tworzymy nową osobę, sprawdzamy, dodajemy do tabeli i pdświeżamy etykietę.
+                Employee newEmployee = new Employee(wolnyNumer + 1, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
+                employees[wolnyNumer] = newEmployee;
+                UpdateEmployeeLabel(employees[wolnyNumer]);
             }
 
             //Edycja danych pracownika.
-            public static void EmployeeEdit(Osoba osoba, double wymiarEtatu)
+            public void EmployeeEdit(Employee employee, double wymiarEtatu)
             {
                 //Edycja danych jednej osoby. Tylko wymiar etatu.
-                if (osoba != null)
-                {
-                    osoba.wymiarEtatu = wymiarEtatu;
-                    UpdateEmployeeLabel(osoba);
-                }
+                //Sprawdzamy, czy osoba istnieje.
+                if (employee == null)
+                    throw new NullReferenceException("Dana osoba nie istnieje");
+
+                employee.WymiarEtatu = wymiarEtatu;
+                UpdateEmployeeLabel(employee);
             }
-            public static void EmployeeEdit(Osoba[] osoby, double wymiarEtatu)
+            public void EmployeeEdit(double wymiarEtatu)
             {
                 //Edycja danych wszystkich osób. Tylko wymiar etatu.
-                foreach (Osoba osoba in osoby)
+                foreach (Employee employee in employees)
                 {
-                    if (osoba != null)
-                        osoba.wymiarEtatu = wymiarEtatu;
+                    if (employee != null)
+                        employee.WymiarEtatu = wymiarEtatu;
                 }
 
-                UpdateEmployeeLabel(osoby);
+                UpdateEmployeeLabel();
             }
-            public static void EmployeeEdit(Osoba osoba, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
+            public void EmployeeEdit(Employee employee, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
             {
                 //Edycja danych jednej osoby. Pełne dane.
                 //Sprawdzamy, czy osoba istnieje.
-                if (osoba == null)
+                if (employee == null)
                     throw new NullReferenceException("Dana osoba nie istnieje");
 
                 //Sprawdzamy, czy imię i nazwisko nie zawierają spacji.
@@ -165,151 +224,188 @@ namespace Funkcje_GA
                 else if (imie == "" || nazwisko == "")
                     throw new InvalidDataException("Imię i nazwisko nie mogą mogą być puste.");
 
-                osoba.imie = imie;
-                osoba.nazwisko = nazwisko;
-                osoba.wymiarEtatu = wymiarEtatu;
-                osoba.zaleglosci = zaleglosci;
-                osoba.czyTriazDzien = czyTriazDzien;
-                osoba.czyTriazNoc = czyTriazNoc;
-                UpdateEmployeeLabel(osoba);
+                employee.Imie = imie;
+                employee.Nazwisko = nazwisko;
+                employee.WymiarEtatu = wymiarEtatu;
+                employee.Zaleglosci = zaleglosci;
+                employee.CzyTriazDzien = czyTriazDzien;
+                employee.CzyTriazNoc = czyTriazNoc;
+                UpdateEmployeeLabel(employee);
             }
-
+            
             //Wyświetlanie informacji o pracowniku na etykiecie.
-            public static void UpdateEmployeeLabel(Osoba osoba)
+            public void UpdateEmployeeLabel(Employee employee)
             {
                 //Aktualizujemy pojedynczą etykietę.
-                labelsPracownicy[osoba.numer - 1].Text = osoba.numer.ToString() + ". " + osoba.imie + " " + osoba.nazwisko + " " + osoba.wymiarEtatu.ToString() + " " + osoba.zaleglosci.ToString();
+                labelsPracownicy[employee.Numer - 1].Text = employee.Numer.ToString() + ". " + employee.Imie + " " + employee.Nazwisko + " " + employee.WymiarEtatu.ToString() + " " + employee.Zaleglosci.ToString();
 
                 //Jeśli osoba jest stażystą to podświetlamy.
-                if (!(osoba.czyTriazDzien && osoba.czyTriazNoc))
-                    labelsPracownicy[osoba.numer - 1].ForeColor = Color.Orange;
+                if (!(employee.CzyTriazDzien && employee.CzyTriazNoc))
+                    labelsPracownicy[employee.Numer - 1].ForeColor = Color.Orange;
 
                 else
-                    labelsPracownicy[osoba.numer - 1].ForeColor = Color.Black;
+                    labelsPracownicy[employee.Numer - 1].ForeColor = Color.Black;
             }
-            public static void UpdateEmployeeLabel(Osoba[] osoby)
+            public void UpdateEmployeeLabel()
             {
                 //Aktualizujemy wszystkie etykiety.
-                foreach (Osoba osoba in osoby)
+                foreach (Employee employee in employees)
                 {
-                    if (osoba != null)
+                    if (employee != null)
                     {
                         //Aktualizujemy wszystkie etykiety.
-                        labelsPracownicy[osoba.numer - 1].Text = osoba.numer.ToString() + ". " + osoba.imie + " " + osoba.nazwisko + " " + osoba.wymiarEtatu.ToString() + " " + osoba.zaleglosci.ToString();
+                        labelsPracownicy[employee.Numer - 1].Text = employee.Numer.ToString() + ". " + employee.Imie + " " + employee.Nazwisko + " " + employee.WymiarEtatu.ToString() + " " + employee.Zaleglosci.ToString();
 
                         //Jeśli osoba jest stażystą to podświetlamy.
-                        if (!(osoba.czyTriazDzien && osoba.czyTriazNoc))
-                            labelsPracownicy[osoba.numer - 1].ForeColor = Color.Orange;
+                        if (!(employee.CzyTriazDzien && employee.CzyTriazNoc))
+                            labelsPracownicy[employee.Numer - 1].ForeColor = Color.Orange;
 
                         else
-                            labelsPracownicy[osoba.numer - 1].ForeColor = Color.Black;
+                            labelsPracownicy[employee.Numer - 1].ForeColor = Color.Black;
                     }
                 }
             }
         }
 
+        //Klasa odpowiada za zapis i odczyt danych grafiku do pliku "Grafik.txt".
         private class FileManagementGrafik
         {
+            //Metoda służy do wczytywania grafiku z pliku "Grafik.txt".
             public static void WczytajGrafik(string plik)
             {
-                string nrOsobNaJednejZmianie;
-                string[] osobyNaZmianieSplit;
-                string nrOsobyZFunkcja;
-                string nrOsobyBezFunkcji;
-                int nrOsoby;
-                bool flagBreak = false;
-                bool flagWarningBrakOsoby = false;
+                bool flagBreak = false;                 //Flaga do wychodzenia z zewnętrznej pętli for.
+                string linijka;                         //Wczytana linijka tekstu.
+                int nrOsoby;                            //Numer pojedynczej osoby bez znaczku funkcji.
+                string nrOsobyZFunkcja;                 //Numer pojedynczej osoby ze znaczkiem funkcji.
+                string nrOsobyBezFunkcji;               //Numer pojedynczej osoby bez znaczku funkcji.
+                string[] osobyNaZmianieSplit;           //Numery osób z funkcjami, rozdzielone.
 
-                UsunGrafik();
+                //Usuwamy grafik.
+                scheduleManager.RemoveAll();
 
+                //Próbujemy wczytać grafik.
                 try
                 {
-                    for (int i = 0; i < 2 * LICZBA_DNI; i++)
+                    //Wczytujemy po kolei każdą linijkę.
+                    for (int nrLinii = 0; nrLinii < 2 * LICZBA_DNI; nrLinii++)
                     {
-                        nrOsobNaJednejZmianie = File.ReadAllLines(plik).Skip(i).Take(1).First();
-                        osobyNaZmianieSplit = nrOsobNaJednejZmianie.Split(' ');
+                        //Wczytujemy linijke, dzielimy dane w miejscach, gdzie jest spacja.
+                        linijka = File.ReadAllLines(plik).Skip(nrLinii).Take(1).First();
+                        osobyNaZmianieSplit = linijka.Split(' ');
 
+                        //Dla każdego dyzuru w linijce dodajemy zmianę do grafiku.
                         for (int nrDyzuru = 0; nrDyzuru < osobyNaZmianieSplit.Length - 1; nrDyzuru++)
                         {
+                            //Wybieramy pojedynczy numer osoby.
                             nrOsobyZFunkcja = osobyNaZmianieSplit[nrDyzuru];
 
+                            //Próbujemy dodać osobę do grafiku.
                             try
                             {
+                                //Jeśli osoba ma przydzieloną salę lub triaż to usuwamy literkę.
                                 if (nrOsobyZFunkcja[nrOsobyZFunkcja.Length - 1] == 's' || nrOsobyZFunkcja[nrOsobyZFunkcja.Length - 1] == 't')
                                     nrOsobyBezFunkcji = nrOsobyZFunkcja.Remove(nrOsobyZFunkcja.Length - 1);
 
                                 else
                                     nrOsobyBezFunkcji = nrOsobyZFunkcja;
 
+                                //Conwertujemy numer osoby do inta.
                                 nrOsoby = Convert.ToInt32(nrOsobyBezFunkcji);
 
+                                //Sprawdzamy, czy numer osoby jest poprawny.
                                 if (nrOsoby < 1 || nrOsoby > MAX_LICZBA_OSOB)
-                                    throw new IndexOutOfRangeException("Numer osoby musi być liczbą naturalną z zakresu 1 - 50.");
+                                    throw new InvalidDataException("Numer osoby musi być liczbą naturalną z zakresu 1 - 50.");
 
-                                if (osoby[nrOsoby - 1] == null)
-                                    flagWarningBrakOsoby = true;
+                                //Sprawdzamy, czy osoba istnieje w bazie.
+                                else if (employeeManager.GetEmployeeById(nrOsoby).Count() < 1)
+                                    throw new InvalidDataException("Osoba nie istnieje w bazie pracowników");
 
+                                //Jeśli wszystko jest ok to dodajemy dyżur do grafiku.
                                 else
-                                    EmployeeManagement.EmployeeEdit(osoby[nrOsoby - 1], osoby[nrOsoby - 1].wymiarEtatu + 1.0);
+                                {
+                                    scheduleManager.AddToShift(nrLinii, nrOsoby);
+
+                                    if (nrOsobyZFunkcja[nrOsobyZFunkcja.Length - 1] == 's')
+                                        scheduleManager.ToSala(nrLinii, nrOsoby);
+                                    
+                                    if (nrOsobyZFunkcja[nrOsobyZFunkcja.Length - 1] == 't')
+                                        scheduleManager.ToTriaz(nrLinii, nrOsoby);
+                                }
                             }
 
+                            //Jeśli się nie udało wyświetlamy komunikat i wychodzimy z pętli z flagą flagBreak.
                             catch
                             {
-                                if (i < LICZBA_DNI)
-                                    MessageBox.Show("Nie udało się wczytać grafiku dla dnia: " + (i + 1).ToString() + " dyżur dzienny.");
+                                //Komunikat, gdy nie udało się wycztać dziennej zmiany.
+                                if (nrLinii < LICZBA_DNI)
+                                    MessageBox.Show("Nie udało się wczytać grafiku dla dnia: " + (nrLinii + 1).ToString() + " dyżur dzienny.");
 
+                                //Komunikat, gdy nie udało się wycztać nocnej zmiany.
                                 else
-                                    MessageBox.Show("Nie udało się wczytać grafiku dla dnia: " + (i + 1).ToString() + " dyżur nocny.");
+                                    MessageBox.Show("Nie udało się wczytać grafiku dla dnia: " + (nrLinii + 1 - LICZBA_DNI).ToString() + " dyżur nocny.");
 
-                                listBoxesDzien[i].Items.Clear();
+                                //Czyścimy grafik, ustawiamy flagę flagBreak, wychodzimy z pętli.
+                                scheduleManager.GetShiftById(nrLinii).First().Present_employees.Clear();
+                                scheduleManager.GetShiftById(nrLinii).First().Sala_employees.Clear();
+                                scheduleManager.GetShiftById(nrLinii).First().Triaz_employees.Clear();
                                 flagBreak = true;
                                 break;
                             }
-
-                            if (i < LICZBA_DNI)
-                                listBoxesDzien[i].Items.Add(osobyNaZmianieSplit[nrDyzuru]);
-
-                            else
-                                listBoxesNoc[i - LICZBA_DNI].Items.Add(osobyNaZmianieSplit[nrDyzuru]);
                         }
 
+                        //Jeśli nie udało się wczytać grafiku wychodzimy z pętli i przerywamy działanie programu.
                         if (flagBreak)
                             break;
                     }
                 }
 
+                //Jeśli się nie udało, to wyświetlamy komunikat i czyścimy grafik.
                 catch
                 {
                     MessageBox.Show("Nie udało się wczytać grafiku.");
-                    UsunGrafik();
-                }
-
-                finally
-                {
-                    if (flagWarningBrakOsoby)
-                        MessageBox.Show("W grafiku są osoby, których nie ma w aktualnej bazie pracowników.");
+                    scheduleManager.RemoveAll();
                 }
             }
+
+            //Metoda służy do zapisywania grafiku do pliku "Grafik.txt".
             public static void ZapiszGrafik(string plik)
             {
+                //Czyśicmy plik, a jeśli nie istniał to go tworzymy.
                 File.WriteAllText(plik, "");
-                foreach (ListBoxGrafik listBoxDzien in listBoxesDzien)
+
+                //Każda zmiana odpowiada jednej linijce tekstu w pliku.
+                for (int nrZmiany = 0; nrZmiany < 2*LICZBA_DNI; nrZmiany++)
                 {
-                    string str = "";
-                    for (int i = 0; i < listBoxDzien.Items.Count; i++)
-                        str = str + listBoxDzien.Items[i].ToString() + " ";
+                    string str = "";                                //Linijka odpowiadająca jednej zmianie.
+                    int nrOsoby;                                    //Numer osoby.
+                    //Jeżeli zmiana jest obsadzona t oformatujemy string.
+                    if(scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count > 0)
+                    {
+                        for (int j = 0; j < scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count; j++)
+                        {
+                            //Pobieramy numer osoby. Jeśli ma salę to dopisujemy "s" plus spacja.
+                            nrOsoby = scheduleManager.GetShiftById(nrZmiany).First().Present_employees[j].Numer;
+                            if (scheduleManager.GetShiftById(nrZmiany).First().Sala_employees.Contains(employeeManager.GetEmployeeById(nrOsoby).First()))
+                                str = str + nrOsoby.ToString() + "s ";
 
-                    str += "\n";
-                    File.AppendAllText(plik, str);
-                }
+                            //Jeśli osoba ma triaż to dopisujemy "t" plus spacja.
+                            else if (scheduleManager.GetShiftById(nrZmiany).First().Triaz_employees.Contains(employeeManager.GetEmployeeById(nrOsoby).First()))
+                                str = str + nrOsoby.ToString() + "t ";
 
-                foreach (ListBoxGrafik listBoxNoc in listBoxesNoc)
-                {
-                    string str = "";
-                    for (int i = 0; i < listBoxNoc.Items.Count; i++)
-                        str = str + listBoxNoc.Items[i].ToString() + " ";
+                            //Jeśli osoba jest bez funkcji to dopisujemy spację.
+                            else
+                                str = str + nrOsoby.ToString() + " ";
+                        }
 
-                    str += "\n";
+                        //Na koniec dopisujemy przejście do nowej linii.
+                        str += "\n";
+                    }
+
+                    //Jeżeli zmiana nie jest obsadzona, to linijka tekstu ma postać jak poniżej.
+                    else
+                        str += "\n";
+
+                    //Zapisujemy linijkę tekstu.
                     File.AppendAllText(plik, str);
                 }
             }
@@ -327,8 +423,17 @@ namespace Funkcje_GA
                     string[] LiniaSplit;                    //Wczytana linijka, wyrazy oddzielone spacją.
 
                     //Wczytujemy linijkę tekstu i rozdzielamy wyrazy.
-                    wczytanaLinia = File.ReadAllLines(plik).Skip(nrLinii).Take(1).First();
-                    LiniaSplit = wczytanaLinia.Split(' ');
+                    try
+                    {
+                        wczytanaLinia = File.ReadAllLines(plik).Skip(nrLinii).Take(1).First();
+                        LiniaSplit = wczytanaLinia.Split(' ');
+                    }
+
+                    catch
+                    {
+                        MessageBox.Show("Plik Pracownicy.txt jest uszkodzony. Napraw go lub usuń.");
+                        return;
+                    }
 
                     //Próbujemy sprawdzić numer wczytanego pracownika.
                     if (Int32.TryParse(LiniaSplit[pracownicy_txt["NUMER"]], out int numer))
@@ -337,9 +442,11 @@ namespace Funkcje_GA
                         try
                         {
                             //Dodajemy nowego pracownika.
-                            EmployeeManagement.EmployeeAdd(numer, LiniaSplit[pracownicy_txt["IMIE"]], LiniaSplit[pracownicy_txt["NAZWISKO"]], 0.0,
-                            Convert.ToInt32(LiniaSplit[pracownicy_txt["ZALEGLOSCI"]]), Convert.ToBoolean(LiniaSplit[pracownicy_txt["TRIAZ_DZIEN"]]),
-                            Convert.ToBoolean(LiniaSplit[pracownicy_txt["TRIAZ_NOC"]]));
+                            employeeManager.EmployeeAdd(numer, LiniaSplit[pracownicy_txt["IMIE"]], 
+                                                        LiniaSplit[pracownicy_txt["NAZWISKO"]], 0.0,
+                                                        Convert.ToInt32(LiniaSplit[pracownicy_txt["ZALEGLOSCI"]]),
+                                                        Convert.ToBoolean(LiniaSplit[pracownicy_txt["TRIAZ_DZIEN"]]),
+                                                        Convert.ToBoolean(LiniaSplit[pracownicy_txt["TRIAZ_NOC"]]));
                         }
 
                         //Obsługa wyjątku: osiągnięto maksymalną liczbę pracowników.
@@ -380,14 +487,17 @@ namespace Funkcje_GA
                 File.WriteAllText(plik, "");
 
                 //Dla każdej osoby (jeśli istnieje) dopisujemy nową linijkę do pliku z danymi pracownika. Jeśli nie istnieje wpisujemy pustą linijkę.
-                for (int nrOsoby = 0; nrOsoby < MAX_LICZBA_OSOB; nrOsoby++)
+                for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
                 {
                     //Jeśli osoba istnieje to wpisz dane.
-                    if (osoby[nrOsoby] != null)
+                    if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
                     {
-                        string danePracownika = osoby[nrOsoby].numer.ToString() + " " + osoby[nrOsoby].imie + " " + osoby[nrOsoby].nazwisko + " "
-                                              + osoby[nrOsoby].zaleglosci.ToString() + " " + osoby[nrOsoby].czyTriazDzien.ToString() + " "
-                                              + osoby[nrOsoby].czyTriazNoc.ToString() + "\n";
+                        string danePracownika = employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString() + " " 
+                                              + employeeManager.GetEmployeeById(nrOsoby).First().Imie + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).First().Zaleglosci.ToString() + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazDzien.ToString() + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazNoc.ToString() + "\n";
                         File.AppendAllText(plik, danePracownika);
                     }
 
@@ -398,127 +508,182 @@ namespace Funkcje_GA
             }
         }
 
+        //Ta klasa zawiera ListBoxy przedstawiające grafik.
         private class ListBoxGrafik : ListBox
         {
+            //Zwraca funkcję danej osoby. 0 - bez funkcji, 1 - sala, 2 - triaż.
             public int GetFunction(int index)
             {
-                int nrFunkcji = -1;
-                string str = this.Items[index].ToString();
-                if (this.Items != null)
+                //Sprawdzamy poprawność danych.
+                try
                 {
-                    if (str[str.Length - 1] == 's')
-                        nrFunkcji = 1;
-
-                    else if (str[str.Length - 1] == 't')
-                        nrFunkcji = 2;
-
-                    else
-                    {
-                        try
-                        {
-                            Convert.ToInt32(str);
-                            nrFunkcji = 0;
-                        }
-                        catch { }
-                    }
+                    CheckData(index);
                 }
+
+                //Jeśli dane są błędne to wyświetlamy komunikat.
+                catch
+                {
+                    MessageBox.Show("Zły format danych grafiku.");
+                }
+
+                int nrFunkcji;                                      //Numer funkcji. 0 - bez funkcji, 1 - sala, 2 - triaż.
+                string str = this.Items[index].ToString();          //Numer osoby, ewentualnie z dodatkową literą.
+
+                //Jeśli funkcja to sala zwracamy 1.
+                if (str[str.Length - 1] == 's')
+                    nrFunkcji = 1;
+
+                //Jeśli funkcja to triaż zwracamy 2.
+                else if (str[str.Length - 1] == 't')
+                    nrFunkcji = 2;
+
+                //Jeśli nie ma funkcj izwracamy 0.
+                else
+                    nrFunkcji = 0;
+
+                //Zwracamy wartość.
                 return nrFunkcji;
             }
 
+            //Zwraca numer osoby wskazanej przez index.
             public int GetNumber(int index)
             {
-                int number;
-                string str = this.Items[index].ToString();
-                if (this.Items != null)
+                //Sprawdzamy poprawność danych.
+                try
                 {
-                    if (str[str.Length - 1] == 's')
-                        str = str.Remove(str.Length - 1);
-
-                    if (str[str.Length - 1] == 't')
-                        str = str.Remove(str.Length - 1);
-
-                    try
-                    {
-                        number = Convert.ToInt32(str);
-                    }
-
-                    catch { number = -1; }
-                    ;
+                    CheckData(index);
                 }
-                else number = -1;
 
+                //Jeśli dane są błędne to wyświetlamy komunikat.
+                catch
+                {
+                    MessageBox.Show("Zły format danych grafiku.");
+                }
+
+                int number;                                         //Numer pracownika.
+                string str = this.Items[index].ToString();          //Wartość pobrana z listBoxa przerobiona na string.
+
+                //Jeśli jest literka s lub t to ją usuwamy. Konwertujemy do int.
+                if (str[str.Length - 1] == 's')
+                    str = str.Remove(str.Length - 1);
+
+                if (str[str.Length - 1] == 't')
+                    str = str.Remove(str.Length - 1);
+
+                number = Convert.ToInt32(str);
+
+                //Zwracamy numer osoby.
                 return number;
             }
 
+            //Zmienia funkcję wybranej osoby na bez funkcji.
             public void ToBezFunkcji(int index)
             {
-                string str = this.Items[index].ToString();
-                if (this.Items != null)
+                //Sprawdzamy poprawność danych.
+                try
                 {
-                    if (str[str.Length - 1] == 's' || str[str.Length - 1] == 't')
-                        str = str.Remove(str.Length - 1);
-
-                    this.Items[index] = str;
+                    CheckData(index);
                 }
+
+                //Jeśli dane są błędne to wyświetlamy komunikat.
+                catch
+                {
+                    MessageBox.Show("Zły format danych grafiku.");
+                }
+
+                string str = this.Items[index].ToString();                          //Wartość pobrana z listBoxa przerobiona na string.
+
+                //Jeśli jest literka s lub t to ją usuwamy i podmieniamy item w listBoxie.
+                if (str[str.Length - 1] == 's' || str[str.Length - 1] == 't')
+                    str = str.Remove(str.Length - 1);
+
+                this.Items[index] = str;
             }
 
+            //Zmienia funkcję wybranej osoby na salę.
             public void ToSala(int index)
             {
-                string str = this.Items[index].ToString();
-                if (this.Items != null)
+                //Sprawdzamy poprawność danych.
+                try
                 {
-                    if (str[str.Length - 1] == 's')
-                        this.Items[index] = str;
-
-                    else if (str[str.Length - 1] == 't')
-                    {
-                        str = str.Remove(str.Length - 1);
-                        this.Items[index] = str + 's';
-                    }
-                    else this.Items[index] = str + 's';
+                    CheckData(index);
                 }
+
+                //Jeśli dane są błędne to wyświetlamy komunikat.
+                catch
+                {
+                    MessageBox.Show("Zły format danych grafiku.");
+                }
+
+                string str = this.Items[index].ToString();              //Wartość pobrana z listBoxa przerobiona na string.
+
+                //Jeśli jest literka s to nic nie robimy.
+                if (str[str.Length - 1] == 's')
+                    this.Items[index] = str;
+
+                //Jeśli jest literka t to podmieniamy na s.
+                else if (str[str.Length - 1] == 't')
+                {
+                    str = str.Remove(str.Length - 1);
+                    this.Items[index] = str + 's';
+                }
+
+                //Jeśli nie ma literki to dopisujemy s.
+                else this.Items[index] = str + 's';
             }
 
+            //Zmienia funkcję wybranej osoby na triaż.
             public void ToTriaz(int index)
             {
-                string str = this.Items[index].ToString();
-                if (this.Items != null)
+                //Sprawdzamy poprawność danych.
+                try
                 {
-                    if (str[str.Length - 1] == 't')
-                        this.Items[index] = str;
-
-                    else if (str[str.Length - 1] == 's')
-                    {
-                        str = str.Remove(str.Length - 1);
-                        this.Items[index] = str + 't';
-                    }
-                    else this.Items[index] = str + 't';
+                    CheckData(index);
                 }
+
+                //Jeśli dane są błędne to wyświetlamy komunikat.
+                catch
+                {
+                    MessageBox.Show("Zły format danych grafiku.");
+                }
+
+                string str = this.Items[index].ToString();                  //Wartość pobrana z listBoxa przerobiona na string.
+
+                //Jeśli jest literka t to nic nie robimy.
+                if (str[str.Length - 1] == 't')
+                    this.Items[index] = str;
+
+                //Jeśli jest literka s to podmieniamy na t.
+                else if (str[str.Length - 1] == 's')
+                { 
+                    str = str.Remove(str.Length - 1);
+                    this.Items[index] = str + 't';
+                }
+
+                //Jeśli nie ma literki to dopisujemy t.
+                else this.Items[index] = str + 't';
             }
 
-        }
-
-        //Obiekty tej klasy to pracownicy.
-        public class Osoba
-        {
-            public int numer;               //Numer osoby.
-            public string imie;             //Imię osoby.
-            public string nazwisko;         //Nazwisko osoby.
-            public double wymiarEtatu;      //Wymiar etatu osoby.
-            public int zaleglosci;          //Zaległości osoby.
-            public bool czyTriazDzien;      //Czy osobie można przydzielać triaż na dziennej zmianie?
-            public bool czyTriazNoc;        //Czy osobie można przydzielać triaż na nocnej zmianie?
-
-            //Konstruktor
-            public Osoba(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
+            //Sprawdzamy poprawność danych.
+            private void CheckData(int index)
             {
-                this.numer = numer;
-                this.imie = imie;
-                this.nazwisko = nazwisko;
-                this.wymiarEtatu = wymiarEtatu;
-                this.zaleglosci = zaleglosci;
-                this.czyTriazDzien = czyTriazDzien;
-                this.czyTriazNoc = czyTriazNoc;
+                //Sprawdzamy, czy wybrany item istnieje.
+                if (this.Items == null)
+                    throw new InvalidDataException("ListBox " + this.Name + " nie zawiera elementów.");
+
+                //Pobieramy item jako string.
+                string str = this.Items[index].ToString();
+
+                //Sprawdzamy, czy item nie jest pusty.
+                if (str == "")
+                    throw new InvalidDataException("Element " + index.ToString() + " ListBoxa " + this.Name + " jest pusty.");
+
+                //Sprawdzamy, czy item jest liczbą z ewentualną literą s lub t.
+                if (!Int32.TryParse(str, out int number))
+                {
+                    if (str[str.Length - 1] != 's' && str[str.Length - 1] != 't')
+                        throw new InvalidDataException("Niepoprawne dane " + str + " w ListBoxie" + this.Name + " .");
+                }
             }
         }
 
@@ -528,7 +693,7 @@ namespace Funkcje_GA
             private class Osobnik
             {
                 public bool[] genom;            //Rozwiązanie związane z danym osobnikiem.
-                public decimal wartosc;         //Wartośćfunkcji celu dla danego rozwiązania.
+                public decimal wartosc;         //Wartość funkcji celu dla danego rozwiązania.
 
                 //Konstruktor.
                 public Osobnik(bool[] genotyp, decimal wartosc)
@@ -553,6 +718,7 @@ namespace Funkcje_GA
             public static readonly FunkcjaCeluUchwyt handler = new FunkcjaCeluUchwyt(FunkcjaCelu);
 
             private static int[] dyzuryGrafik;
+            private static Employee[] employees = employees = employeeManager.GetAllEmployees().ToArray();
             private static int[] liczbaDyzurow;
             private static int[] nieTriazDzien;
             private static int[] nieTriazNoc;
@@ -586,16 +752,16 @@ namespace Funkcje_GA
 
                         if (i < LICZBA_DNI)
                         {
-                            listBoxesDzien[i].ToSala(nrSala);
-                            listBoxesDzien[i].ToTriaz(nrTriaz1);
-                            listBoxesDzien[i].ToTriaz(nrTriaz2);
+                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).First().Present_employees[nrSala].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz1].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz2].Numer);
                         }
 
                         else
                         {
-                            listBoxesNoc[i - LICZBA_DNI].ToSala(nrSala);
-                            listBoxesNoc[i - LICZBA_DNI].ToTriaz(nrTriaz1);
-                            listBoxesNoc[i - LICZBA_DNI].ToTriaz(nrTriaz2);
+                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).First().Present_employees[nrSala].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz1].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz2].Numer);
                         }
                     }
                 }
@@ -620,8 +786,8 @@ namespace Funkcje_GA
 
                 for (int i = 0; i < MAX_LICZBA_OSOB; i++)
                 {
-                    if (osoby[i] != null)
-                        dyzuryRozstaw[i] = new bool[Convert.ToInt32(osoby[i].wymiarEtatu)];
+                    if (employees[i] != null)
+                        dyzuryRozstaw[i] = new bool[Convert.ToInt32(employees[i].WymiarEtatu)];
 
                     else
                         dyzuryRozstaw[i] = new bool[0];
@@ -847,63 +1013,25 @@ namespace Funkcje_GA
 
             private static int[] ListaNieTiazDzien()
             {
-                int nieTriazDzienNumber = 0;
-                foreach (Osoba iter in osoby)
-                {
-                    if (iter != null)
-                    {
-                        if (!iter.czyTriazDzien)
-                            nieTriazDzienNumber++;
-                    }
-                }
-
-                int[] nieTriazDzien = new int[nieTriazDzienNumber];
-                int iter1 = 0;
-                foreach (Osoba iter in osoby)
-                {
-                    if (iter != null)
-                    {
-                        if (!iter.czyTriazDzien)
-                        {
-                            nieTriazDzien[iter1] = iter.numer;
-                            iter1++;
-                        }
-                    }
-                }
+                Employee[] employeesNieTriazDzien = employeeManager.GetAllEmployeesNotNull().Where(emp => emp.CzyTriazDzien == false).ToArray();
+                int[] nieTriazDzien = new int[employeesNieTriazDzien.Count()];
+                for (int i = 0; i < employeesNieTriazDzien.Count(); i++)
+                    nieTriazDzien[i] = employeesNieTriazDzien[i].Numer;
 
                 return nieTriazDzien;
             }
 
             private static int[] ListaNieTiazNoc()
             {
-                int nieStazNocNumber = 0;
-                foreach (Osoba iter in osoby)
-                {
-                    if (iter != null)
-                    {
-                        if (!iter.czyTriazNoc)
-                            nieStazNocNumber++;
-                    }
-                }
+                Employee[] employeesNieTriazNoc = employeeManager.GetAllEmployeesNotNull().Where(emp => emp.CzyTriazNoc == false).ToArray();
+                int[] nieTriazNoc = new int[employeesNieTriazNoc.Count()];
+                for (int i = 0; i < employeesNieTriazNoc.Count(); i++)
+                    nieTriazNoc[i] = employeesNieTriazNoc[i].Numer;
 
-                int[] nieStazNoc = new int[nieStazNocNumber];
-                int iter1 = 0;
-                foreach (Osoba iter in osoby)
-                {
-                    if (iter != null)
-                    {
-                        if (!iter.czyTriazNoc)
-                        {
-                            nieStazNoc[iter1] = iter.numer;
-                            iter1++;
-                        }
-                    }
-                }
-
-                return nieStazNoc;
+                return nieTriazNoc;
             }
 
-            private static double[] OczekiwanaLiczbaFunkcji(Osoba[] osoby)
+            private static double[] OczekiwanaLiczbaFunkcji(Employee[] osoby)
             {
                 const double MAX_LICZBA_FUNKCJI = 8.5;
                 const double MIN_LICZBA_FUNKCJI = 2.5;
@@ -911,27 +1039,24 @@ namespace Funkcje_GA
                 int liczbaDniRoboczych = 0;
                 double sumaEtatow = 0.0;
 
-                for (int i = 0; i < LICZBA_DNI; i++)
+                for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
                 {
-                    if (listBoxesDzien[i].Items.Count > 0)
-                        liczbaDniRoboczych++;
-
-                    if (listBoxesNoc[i].Items.Count > 0)
+                    if(scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() > 0)
                         liczbaDniRoboczych++;
                 }
 
                 for (int i = 0; i < MAX_LICZBA_OSOB; i++)
                 {
                     if (osoby[i] != null)
-                        sumaEtatow += Convert.ToInt32(osoby[i].wymiarEtatu);
+                        sumaEtatow += Convert.ToInt32(osoby[i].WymiarEtatu);
                 }
 
                 for (int i = 0; i < MAX_LICZBA_OSOB; i++)
                 {
                     if (osoby[i] != null)
                     {
-                        oczekiwanaLiczbaFunkcji[i] = Math.Min(Math.Max(((3 * liczbaDniRoboczych * osoby[i].wymiarEtatu / sumaEtatow) - osoby[i].zaleglosci), 0), MAX_LICZBA_FUNKCJI);
-                        if (osoby[i].wymiarEtatu > 0.1)
+                        oczekiwanaLiczbaFunkcji[i] = Math.Min(Math.Max(((3 * liczbaDniRoboczych * osoby[i].WymiarEtatu / sumaEtatow) - osoby[i].Zaleglosci), 0), MAX_LICZBA_FUNKCJI);
+                        if (osoby[i].WymiarEtatu > 0.1)
                         {
                             oczekiwanaLiczbaFunkcji[i] = Math.Max(oczekiwanaLiczbaFunkcji[i], MIN_LICZBA_FUNKCJI);
                         }
@@ -1210,11 +1335,20 @@ namespace Funkcje_GA
 
             public static void Prepare()
             {
+                for(int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
+                {
+                    if (scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() == 1 || scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() == 2)
+                        throw new InvalidDataException("Za mało pracowników na zmianie: " + shiftId.ToString() + " .");
+
+                    if (scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() > MAX_LICZBA_DYZUROW)
+                        throw new InvalidDataException("Za dużo pracowników na zmianie: " + shiftId.ToString() + " .");
+                }
+
                 dyzuryGrafik = UtworzGrafik();
                 nieTriazDzien = ListaNieTiazDzien();
                 nieTriazNoc = ListaNieTiazNoc();
                 liczbaDyzurow = LiczbaDyzurow(dyzuryGrafik);
-                oczekiwanaLiczbaFunkcji = OczekiwanaLiczbaFunkcji(osoby);
+                oczekiwanaLiczbaFunkcji = OczekiwanaLiczbaFunkcji(employees);
                 stopienZdegenerowania = StopienZdegenerowania(liczbaDyzurow, nieTriazDzien, nieTriazNoc, dyzuryGrafik);
             }
 
@@ -1259,32 +1393,207 @@ namespace Funkcje_GA
 
             private static int[] UtworzGrafik()
             {
-                int nrListBoxa;
+                int nrZmiany;
                 int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
-                for (int i = 0; i < LICZBA_DNI * MAX_LICZBA_DYZUROW; i++)
+
+                for (int nrDyzuru = 0; nrDyzuru < 2 * LICZBA_DNI * MAX_LICZBA_DYZUROW; nrDyzuru++)
                 {
-                    nrListBoxa = Convert.ToInt32(Math.Floor(Convert.ToDouble(i) / MAX_LICZBA_DYZUROW));
-                    if (listBoxesDzien[nrListBoxa].Items.Count > i % MAX_LICZBA_DYZUROW)
+                    nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));
+                    if (scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
                     {
-                        listBoxesDzien[nrListBoxa].ToBezFunkcji(i % MAX_LICZBA_DYZUROW);
-                        dyzuryGrafik[i] = Convert.ToInt32(listBoxesDzien[nrListBoxa].GetNumber(i % MAX_LICZBA_DYZUROW));
+                        scheduleManager.ToBezFunkcji(nrZmiany, scheduleManager.GetShiftById(nrZmiany).First().Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer);
+                        dyzuryGrafik[nrDyzuru] = scheduleManager.GetShiftById(nrZmiany).First().Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
                     }
 
                     else
-                        dyzuryGrafik[i] = 0;
-
-                    nrListBoxa = Convert.ToInt32(Math.Floor(Convert.ToDouble(i) / MAX_LICZBA_DYZUROW));
-                    if (listBoxesNoc[nrListBoxa].Items.Count > i % MAX_LICZBA_DYZUROW)
-                    {
-                        listBoxesNoc[nrListBoxa].ToBezFunkcji(i % MAX_LICZBA_DYZUROW);
-                        dyzuryGrafik[i + LICZBA_DNI * MAX_LICZBA_DYZUROW] = Convert.ToInt32(listBoxesNoc[nrListBoxa].GetNumber(i % MAX_LICZBA_DYZUROW));
-                    }
-
-                    else
-                        dyzuryGrafik[i + LICZBA_DNI * MAX_LICZBA_DYZUROW] = 0;
+                        dyzuryGrafik[nrDyzuru] = 0;
                 }
 
                 return dyzuryGrafik;
+            }
+        }
+
+        public class ScheduleManagement : IShift
+        {
+            private IEmployees EmpManager { get; set; }
+            private readonly List<Shift> schedule;
+
+            public ScheduleManagement(IEmployees EmpManager)
+            {
+                schedule = new List<Shift>(2 * LICZBA_DNI);
+                for (int i = 0; i < 2 * LICZBA_DNI; i++)
+                {
+                    Shift newShift = new Shift(i);
+                    schedule.Add(newShift);
+                }
+
+                this.EmpManager = EmpManager;
+            }
+
+            public IEnumerable<Shift> GetShiftById(int id) => schedule.Where(sched => (sched != null && sched.Id == id));
+
+            public void AddToShift(int shiftId, int employeeId)
+            {
+                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
+                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+
+                if (!shift.Present_employees.Contains(employee))
+                {
+                     shift.Present_employees.Add(employee);
+                    employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
+                    UpdateListBox(shift);
+                }
+
+            }
+
+            public void RemoveAll()
+            {
+                foreach (Shift shift in schedule)
+                {
+                    schedule[shift.Id].Present_employees.Clear();
+                    schedule[shift.Id].Sala_employees.Clear();
+                    schedule[shift.Id].Triaz_employees.Clear();
+                }
+
+                employeeManager.EmployeeEdit(0.0);
+
+                //Usuwamy dane z listBoxów
+                for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+                {
+                    listBoxesDzien[nrDnia].Items.Clear();
+                    listBoxesNoc[nrDnia].Items.Clear();
+                }
+            }
+
+            public void RemoveFromShift(int shiftId, int employeeId)
+            {
+                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
+                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+
+                if (shift.Present_employees.Contains(employee))
+                {
+                    shift.Present_employees.Remove(employee);
+                    shift.Sala_employees.Remove(employee);
+                    shift.Triaz_employees.Remove(employee);
+                    employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
+                    UpdateListBox(shift);
+                }
+            }
+
+            public void ToBezFunkcji(int shiftId, int employeeId)
+            {
+                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
+                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+
+                if (shift.Present_employees.Contains(employee))
+                {
+                    if (shift.Sala_employees.Contains(employee))
+                    {
+                        shift.Sala_employees.Remove(employee);
+                        UpdateListBox(shift);
+                    }
+
+                    else if (shift.Triaz_employees.Contains(employee))
+                    {
+                        shift.Triaz_employees.Remove(employee);
+                        UpdateListBox(shift);
+                    }
+                }
+            }
+
+            public void ToSala(int shiftId, int employeeId)
+            {
+                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
+                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+
+                if (shift.Present_employees.Contains(employee) && !shift.Sala_employees.Contains(employee))
+                {
+                    if (shift.Triaz_employees.Contains(employee))
+                        shift.Triaz_employees.Remove(employee);
+
+                    shift.Sala_employees.Add(employee);
+                    UpdateListBox(shift);
+                }
+            }
+
+            public void ToTriaz(int shiftId, int employeeId)
+            {
+                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
+                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+
+                if (shift.Present_employees.Contains(employee) && !shift.Triaz_employees.Contains(employee))
+                {
+                    if (shift.Sala_employees.Contains(employee))
+                        shift.Sala_employees.Remove(employee);
+
+                    shift.Triaz_employees.Add(employee);
+                    UpdateListBox(shift);
+                }
+            }
+
+            private void UpdateListBox(Shift shift)
+            {
+                if (shift.Id < LICZBA_DNI)
+                {
+                    listBoxesDzien[shift.Id].Items.Clear();
+                    for (int nrOsoby = 0; nrOsoby < shift.Present_employees.Count; nrOsoby++)
+                    {
+                        if (shift.Present_employees.Count > 0)
+                            listBoxesDzien[shift.Id].Items.Add(shift.Present_employees[nrOsoby].Numer);
+                    }
+
+                    for (int liczbaSal = 0; liczbaSal < shift.Sala_employees.Count; liczbaSal++)
+                    {
+                        if (shift.Sala_employees.Count > 0)
+                            listBoxesDzien[shift.Id].ToSala(listBoxesDzien[shift.Id].Items.IndexOf(shift.Sala_employees[liczbaSal].Numer));
+                    }
+
+                    for (int liczbaTriazy = 0; liczbaTriazy < shift.Triaz_employees.Count; liczbaTriazy++)
+                    {
+                        if (shift.Triaz_employees.Count > 0)
+                            listBoxesDzien[shift.Id].ToTriaz(listBoxesDzien[shift.Id].Items.IndexOf(shift.Triaz_employees[liczbaTriazy].Numer));
+                    }
+                }
+
+                else
+                {
+                    listBoxesNoc[shift.Id - LICZBA_DNI].Items.Clear();
+                    for (int nrOsoby = 0; nrOsoby < shift.Present_employees.Count; nrOsoby++)
+                    {
+                        if (shift.Present_employees.Count > 0)
+                            listBoxesNoc[shift.Id - LICZBA_DNI].Items.Add(shift.Present_employees[nrOsoby].Numer);
+                    }
+
+                    for (int liczbaSal = 0; liczbaSal < shift.Sala_employees.Count; liczbaSal++)
+                    {
+                        if(shift.Sala_employees.Count > 0)
+                            listBoxesNoc[shift.Id - LICZBA_DNI].ToSala(listBoxesNoc[shift.Id - LICZBA_DNI].Items.IndexOf(shift.Sala_employees[liczbaSal].Numer));
+                    }
+
+                    for (int liczbaTriazy = 0; liczbaTriazy < shift.Triaz_employees.Count; liczbaTriazy++)
+                    {
+                        if (shift.Triaz_employees.Count > 0)
+                            listBoxesNoc[shift.Id - LICZBA_DNI].ToTriaz(listBoxesNoc[shift.Id - LICZBA_DNI].Items.IndexOf(shift.Triaz_employees[liczbaTriazy].Numer));
+                    }
+                }
+            }
+        }
+
+        //Obiekty tej klasy przechowują informacje o zmianie.
+        public class Shift
+        {
+            public int Id { get; set; }                                 //Numer id zmiany 0 - 30 dzienne zmiany, 31 - 61 nocne zmiany.
+            public List<Employee> Present_employees { get; set; }       //Pracownicy na zmianie.
+            public List<Employee> Sala_employees { get; set; }          //Pracownicy na sali.
+            public List<Employee> Triaz_employees { get; set; }         //Pracownicy na triażu.
+
+            //Konstruktor.
+            public Shift(int Id)
+            {
+                Present_employees = new List<Employee>();
+                Sala_employees = new List<Employee>();
+                Triaz_employees = new List<Employee>();
+                this.Id = Id;
             }
         }
 
@@ -1304,26 +1613,26 @@ namespace Funkcje_GA
             {"NUMER", 0 }, {"IMIE", 1}, {"NAZWISKO", 2}, {"ZALEGLOSCI", 3}, {"TRIAZ_DZIEN", 4}, {"TRIAZ_NOC", 5}
         };
 
-        public static Osoba[] osoby = new Osoba[MAX_LICZBA_OSOB];           //Stworzenie listy pracowników.
-        public static System.Windows.Forms.Label[] labelsPracownicy = new System.Windows.Forms.Label[MAX_LICZBA_OSOB];      //Tworzenie etykiet wyświetlających dane pracowników.
-        private System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];                //Tworzenie etykiet wyświetlających numer dziennej zmiany.
-        private System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];                  //Tworzenie etykiet wyświetlających numer nocnej zmiany.
-        private static ListBoxGrafik[] listBoxesDzien = new ListBoxGrafik[LICZBA_DNI];                                       //Tworzenie listboxów odpowiadających dziennej zmianie.
-        private static ListBoxGrafik[] listBoxesNoc = new ListBoxGrafik[LICZBA_DNI];                                         //Tworzenie listboxów odpowiadających nocnej zmianie.
+        private static System.Windows.Forms.Label[] labelsPracownicy = new System.Windows.Forms.Label[MAX_LICZBA_OSOB];     //Tworzenie etykiet wyświetlających dane pracowników.
+        private System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];                      //Tworzenie etykiet wyświetlających numer dziennej zmiany.
+        private System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];                        //Tworzenie etykiet wyświetlających numer nocnej zmiany.
+        private static ListBoxGrafik[] listBoxesDzien = new ListBoxGrafik[LICZBA_DNI];                                      //Tworzenie listboxów odpowiadających dziennej zmianie.
+        private static ListBoxGrafik[] listBoxesNoc = new ListBoxGrafik[LICZBA_DNI];                                        //Tworzenie listboxów odpowiadających nocnej zmianie.
 
-        private const int MAX_LICZBA_BITOW = 3;                             //Liczba bitów potrzebna do zakodowania jednej osoby (log2(MAX_LICZBA_DYZUROW)).
-        private const int MAX_LICZBA_DYZUROW = 8;                           //Maksymalna liczba dyżurów jednego dnia.
-        public const int MAX_LICZBA_OSOB = 50;                              //Maksymalna liczba pracowników w systemie.
-        private const int LICZBA_DNI = 31;                                   //Największa liczba dni w miesiącu.
-        private const int LICZBA_ZMIENNYCH = 2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW;     //Liczba zmiennych w zadaniu optymalizacji.
-        private static int liczbaOsob = 0;                                   //Aktualna liczba pracowników w systemie.       
-        private DateTime startOptymalizacja;                                //Pomiar czasu działania algorytmu optymalizacji.
-        private TimeSpan czasOptymalizacja;                                 //Pomiar czasu działania algorytmu optymalizacji.
+        private TimeSpan czasOptymalizacja;                                                         //Pomiar czasu działania algorytmu optymalizacji.
+        public static EmployeeManagement employeeManager = new EmployeeManagement();                //Instancja do zarządzania pracownikami.
+        private const int LICZBA_DNI = 31;                                                          //Największa liczba dni w miesiącu.
+        private const int LICZBA_ZMIENNYCH = 2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW;                 //Liczba zmiennych w zadaniu optymalizacji. 
+        private const int MAX_LICZBA_BITOW = 3;                                                     //Liczba bitów potrzebna do zakodowania jednej osoby (log2(MAX_LICZBA_DYZUROW)).
+        private const int MAX_LICZBA_DYZUROW = 8;                                                   //Maksymalna liczba dyżurów jednego dnia.
+        public const int MAX_LICZBA_OSOB = 50;                                                      //Maksymalna liczba pracowników w systemie.    
+        private static ScheduleManagement scheduleManager = new ScheduleManagement(employeeManager); //Instancja do zarządzania grafikiem.
+        private DateTime startOptymalizacja;                                                        //Pomiar czasu działania algorytmu optymalizacji.
         
         //Konstruktor.
         public Form1()
         {
-            //Generuje większaość kontrolek. Metoda stworzona przez Designera.
+            //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
 
             //Generuje listboxy i etykiety grafiku i listy pracowników. Zdarzenie asynchroniczne przycisku optymalizacji.
@@ -1339,7 +1648,19 @@ namespace Funkcje_GA
 
                 //Jeśli wybrano opcje "Tak" to wczytywany jest grafik.
                 if (result == DialogResult.Yes)
-                    FileManagementGrafik.WczytajGrafik("Grafik.txt");
+                {
+                    //Próbujemy wczytać grafik
+                    try
+                    {
+                        FileManagementGrafik.WczytajGrafik("Grafik.txt");
+                        MessageBox.Show("Grafik wczytany.");
+                    }
+
+                    catch
+                    {
+                        MessageBox.Show("Grafik nie został wczytany.");
+                    }
+                }
             }
         }
 
@@ -1352,23 +1673,13 @@ namespace Funkcje_GA
             //Zamieniamy wszystkie wybrane dyżury na bezfunkcyjne.
             for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
             {
-                int idx;    //Numer wybranego indeksu.
+                //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
+                if (listBoxesDzien[nrDnia].SelectedItem != null)
+                    scheduleManager.ToBezFunkcji(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
 
-                //Zamieniamy wszystkie wybrane dyżury na bezfunkcyjne (dzień).
-                try
-                {
-                    idx = listBoxesDzien[nrDnia].Items.IndexOf(listBoxesDzien[nrDnia].SelectedItem);
-                    listBoxesDzien[nrDnia].ToBezFunkcji(idx);
-                }
-                catch { }
-
-                //Zamieniamy wszystkie wybrane dyżury na bezfunkcyjne (noc).
-                try
-                {
-                    idx = listBoxesNoc[nrDnia].Items.IndexOf(listBoxesNoc[nrDnia].SelectedItem);
-                    listBoxesNoc[nrDnia].ToBezFunkcji(idx);
-                }
-                catch { }
+                //Zamieniamy wszystkie wybrane dyżury na sale (noc).
+               if (listBoxesNoc[nrDnia].SelectedItem != null)
+                    scheduleManager.ToBezFunkcji(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
             }
         }
 
@@ -1377,7 +1688,7 @@ namespace Funkcje_GA
         {
             //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana. Usuwamy grafik. Wyświetlamy informację.
             UsunPodswietlenie();
-            UsunGrafik();
+            scheduleManager.RemoveAll();
             MessageBox.Show("Grafik usunięty");
         }
 
@@ -1401,23 +1712,13 @@ namespace Funkcje_GA
             //Zamieniamy wszystkie wybrane dyżury na sale.
             for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
             {
-                int idx;    //Numer wybranego indeksu.
-
                 //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
-                try
-                {
-                    idx = listBoxesDzien[nrDnia].Items.IndexOf(listBoxesDzien[nrDnia].SelectedItem);
-                    listBoxesDzien[nrDnia].ToSala(idx);
-                }
-                catch { }
+                if (listBoxesDzien[nrDnia].SelectedItem != null)
+                    scheduleManager.ToSala(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
 
                 //Zamieniamy wszystkie wybrane dyżury na sale (noc).
-                try
-                {
-                    idx = listBoxesNoc[nrDnia].Items.IndexOf(listBoxesNoc[nrDnia].SelectedItem);
-                    listBoxesNoc[nrDnia].ToSala(idx);
-                }
-                catch { }
+                if (listBoxesNoc[nrDnia].SelectedItem != null)
+                    scheduleManager.ToSala(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
             }
         }
 
@@ -1430,23 +1731,14 @@ namespace Funkcje_GA
             //Zamieniamy wszystkie wybrane dyzury na triaż.
             for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
             {
-                int idx; //Numer wybranego indeksu.
+                //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
+                if (listBoxesDzien[nrDnia].SelectedItem != null)
+                    scheduleManager.ToTriaz(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
 
-                //Zamieniamy wszystkie wybrane dyżury na triaż (dzień).
-                try
-                {
-                    idx = listBoxesDzien[nrDnia].Items.IndexOf(listBoxesDzien[nrDnia].SelectedItem);
-                    listBoxesDzien[nrDnia].ToTriaz(idx);
-                }
-                catch { }
-
-                //Zamieniamy wszystkie wybrane dyżury na triaż (noc).
-                try
-                {
-                    idx = listBoxesNoc[nrDnia].Items.IndexOf(listBoxesNoc[nrDnia].SelectedItem);
-                    listBoxesNoc[nrDnia].ToTriaz(idx);
-                }
-                catch { }
+                //Zamieniamy wszystkie wybrane dyżury na sale (noc).
+                if (listBoxesNoc[nrDnia].SelectedItem != null)
+                    scheduleManager.ToTriaz(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
+                
             }
         }
 
@@ -1456,24 +1748,24 @@ namespace Funkcje_GA
             //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana.
             UsunPodswietlenie();
 
-            //Jeśli był wybrany jakiś dyżur, to uaktulaniamy wymair etatu danego pracownika.
-            foreach (ListBoxGrafik listBoxDzien in listBoxesDzien)
+            //Usuwamy dyżur.
+            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
             {
-                if (listBoxDzien.SelectedItem != null)
-                    EmployeeManagement.EmployeeEdit(osoby[listBoxDzien.GetNumber(listBoxDzien.SelectedIndex) - 1], (osoby[listBoxDzien.GetNumber(listBoxDzien.SelectedIndex) - 1].wymiarEtatu - 1.0));
-            }
+                int nrOsoby;                        //Numer osoby;
 
-            foreach (ListBoxGrafik listBoxNoc in listBoxesNoc)
-            {
-                if (listBoxNoc.SelectedItem != null)
-                    EmployeeManagement.EmployeeEdit(osoby[listBoxNoc.GetNumber(listBoxNoc.SelectedIndex) - 1], (osoby[listBoxNoc.GetNumber(listBoxNoc.SelectedIndex) - 1].wymiarEtatu - 1.0));
-            }
+                //Usuwamy, jeśli dyżur był dzienny.
+                if (listBoxesDzien[nrDnia].SelectedIndex != -1)
+                {
+                    nrOsoby = listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex);
+                    scheduleManager.RemoveFromShift(nrDnia, nrOsoby);
+                }
 
-            //Usuwamy wybrane dyżury.
-            for (int j = 0; j < LICZBA_DNI; j++)
-            {
-                listBoxesDzien[j].Items.Remove(listBoxesDzien[j].SelectedItem);
-                listBoxesNoc[j].Items.Remove(listBoxesNoc[j].SelectedItem);
+                //Usuwamy, jeśli dyżur był nocny.
+                if (listBoxesNoc[nrDnia].SelectedIndex != -1)
+                {
+                        nrOsoby = listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex);
+                        scheduleManager.RemoveFromShift(nrDnia + LICZBA_DNI, nrOsoby);
+                }
             }
         }
 
@@ -1570,18 +1862,18 @@ namespace Funkcje_GA
             }
 
             //Tworzymy etykiety wyświetlające dane pracowników i delegaty do zdarzeń drag and drop.
-            for (int nrOsoby = 0; nrOsoby < MAX_LICZBA_OSOB; nrOsoby++)
+            for (int nrIndeksu = 0; nrIndeksu < MAX_LICZBA_OSOB; nrIndeksu++)
             {
                 //Tworzymy etykiety wyświetlające dane pracowników.
-                labelsPracownicy[nrOsoby] = new System.Windows.Forms.Label();
-                labelsPracownicy[nrOsoby].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                labelsPracownicy[nrOsoby].Size = Size = new System.Drawing.Size(340, 40);
-                labelsPracownicy[nrOsoby].Text = "";
-                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], nrOsoby / 10, nrOsoby % 10);
+                labelsPracownicy[nrIndeksu] = new System.Windows.Forms.Label();
+                labelsPracownicy[nrIndeksu].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+                labelsPracownicy[nrIndeksu].Size = Size = new System.Drawing.Size(340, 40);
+                labelsPracownicy[nrIndeksu].Text = "";
+                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrIndeksu], nrIndeksu / 10, nrIndeksu % 10);
 
                 //Przypisujemy delegaty do zdarzeń drag and drop.
-                int temp = nrOsoby;
-                labelsPracownicy[nrOsoby].MouseDown += new MouseEventHandler((sender, e) => labelsPracownicy_MouseDown(sender, e, temp));
+                int nrOsoby = nrIndeksu + 1;
+                labelsPracownicy[nrIndeksu].MouseDown += new MouseEventHandler((sender, e) => labelsPracownicy_MouseDown(sender, e, nrOsoby));
             }
 
             //Zdarzenie asynchroniczne po kliknięciu przycisku "Opt".
@@ -1609,26 +1901,6 @@ namespace Funkcje_GA
 
                     Optimization.Prepare();
 
-                    //Jeżeli w dowolnym dniu liczba dyżurów jest większa niz MAX_LICZBA_DYZUROW to optymalizacja nie startuje.
-                    for (int i = 0; i < LICZBA_DNI; i++)
-                    {
-                        if (listBoxesDzien[i].Items.Count > MAX_LICZBA_DYZUROW || listBoxesNoc[i].Items.Count > MAX_LICZBA_DYZUROW)
-                        {
-                            MessageBox.Show("Aby móc wykorzystać automatyczne rozdzielanie funkcji liczba dyżurów danego dnia nie może przekraczać " + MAX_LICZBA_DYZUROW.ToString() + ".");
-                            return;
-                        }
-                    }
-
-                    //Jeżeli w dowolnym dniu przypisany jest dokładnie jeden lub dokładnie dwa dyżury to optymalizacja nie startuje.
-                    for (int i = 0; i < LICZBA_DNI; i++)
-                    {
-                        if (listBoxesDzien[i].Items.Count == 1 || listBoxesDzien[i].Items.Count == 2 || listBoxesNoc[i].Items.Count == 1 || listBoxesNoc[i].Items.Count == 2)
-                        {
-                            MessageBox.Show("Aby móc wykorzystać automatyczne rozdzielanie funkcji liczba dyżurów na każdej zmianie musi wynosić conajmniej 3.");
-                            return;
-                        }
-                    }
-
                     //Jeśli wszystko jest w porządku uruchamia się optymalizacja i mierzony jest czas.
                     startOptymalizacja = DateTime.Now;
                     {
@@ -1640,6 +1912,12 @@ namespace Funkcje_GA
                     Optimization.DodajFunkcje(optymalneRozwiazanie);
                     FileManagementGrafik.ZapiszGrafik("GrafikGA.txt");
                     MessageBox.Show("Przydzielanie funkcji ukończone w: " + czasOptymalizacja.ToString() + ".");
+                }
+
+                //Wyświetla informację, jeśli nie udało się przeprowadzić optymalizacji ze względu na złą liczbę pracowników.
+                catch (InvalidDataException)
+                {
+                    MessageBox.Show("Aby przeprowadzić przydzielanie funkcji na każdej zmianie musi być od 3 do " + MAX_LICZBA_DYZUROW.ToString() + " .");
                 }
 
                 //Wyświetla informację, jeśli nie udało się przeprowadzić optymalizacji.
@@ -1676,18 +1954,10 @@ namespace Funkcje_GA
             //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
             string pom = e.Data.GetData(DataFormats.Text).ToString();
             string[] subs = pom.Split('.');
-            int nrOsoby = (Convert.ToInt32(subs[0]) - 1);
 
-            //Jeśli numer osoby występuje w danym listBoxie, to nic się nie dzieje.
-            for (int item = 0; item < listBoxesDzien[nrListBoxa].Items.Count; item++)
-            {
-                if (listBoxesDzien[nrListBoxa].GetNumber(item).ToString() == subs[0])
-                    return;
-            }
-
-            //Jeśli dana osoba nie miała dyżuru, to dodajemy do listBoxa.
-            listBoxesDzien[nrListBoxa].Items.Add(subs[0]);
-            EmployeeManagement.EmployeeEdit(osoby[nrOsoby], osoby[nrOsoby].wymiarEtatu + 1.0);
+            //Jeśli dane są ok, to dodajemy do grafiku.
+            if (Int32.TryParse(subs[0], out int nrOsoby))
+                scheduleManager.AddToShift(nrListBoxa, nrOsoby);
         }
 
         //Drag and drop, listBoxNoc. Efekt wizualny i kopiowanie tekstu.
@@ -1706,18 +1976,10 @@ namespace Funkcje_GA
             //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
             string pom = e.Data.GetData(DataFormats.Text).ToString();
             string[] subs = pom.Split('.');
-            int nrOsoby = (Convert.ToInt32(subs[0]) - 1);
 
-            //Jeśli numer osoby występuje w danym listBoxie, to nic się nie dzieje.
-            for (int item = 0; item < listBoxesNoc[nrListBoxa].Items.Count; item++)
-            {
-                if (listBoxesNoc[nrListBoxa].GetNumber(item).ToString() == subs[0])
-                    return;
-            }
-
-            //Jeśli dana osoba nie miała dyżuru, to dodajemy do listBoxa.
-            listBoxesNoc[nrListBoxa].Items.Add(subs[0]);
-            EmployeeManagement.EmployeeEdit(osoby[nrOsoby], osoby[nrOsoby].wymiarEtatu + 1.0);
+            //Jeśli dane są ok, to dodajemy do grafiku.
+            if (Int32.TryParse(subs[0], out int nrOsoby))
+                scheduleManager.AddToShift(nrListBoxa + LICZBA_DNI, nrOsoby);
         }
 
         //Drag and drop, etykieta Pracownicy.
@@ -1726,15 +1988,15 @@ namespace Funkcje_GA
             //Usuwamy podświetlenie, jeśli ktoś był zaznaczony.
             UsunPodswietlenie();
 
-            //Sprawdzamy po kolei każdy dyżur, jeśli osoba występuje to podśiwtlamy: czerwony - bez funkcji, zielony - sala, niebieski - triaż.
+            //Sprawdzamy po kolei każdy dyżur, jeśli osoba występuje to podświetlamy: czerwony - bez funkcji, zielony - sala, niebieski - triaż.
             for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
             {
-                if (osoby[nrOsoby] != null)
+                if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
                 {
                     //Sprawdzamy dyżury nocne.
                     for (int nrDyzuru = 0; nrDyzuru < listBoxesDzien[nrDnia].Items.Count; nrDyzuru++)
                     {
-                        if (listBoxesDzien[nrDnia].GetNumber(nrDyzuru) == osoby[nrOsoby].numer)
+                        if (listBoxesDzien[nrDnia].GetNumber(nrDyzuru) == employeeManager.GetEmployeeById(nrOsoby).First().Numer)
                         {
                             switch (listBoxesDzien[nrDnia].GetFunction(nrDyzuru))
                             {
@@ -1756,7 +2018,7 @@ namespace Funkcje_GA
                     //Sprawdzamy dyżury nocne.
                     for (int nrDyzuru = 0; nrDyzuru < listBoxesNoc[nrDnia].Items.Count; nrDyzuru++)
                     {
-                        if (listBoxesNoc[nrDnia].GetNumber(nrDyzuru) == osoby[nrOsoby].numer)
+                        if (listBoxesNoc[nrDnia].GetNumber(nrDyzuru) == employeeManager.GetEmployeeById(nrOsoby).First().Numer)
                         {
                             switch (listBoxesNoc[nrDnia].GetFunction(nrDyzuru))
                             {
@@ -1777,22 +2039,8 @@ namespace Funkcje_GA
                 }
             }
 
-            if (osoby[nrOsoby] != null)
-                labelsPracownicy[nrOsoby].DoDragDrop(labelsPracownicy[nrOsoby].Text, DragDropEffects.Copy | DragDropEffects.Move);
-        }
-
-        //Usuń grafik.
-        private static void UsunGrafik()
-        {
-            //Usuwamy dane z listBoxów
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
-            {
-                listBoxesDzien[nrDnia].Items.Clear();
-                listBoxesNoc[nrDnia].Items.Clear();
-            }
-
-            //Usuwamy dane o wymiarze etatu.
-            EmployeeManagement.EmployeeEdit(osoby, 0.0);
+            if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+                labelsPracownicy[nrOsoby - 1].DoDragDrop(labelsPracownicy[nrOsoby - 1].Text, DragDropEffects.Copy | DragDropEffects.Move);
         }
 
         //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana.
@@ -1805,24 +2053,5 @@ namespace Funkcje_GA
                 listBoxesNoc[nrListBoxa].ResetBackColor();
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.IO;
 using static Funkcje_GA.Form1;
 using System.Linq.Expressions;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Funkcje_GA
 {
