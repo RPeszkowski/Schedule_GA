@@ -14,7 +14,6 @@ C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\bin\Debug\Fun
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\bin\Debug\Funkcje_GA.exe
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\bin\Debug\Funkcje_GA.pdb
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.csproj.AssemblyReference.cache
-C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.exe.config
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.Form1.resources
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.Form2.resources
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.Properties.Resources.resources
@@ -22,3 +21,4 @@ C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Fun
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.csproj.CoreCompileInputs.cache
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.exe
 C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.pdb
+C:\Users\lenovo\Documents\GitHub\Schedule_GA\Funkcje_GA\Funkcje_GA\obj\Debug\Funkcje_GA.exe.config

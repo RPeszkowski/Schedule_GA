@@ -89,4 +89,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>echo "Pliki Pracownicy.txt i Grafik.txt powinny być w folderze bin/Debug"
+copy "$(SolutionDir)\Funkcje_GA\Pracownicy.txt" "$(TargetDir)\Pracownicy.txt"
+copy "$(SolutionDir)\Funkcje_GA\Grafik.txt" "$(TargetDir)\Grafik.txt"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
