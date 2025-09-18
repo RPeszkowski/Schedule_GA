@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static Funkcje_GA.Form1;
+using static Funkcje_GA.Constans;
 
 namespace Funkcje_GA
 {
@@ -59,8 +60,14 @@ namespace Funkcje_GA
             try
             {
                 int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
-                employeeManager.EmployeeEdit(employeeManager.GetEmployeeById(nrOsoby).First(), textBoxImie.Text, textBoxNazwisko.Text, employeeManager.GetEmployeeById(nrOsoby).First().WymiarEtatu, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
-                MessageBox.Show("Zmieniono dane pracownika: " + employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString() + " " + employeeManager.GetEmployeeById(nrOsoby).First().Imie + " " + employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko);
+                employeeManager.EmployeeEdit(employeeManager.GetEmployeeById(nrOsoby), 
+                                             textBoxImie.Text, 
+                                             textBoxNazwisko.Text, 
+                                             employeeManager.GetEmployeeById(nrOsoby).WymiarEtatu, 
+                                             Convert.ToInt32(numericUpDownZaleglosci.Value), 
+                                             checkBoxCzyTriazDzien.Checked, 
+                                             checkBoxCzyTriazNoc.Checked);
+                MessageBox.Show("Zmieniono dane pracownika: " + employeeManager.GetEmployeeById(nrOsoby).Numer.ToString() + " " + employeeManager.GetEmployeeById(nrOsoby).Imie + " " + employeeManager.GetEmployeeById(nrOsoby).Nazwisko);
             }
 
             //Obsługa wyjątku: osoba nie istnieje.
@@ -97,7 +104,7 @@ namespace Funkcje_GA
             //Usuwamy osobę. Wyświetlamy numery istniejących w systemie osób.
             try
             {
-                employeeManager.EmployeeDelete(employeeManager.GetEmployeeById(nrOsoby).First());
+                employeeManager.EmployeeDelete(employeeManager.GetEmployeeById(nrOsoby));
                 UpdateListBoxNumerOsoby();
             }
 
@@ -117,13 +124,13 @@ namespace Funkcje_GA
             int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
 
             //Jeśli osoba istnieje w systemie to wyświetlamy jej numer.
-            if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+            if (employeeManager.GetEmployeeById(nrOsoby) != null)
             {
-                textBoxImie.Text = employeeManager.GetEmployeeById(nrOsoby).First().Imie;
-                textBoxNazwisko.Text = employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko;
-                numericUpDownZaleglosci.Value = employeeManager.GetEmployeeById(nrOsoby).First().Zaleglosci;
-                checkBoxCzyTriazDzien.Checked = employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazDzien;
-                checkBoxCzyTriazNoc.Checked = employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazNoc;
+                textBoxImie.Text = employeeManager.GetEmployeeById(nrOsoby).Imie;
+                textBoxNazwisko.Text = employeeManager.GetEmployeeById(nrOsoby).Nazwisko;
+                numericUpDownZaleglosci.Value = employeeManager.GetEmployeeById(nrOsoby).Zaleglosci;
+                checkBoxCzyTriazDzien.Checked = employeeManager.GetEmployeeById(nrOsoby).CzyTriazDzien;
+                checkBoxCzyTriazNoc.Checked = employeeManager.GetEmployeeById(nrOsoby).CzyTriazNoc;
 
             }
         }
@@ -135,8 +142,8 @@ namespace Funkcje_GA
             listBoxNumerOsoby.Items.Clear();
             for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
             {
-                if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
-                    listBoxNumerOsoby.Items.Add(employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString());
+                if (employeeManager.GetEmployeeById(nrOsoby) != null)
+                    listBoxNumerOsoby.Items.Add(employeeManager.GetEmployeeById(nrOsoby).Numer.ToString());
 
             }
         }

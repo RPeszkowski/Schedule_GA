@@ -23,74 +23,35 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static Funkcje_GA.Form1;
+using static Funkcje_GA.Constans;
+using static Funkcje_GA.Employee;
+using static Funkcje_GA.ScheduleManagement;
+using static Funkcje_GA.Shift;
+using static Funkcje_GA.FileService;
+using static Funkcje_GA.UIForm1Management;
+using static Funkcje_GA.IEmployees;
+using static Funkcje_GA.IUISchedule;
+using static Funkcje_GA.IShifts;
 
-namespace Funkcje_GA          
-
+namespace Funkcje_GA
 {
     public partial class Form1 : Form
     {
-        //Ten interfejs odpowiada za połączenie klasy EmployeeManagement z resztą kodu.
-        public interface IEmployees
-        {
-            IEnumerable<Employee> GetAllEmployees();
-            IEnumerable<Employee> GetAllEmployeesNotNull();
-            IEnumerable<Employee> GetEmployeeById(int numer);
-        }
-
-        //Ten interfejs odpowiada za połączenie klasy ShiftManagement z resztą kodu.
-        public interface IShift
-        {
-            IEnumerable<Shift> GetShiftById(int id);
-        }
-
-        //Obiekty tej klasy to pracownicy.
-        public class Employee
-        {
-            public int Numer { get; set; }                  //Numer osoby.
-            public string Imie { get; set; }                //Imię osoby.
-            public string Nazwisko { get; set; }            //Nazwisko osoby.
-            public double WymiarEtatu { get; set; }         //Wymiar etatu osoby.
-            public int Zaleglosci { get; set; }             //Zaległości osoby.
-            public bool CzyTriazDzien { get; set; }         //Czy osobie można przydzielać triaż na dziennej zmianie?
-            public bool CzyTriazNoc { get; set; }           //Czy osobie można przydzielać triaż na nocnej zmianie?
-
-            //Konstruktor
-            public Employee(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
-            {
-                this.Numer = numer;
-                this.Imie = imie;
-                this.Nazwisko = nazwisko;
-                this.WymiarEtatu = wymiarEtatu;
-                this.Zaleglosci = zaleglosci;
-                this.CzyTriazDzien = czyTriazDzien;
-                this.CzyTriazNoc = czyTriazNoc;
-            }
-        }
-
         //Ta klasa odpowiada za zarządzanie pracownikami.
         public class EmployeeManagement : IEmployees
         {
-            private readonly List<Employee>  employees;          //Deklaracja listy pracowników.
+            private readonly List<Employee>  employees;                                 //Deklaracja listy pracowników.
 
             //Konstruktor.
             public EmployeeManagement()
             {
-                //Tworzymy listę i wypełniamy wartościami null.
-                employees = new List<Employee>(MAX_LICZBA_OSOB);            //Lista pracowników.
+                //Tworzymy listę i wypełniamy wartościami null. Tworzymy menadżera UI.
+                employees = new List<Employee>(MAX_LICZBA_OSOB);                        //Lista pracowników.
                 for (int i = 0; i < MAX_LICZBA_OSOB; i++)
                 {
                     employees.Add(null);
                 }
             }
-
-            //Interfejs do wybierani wszystkich pracowników.
-            public IEnumerable<Employee> GetAllEmployees() => employees;
-
-            //Interfejs do wybierani wszystkich pracowników (tylko pola niepuste).
-            public IEnumerable<Employee> GetAllEmployeesNotNull() => employees.Where(emp => emp != null);
-
-            //Interfejs do wybierania pracowników.
-            public IEnumerable<Employee> GetEmployeeById(int numer) => employees.Where(emp => (emp != null && emp.Numer == numer));
 
             //Usuwanie pracownika.
             public void EmployeeDelete(Employee employee)
@@ -98,31 +59,6 @@ namespace Funkcje_GA
                 //Próbujemy usunąć osobę z grafiku.
                 try
                 {
-                    //Usuwamy osobę z grafiku.
-                    for (int i = 0; i < LICZBA_DNI; i++)
-                    {
-                        //Usuwamy dyżury dzienne.
-                        for (int j = 0; j < listBoxesDzien[i].Items.Count; j++)
-                        {
-
-                            if (listBoxesDzien[i].GetNumber(j) == employee.Numer)
-                            {
-                                listBoxesDzien[i].Items.RemoveAt(j);
-                                listBoxesDzien[i].Refresh();
-                            }
-                        }
-
-                        //Usuwamy dyżury nocne.
-                        for (int j = 0; j < listBoxesNoc[i].Items.Count; j++)
-                        {
-                            if (listBoxesNoc[i].GetNumber(j) == employee.Numer)
-                            {
-                                listBoxesNoc[i].Items.RemoveAt(j);
-                                listBoxesNoc[i].Refresh();
-                            }
-                        }
-                    }
-
                     //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
                     labelsPracownicy[employee.Numer - 1].Text = "";
                     employees[employee.Numer - 1] = null;
@@ -232,7 +168,16 @@ namespace Funkcje_GA
                 employee.CzyTriazNoc = czyTriazNoc;
                 UpdateEmployeeLabel(employee);
             }
-            
+
+            //Interfejs do wybierani wszystkich pracowników.
+            public IEnumerable<Employee> GetAllEmployees() => employees;
+
+            //Interfejs do wybierani wszystkich pracowników (tylko pola niepuste).
+            public IEnumerable<Employee> GetAllEmployeesNotNull() => employees.Where(emp => emp != null);
+
+            //Interfejs do wybierania pracowników.
+            public Employee GetEmployeeById(int numer) => employees.First(emp => (emp != null && emp.Numer == numer));
+
             //Wyświetlanie informacji o pracowniku na etykiecie.
             public void UpdateEmployeeLabel(Employee employee)
             {
@@ -317,7 +262,7 @@ namespace Funkcje_GA
                                     throw new InvalidDataException("Numer osoby musi być liczbą naturalną z zakresu 1 - 50.");
 
                                 //Sprawdzamy, czy osoba istnieje w bazie.
-                                else if (employeeManager.GetEmployeeById(nrOsoby).Count() < 1)
+                                else if (employeeManager.GetEmployeeById(nrOsoby) == null)
                                     throw new InvalidDataException("Osoba nie istnieje w bazie pracowników");
 
                                 //Jeśli wszystko jest ok to dodajemy dyżur do grafiku.
@@ -345,9 +290,9 @@ namespace Funkcje_GA
                                     MessageBox.Show("Nie udało się wczytać grafiku dla dnia: " + (nrLinii + 1 - LICZBA_DNI).ToString() + " dyżur nocny.");
 
                                 //Czyścimy grafik, ustawiamy flagę flagBreak, wychodzimy z pętli.
-                                scheduleManager.GetShiftById(nrLinii).First().Present_employees.Clear();
-                                scheduleManager.GetShiftById(nrLinii).First().Sala_employees.Clear();
-                                scheduleManager.GetShiftById(nrLinii).First().Triaz_employees.Clear();
+                                scheduleManager.GetShiftById(nrLinii).Present_employees.Clear();
+                                scheduleManager.GetShiftById(nrLinii).Sala_employees.Clear();
+                                scheduleManager.GetShiftById(nrLinii).Triaz_employees.Clear();
                                 flagBreak = true;
                                 break;
                             }
@@ -379,17 +324,17 @@ namespace Funkcje_GA
                     string str = "";                                //Linijka odpowiadająca jednej zmianie.
                     int nrOsoby;                                    //Numer osoby.
                     //Jeżeli zmiana jest obsadzona t oformatujemy string.
-                    if(scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count > 0)
+                    if(scheduleManager.GetShiftById(nrZmiany).Present_employees.Count > 0)
                     {
-                        for (int j = 0; j < scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count; j++)
+                        for (int j = 0; j < scheduleManager.GetShiftById(nrZmiany).Present_employees.Count; j++)
                         {
                             //Pobieramy numer osoby. Jeśli ma salę to dopisujemy "s" plus spacja.
-                            nrOsoby = scheduleManager.GetShiftById(nrZmiany).First().Present_employees[j].Numer;
-                            if (scheduleManager.GetShiftById(nrZmiany).First().Sala_employees.Contains(employeeManager.GetEmployeeById(nrOsoby).First()))
+                            nrOsoby = scheduleManager.GetShiftById(nrZmiany).Present_employees[j].Numer;
+                            if (scheduleManager.GetShiftById(nrZmiany).Sala_employees.Contains(employeeManager.GetEmployeeById(nrOsoby)))
                                 str = str + nrOsoby.ToString() + "s ";
 
                             //Jeśli osoba ma triaż to dopisujemy "t" plus spacja.
-                            else if (scheduleManager.GetShiftById(nrZmiany).First().Triaz_employees.Contains(employeeManager.GetEmployeeById(nrOsoby).First()))
+                            else if (scheduleManager.GetShiftById(nrZmiany).Triaz_employees.Contains(employeeManager.GetEmployeeById(nrOsoby)))
                                 str = str + nrOsoby.ToString() + "t ";
 
                             //Jeśli osoba jest bez funkcji to dopisujemy spację.
@@ -490,14 +435,14 @@ namespace Funkcje_GA
                 for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
                 {
                     //Jeśli osoba istnieje to wpisz dane.
-                    if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+                    if (employeeManager.GetEmployeeById(nrOsoby) != null)
                     {
-                        string danePracownika = employeeManager.GetEmployeeById(nrOsoby).First().Numer.ToString() + " " 
-                                              + employeeManager.GetEmployeeById(nrOsoby).First().Imie + " "
-                                              + employeeManager.GetEmployeeById(nrOsoby).First().Nazwisko + " "
-                                              + employeeManager.GetEmployeeById(nrOsoby).First().Zaleglosci.ToString() + " "
-                                              + employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazDzien.ToString() + " "
-                                              + employeeManager.GetEmployeeById(nrOsoby).First().CzyTriazNoc.ToString() + "\n";
+                        string danePracownika = employeeManager.GetEmployeeById(nrOsoby).Numer.ToString() + " " 
+                                              + employeeManager.GetEmployeeById(nrOsoby).Imie + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).Nazwisko + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).Zaleglosci.ToString() + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).CzyTriazDzien.ToString() + " "
+                                              + employeeManager.GetEmployeeById(nrOsoby).CzyTriazNoc.ToString() + "\n";
                         File.AppendAllText(plik, danePracownika);
                     }
 
@@ -509,8 +454,16 @@ namespace Funkcje_GA
         }
 
         //Ta klasa zawiera ListBoxy przedstawiające grafik.
-        private class ListBoxGrafik : ListBox
+        public class ListBoxGrafik : ListBox
         {
+            public int Id { get; set; }                 //Numer listBoxa.
+
+            //Konstruktor.
+            public ListBoxGrafik(int id)
+            {
+                this.Id = id;
+            }
+
             //Zwraca funkcję danej osoby. 0 - bez funkcji, 1 - sala, 2 - triaż.
             public int GetFunction(int index)
             {
@@ -752,16 +705,16 @@ namespace Funkcje_GA
 
                         if (i < LICZBA_DNI)
                         {
-                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).First().Present_employees[nrSala].Numer);
-                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz1].Numer);
-                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz2].Numer);
+                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).Present_employees[nrSala].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).Present_employees[nrTriaz1].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).Present_employees[nrTriaz2].Numer);
                         }
 
                         else
                         {
-                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).First().Present_employees[nrSala].Numer);
-                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz1].Numer);
-                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).First().Present_employees[nrTriaz2].Numer);
+                            scheduleManager.ToSala(i, scheduleManager.GetShiftById(i).Present_employees[nrSala].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).Present_employees[nrTriaz1].Numer);
+                            scheduleManager.ToTriaz(i, scheduleManager.GetShiftById(i).Present_employees[nrTriaz2].Numer);
                         }
                     }
                 }
@@ -1011,23 +964,29 @@ namespace Funkcje_GA
                 return liczbaDyzurow;
             }
 
+            //Generuje tablicę z numerami osób, które nie powinny mieć triażu za dnia.
             private static int[] ListaNieTiazDzien()
             {
+                //Pobieramy listę osób, które nie powinny być przypisane do triażu w ciągu dnia i zamieniamy na tablicę int.
                 Employee[] employeesNieTriazDzien = employeeManager.GetAllEmployeesNotNull().Where(emp => emp.CzyTriazDzien == false).ToArray();
-                int[] nieTriazDzien = new int[employeesNieTriazDzien.Count()];
+                int[] nieTriazDzien = new int[employeesNieTriazDzien.Count()];          //Liczba osób, które nie powinny mieć triażu w ciągu dnia.
                 for (int i = 0; i < employeesNieTriazDzien.Count(); i++)
                     nieTriazDzien[i] = employeesNieTriazDzien[i].Numer;
 
+                //Zwracamy tablicę int.
                 return nieTriazDzien;
             }
 
+            //Generuje tablicę z numerami osób, które nie powinny mieć triażu w nocy.
             private static int[] ListaNieTiazNoc()
             {
+                //Pobieramy listę osób, które nie powinny być przypisane do triażu w ciągu nocy i zamieniamy na tablicę int.
                 Employee[] employeesNieTriazNoc = employeeManager.GetAllEmployeesNotNull().Where(emp => emp.CzyTriazNoc == false).ToArray();
-                int[] nieTriazNoc = new int[employeesNieTriazNoc.Count()];
+                int[] nieTriazNoc = new int[employeesNieTriazNoc.Count()];          //Liczba osób, które nie powinny mieć triażu w ciągu nocy.
                 for (int i = 0; i < employeesNieTriazNoc.Count(); i++)
                     nieTriazNoc[i] = employeesNieTriazNoc[i].Numer;
 
+                //Zwracamy tablicę int.
                 return nieTriazNoc;
             }
 
@@ -1041,7 +1000,7 @@ namespace Funkcje_GA
 
                 for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
                 {
-                    if(scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() > 0)
+                    if(scheduleManager.GetShiftById(shiftId).Present_employees.Count() > 0)
                         liczbaDniRoboczych++;
                 }
 
@@ -1065,6 +1024,7 @@ namespace Funkcje_GA
                 return oczekiwanaLiczbaFunkcji;
             }
 
+            //Algorytm optymalizacji genetycznej.
             public static bool[] OptymalizacjaGA(int liczbaZmiennych, int liczbaOsobnikow, decimal tol, decimal tolX, int maxKonsekwentnychIteracji, int maxIteracji)
             {
                 //Jeśli wybrano liczbę osobników mniejszą niż 10 to przypisz 10.
@@ -1095,17 +1055,22 @@ namespace Funkcje_GA
                 double sumaSzans = 0.0;                                                     //1 + 2 + 3 + ... + liczbaReprodukujących.
                 double[] szansa = new double[Convert.ToInt32(liczbaReprodukujacych)];       //Szansa danego osobnika na reprodukcję.
 
+                //Obliczamy sumę szans.
                 for (int i = 0; i < liczbaReprodukujacych; i++)
                     sumaSzans += (i + 1);
 
+                //Obliczamy szance kolejnych osobników. nty Osobnik zostaje wybrany, gdy liczba losowa jest mniejsza od ntej szansy, ale większa od (n-1)tej szansy.
                 szansa[0] = liczbaReprodukujacych / sumaSzans;
                 for (int i = 1; i < liczbaReprodukujacych; i++)
                     szansa[i] = szansa[i - 1] + (liczbaReprodukujacych - i) / sumaSzans;
 
+                //Generujemy losowe genomy początkowe.
                 for (int j = 0; j < liczbaOsobnikow; j++)
                 {
-                    bool[] bools = new bool[liczbaZmiennych];
-                    bool[] bools2 = new bool[liczbaZmiennych];
+                    bool[] bools = new bool[liczbaZmiennych];               //Genom osobnika.
+                    bool[] bools2 = new bool[liczbaZmiennych];              //Genom kopii osobnika.
+
+                    //Losujemy poszczególne geny.
                     for (int i = 0; i < liczbaZmiennych; i++)
                     {
                         temp = rnd.NextDouble();
@@ -1121,32 +1086,39 @@ namespace Funkcje_GA
                             bools2[i] = true;
                         }
                     }
+
+                    //Przypisujemy genomy początkowe do osobników i ich kopii.
                     osobniki[j] = new Osobnik(bools, 0.0m);
                     osobnikiTemp[j] = new Osobnik(bools2, 0.0m);
                 }
 
+                //Obliczamy f. celu dla populacji początkowej.
                 for (int i = 0; i < liczbaOsobnikow; i++)
                 {
                     osobniki[i].wartosc = FunkcjaCelu(osobniki[i].genom);
                     liczbaWywolanFunkcjiCelu++;
                 }
 
+                //Sortujemy osobniki malejąco i wybieramy najlepszą  wartość f. celu.
                 Array.Sort(osobniki, OsComp);
                 cel = osobniki[0].wartosc;
 
+                //Wyznaczamy kolejne poppulacja dopóki:
+                //1. Nie zostanie osiągnięta maksymalna liczba iteracji.
+                //2. Nie zostanie osiągnięta maksymalna liczba konsekwentych iteracji bez poprawy f. celu.
+                //3. Rozwiązanie nie będzie sięróżnić od celu o mniej niż tol + stopienZdegenerowania.
                 while (nrIteracji <= maxIteracji && nrKonsekwentnejIteracji <= maxKonsekwentnychIteracji && (cel > stopienZdegenerowania + tol))
                 {
+                    //Inkrementujemy numery iteracji i kopiujemy genomy populacji.
                     nrIteracji++;
                     nrKonsekwentnejIteracji++;
                     for (int i = 0; i < liczbaOsobnikow; i++)
                         osobnikiTemp[i].genom = osobniki[i].genom;
 
-                    //
-                    // Krzyzowanie
-                    //
-
+                    //Tworzenie nowej populacji przez krzyżowanie. Osobniki elitarne przechodzą do nowej populacji bez uszczerbku.
                     for (int i = liczbaOsobnikow - 1; i >= liczbaElitarnych; i--)
                     {
+                        //Losujemy pierwszego przodka. Wybieramy największy indeks j taki, że szansa[j] <= temp.
                         temp = rnd.NextDouble();
                         for (int j = (liczbaReprodukujacych - 1); j > 0; j--)
                         {
@@ -1157,6 +1129,7 @@ namespace Funkcje_GA
                             }
                         }
 
+                        //Losujemy drugiego przodka. Wybieramy największy indeks j taki, że szansa[j] <= temp.
                         temp = rnd.NextDouble();
                         for (int j = (liczbaReprodukujacych - 1); j > 0; j--)
                         {
@@ -1167,13 +1140,15 @@ namespace Funkcje_GA
                             }
                         }
 
+                        //Sprawdzamy czy dojdzie do krzyżowania, czy do kopiowania.
                         czyKrzyzowanie = rnd.NextDouble();
 
                         if (czyKrzyzowanie < SZANSA_KRZYZOWANIE)
                         {
-
+                            //Dla każdego genu złozonego z MAX_LICZBA_BITOW bitów wybieramy jednego z przodków, od którego gen będzie kopiowany.
                             for (int k = 0; k < liczbaZmiennych / MAX_LICZBA_BITOW; k++)
                             {
+                                //Kopiowanie od pierwszego przodka.
                                 temp = rnd.NextDouble();
                                 if (temp < 0.5)
                                 {
@@ -1183,6 +1158,7 @@ namespace Funkcje_GA
                                     }
                                 }
 
+                                //Kopiowanie od drugiego przodka.
                                 else
                                 {
                                     for (int m = 0; m < MAX_LICZBA_BITOW; m++)
@@ -1193,18 +1169,20 @@ namespace Funkcje_GA
                             }
                         }
 
+                        //Kopiowanie. Z prawdopodobieństwem 50% kopiujemy jednego z przodków, a z prawdopodobieństwem 50% drugiego z przodkuów.
                         else if (czyKrzyzowanie >= SZANSA_KRZYZOWANIE)
                         {
                             temp = rnd.NextDouble();
                             for (int k = 0; k < liczbaZmiennych / MAX_LICZBA_BITOW; k++)
                             {
-
+                                //Kopiowanie pierwszego przodka.
                                 if (temp < 0.5)
                                 {
                                     for (int m = 0; m < MAX_LICZBA_BITOW; m++)
                                         osobniki[i].genom[k * MAX_LICZBA_BITOW + m] = osobnikiTemp[nrPrzodka1].genom[k * MAX_LICZBA_BITOW + m];
                                 }
 
+                                //Kopiowanie drugiego przodka.
                                 else
                                 {
                                     for (int m = 0; m < MAX_LICZBA_BITOW; m++)
@@ -1332,18 +1310,21 @@ namespace Funkcje_GA
                 //Funkcja zwraca genom najlepszego osobnika.
                 return osobniki[0].genom;
             }
-
+            
+            //Przygotowanie danych do optymalizacji.
             public static void Prepare()
             {
+                //Sprawdzamy, czy liczba pracowników na każdej zmianie wynosi 0 lub od 3 do MAX_LICZBA_DYZUROW.
                 for(int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
                 {
-                    if (scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() == 1 || scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() == 2)
+                    if (scheduleManager.GetShiftById(shiftId).Present_employees.Count() == 1 || scheduleManager.GetShiftById(shiftId).Present_employees.Count() == 2)
                         throw new InvalidDataException("Za mało pracowników na zmianie: " + shiftId.ToString() + " .");
 
-                    if (scheduleManager.GetShiftById(shiftId).First().Present_employees.Count() > MAX_LICZBA_DYZUROW)
+                    if (scheduleManager.GetShiftById(shiftId).Present_employees.Count() > MAX_LICZBA_DYZUROW)
                         throw new InvalidDataException("Za dużo pracowników na zmianie: " + shiftId.ToString() + " .");
                 }
 
+                //Przygotowujemy niezbędne dane.
                 dyzuryGrafik = UtworzGrafik();
                 nieTriazDzien = ListaNieTiazDzien();
                 nieTriazNoc = ListaNieTiazNoc();
@@ -1399,10 +1380,10 @@ namespace Funkcje_GA
                 for (int nrDyzuru = 0; nrDyzuru < 2 * LICZBA_DNI * MAX_LICZBA_DYZUROW; nrDyzuru++)
                 {
                     nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));
-                    if (scheduleManager.GetShiftById(nrZmiany).First().Present_employees.Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
+                    if (scheduleManager.GetShiftById(nrZmiany).Present_employees.Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
                     {
-                        scheduleManager.ToBezFunkcji(nrZmiany, scheduleManager.GetShiftById(nrZmiany).First().Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer);
-                        dyzuryGrafik[nrDyzuru] = scheduleManager.GetShiftById(nrZmiany).First().Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
+                        scheduleManager.ToBezFunkcji(nrZmiany, scheduleManager.GetShiftById(nrZmiany).Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer);
+                        dyzuryGrafik[nrDyzuru] = scheduleManager.GetShiftById(nrZmiany).Present_employees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
                     }
 
                     else
@@ -1410,190 +1391,6 @@ namespace Funkcje_GA
                 }
 
                 return dyzuryGrafik;
-            }
-        }
-
-        public class ScheduleManagement : IShift
-        {
-            private IEmployees EmpManager { get; set; }
-            private readonly List<Shift> schedule;
-
-            public ScheduleManagement(IEmployees EmpManager)
-            {
-                schedule = new List<Shift>(2 * LICZBA_DNI);
-                for (int i = 0; i < 2 * LICZBA_DNI; i++)
-                {
-                    Shift newShift = new Shift(i);
-                    schedule.Add(newShift);
-                }
-
-                this.EmpManager = EmpManager;
-            }
-
-            public IEnumerable<Shift> GetShiftById(int id) => schedule.Where(sched => (sched != null && sched.Id == id));
-
-            public void AddToShift(int shiftId, int employeeId)
-            {
-                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
-                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
-
-                if (!shift.Present_employees.Contains(employee))
-                {
-                     shift.Present_employees.Add(employee);
-                    employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
-                    UpdateListBox(shift);
-                }
-
-            }
-
-            public void RemoveAll()
-            {
-                foreach (Shift shift in schedule)
-                {
-                    schedule[shift.Id].Present_employees.Clear();
-                    schedule[shift.Id].Sala_employees.Clear();
-                    schedule[shift.Id].Triaz_employees.Clear();
-                }
-
-                employeeManager.EmployeeEdit(0.0);
-
-                //Usuwamy dane z listBoxów
-                for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
-                {
-                    listBoxesDzien[nrDnia].Items.Clear();
-                    listBoxesNoc[nrDnia].Items.Clear();
-                }
-            }
-
-            public void RemoveFromShift(int shiftId, int employeeId)
-            {
-                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
-                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
-
-                if (shift.Present_employees.Contains(employee))
-                {
-                    shift.Present_employees.Remove(employee);
-                    shift.Sala_employees.Remove(employee);
-                    shift.Triaz_employees.Remove(employee);
-                    employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
-                    UpdateListBox(shift);
-                }
-            }
-
-            public void ToBezFunkcji(int shiftId, int employeeId)
-            {
-                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
-                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
-
-                if (shift.Present_employees.Contains(employee))
-                {
-                    if (shift.Sala_employees.Contains(employee))
-                    {
-                        shift.Sala_employees.Remove(employee);
-                        UpdateListBox(shift);
-                    }
-
-                    else if (shift.Triaz_employees.Contains(employee))
-                    {
-                        shift.Triaz_employees.Remove(employee);
-                        UpdateListBox(shift);
-                    }
-                }
-            }
-
-            public void ToSala(int shiftId, int employeeId)
-            {
-                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
-                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
-
-                if (shift.Present_employees.Contains(employee) && !shift.Sala_employees.Contains(employee))
-                {
-                    if (shift.Triaz_employees.Contains(employee))
-                        shift.Triaz_employees.Remove(employee);
-
-                    shift.Sala_employees.Add(employee);
-                    UpdateListBox(shift);
-                }
-            }
-
-            public void ToTriaz(int shiftId, int employeeId)
-            {
-                Employee employee = EmpManager.GetEmployeeById(employeeId).First() ?? throw new ArgumentNullException("Osoba nie istnieje.");
-                Shift shift = this.GetShiftById(shiftId).First() ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
-
-                if (shift.Present_employees.Contains(employee) && !shift.Triaz_employees.Contains(employee))
-                {
-                    if (shift.Sala_employees.Contains(employee))
-                        shift.Sala_employees.Remove(employee);
-
-                    shift.Triaz_employees.Add(employee);
-                    UpdateListBox(shift);
-                }
-            }
-
-            private void UpdateListBox(Shift shift)
-            {
-                if (shift.Id < LICZBA_DNI)
-                {
-                    listBoxesDzien[shift.Id].Items.Clear();
-                    for (int nrOsoby = 0; nrOsoby < shift.Present_employees.Count; nrOsoby++)
-                    {
-                        if (shift.Present_employees.Count > 0)
-                            listBoxesDzien[shift.Id].Items.Add(shift.Present_employees[nrOsoby].Numer);
-                    }
-
-                    for (int liczbaSal = 0; liczbaSal < shift.Sala_employees.Count; liczbaSal++)
-                    {
-                        if (shift.Sala_employees.Count > 0)
-                            listBoxesDzien[shift.Id].ToSala(listBoxesDzien[shift.Id].Items.IndexOf(shift.Sala_employees[liczbaSal].Numer));
-                    }
-
-                    for (int liczbaTriazy = 0; liczbaTriazy < shift.Triaz_employees.Count; liczbaTriazy++)
-                    {
-                        if (shift.Triaz_employees.Count > 0)
-                            listBoxesDzien[shift.Id].ToTriaz(listBoxesDzien[shift.Id].Items.IndexOf(shift.Triaz_employees[liczbaTriazy].Numer));
-                    }
-                }
-
-                else
-                {
-                    listBoxesNoc[shift.Id - LICZBA_DNI].Items.Clear();
-                    for (int nrOsoby = 0; nrOsoby < shift.Present_employees.Count; nrOsoby++)
-                    {
-                        if (shift.Present_employees.Count > 0)
-                            listBoxesNoc[shift.Id - LICZBA_DNI].Items.Add(shift.Present_employees[nrOsoby].Numer);
-                    }
-
-                    for (int liczbaSal = 0; liczbaSal < shift.Sala_employees.Count; liczbaSal++)
-                    {
-                        if(shift.Sala_employees.Count > 0)
-                            listBoxesNoc[shift.Id - LICZBA_DNI].ToSala(listBoxesNoc[shift.Id - LICZBA_DNI].Items.IndexOf(shift.Sala_employees[liczbaSal].Numer));
-                    }
-
-                    for (int liczbaTriazy = 0; liczbaTriazy < shift.Triaz_employees.Count; liczbaTriazy++)
-                    {
-                        if (shift.Triaz_employees.Count > 0)
-                            listBoxesNoc[shift.Id - LICZBA_DNI].ToTriaz(listBoxesNoc[shift.Id - LICZBA_DNI].Items.IndexOf(shift.Triaz_employees[liczbaTriazy].Numer));
-                    }
-                }
-            }
-        }
-
-        //Obiekty tej klasy przechowują informacje o zmianie.
-        public class Shift
-        {
-            public int Id { get; set; }                                 //Numer id zmiany 0 - 30 dzienne zmiany, 31 - 61 nocne zmiany.
-            public List<Employee> Present_employees { get; set; }       //Pracownicy na zmianie.
-            public List<Employee> Sala_employees { get; set; }          //Pracownicy na sali.
-            public List<Employee> Triaz_employees { get; set; }         //Pracownicy na triażu.
-
-            //Konstruktor.
-            public Shift(int Id)
-            {
-                Present_employees = new List<Employee>();
-                Sala_employees = new List<Employee>();
-                Triaz_employees = new List<Employee>();
-                this.Id = Id;
             }
         }
 
@@ -1614,19 +1411,11 @@ namespace Funkcje_GA
         };
 
         private static System.Windows.Forms.Label[] labelsPracownicy = new System.Windows.Forms.Label[MAX_LICZBA_OSOB];     //Tworzenie etykiet wyświetlających dane pracowników.
-        private System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];                      //Tworzenie etykiet wyświetlających numer dziennej zmiany.
-        private System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];                        //Tworzenie etykiet wyświetlających numer nocnej zmiany.
-        private static ListBoxGrafik[] listBoxesDzien = new ListBoxGrafik[LICZBA_DNI];                                      //Tworzenie listboxów odpowiadających dziennej zmianie.
-        private static ListBoxGrafik[] listBoxesNoc = new ListBoxGrafik[LICZBA_DNI];                                        //Tworzenie listboxów odpowiadających nocnej zmianie.
 
         private TimeSpan czasOptymalizacja;                                                         //Pomiar czasu działania algorytmu optymalizacji.
-        public static EmployeeManagement employeeManager = new EmployeeManagement();                //Instancja do zarządzania pracownikami.
-        private const int LICZBA_DNI = 31;                                                          //Największa liczba dni w miesiącu.
-        private const int LICZBA_ZMIENNYCH = 2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW;                 //Liczba zmiennych w zadaniu optymalizacji. 
-        private const int MAX_LICZBA_BITOW = 3;                                                     //Liczba bitów potrzebna do zakodowania jednej osoby (log2(MAX_LICZBA_DYZUROW)).
-        private const int MAX_LICZBA_DYZUROW = 8;                                                   //Maksymalna liczba dyżurów jednego dnia.
-        public const int MAX_LICZBA_OSOB = 50;                                                      //Maksymalna liczba pracowników w systemie.    
-        private static ScheduleManagement scheduleManager = new ScheduleManagement(employeeManager); //Instancja do zarządzania grafikiem.
+        public static EmployeeManagement employeeManager = new EmployeeManagement();                //Instancja do zarządzania pracownikami.   
+        private static UIForm1Management uiManager = new UIForm1Management();                                  //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
+        private static ScheduleManagement scheduleManager = new ScheduleManagement(employeeManager, uiManager); //Instancja do zarządzania grafikiem.
         private DateTime startOptymalizacja;                                                        //Pomiar czasu działania algorytmu optymalizacji.
         
         //Konstruktor.
@@ -1671,15 +1460,11 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Zamieniamy wszystkie wybrane dyżury na bezfunkcyjne.
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
-                //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
-                if (listBoxesDzien[nrDnia].SelectedItem != null)
-                    scheduleManager.ToBezFunkcji(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
-
-                //Zamieniamy wszystkie wybrane dyżury na sale (noc).
-               if (listBoxesNoc[nrDnia].SelectedItem != null)
-                    scheduleManager.ToBezFunkcji(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
+                //Zamieniamy wszystkie wybrane dyżury na bez funkcyjne.
+                if (uiManager.GetSelectedIndex(nrZmiany) != -1)
+                    scheduleManager.ToBezFunkcji(nrZmiany, uiManager.GetSelectedEmployeeNumber(nrZmiany, uiManager.GetSelectedIndex(nrZmiany)));
             }
         }
 
@@ -1710,15 +1495,11 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Zamieniamy wszystkie wybrane dyżury na sale.
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
-                //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
-                if (listBoxesDzien[nrDnia].SelectedItem != null)
-                    scheduleManager.ToSala(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
-
-                //Zamieniamy wszystkie wybrane dyżury na sale (noc).
-                if (listBoxesNoc[nrDnia].SelectedItem != null)
-                    scheduleManager.ToSala(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
+                //Zamieniamy wszystkie wybrane dyżury na sale.
+                if (uiManager.GetSelectedIndex(nrZmiany) != -1)
+                    scheduleManager.ToSala(nrZmiany, uiManager.GetSelectedEmployeeNumber(nrZmiany, uiManager.GetSelectedIndex(nrZmiany)));
             }
         }
 
@@ -1729,16 +1510,11 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Zamieniamy wszystkie wybrane dyzury na triaż.
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
-                //Zamieniamy wszystkie wybrane dyżury na sale (dzień).
-                if (listBoxesDzien[nrDnia].SelectedItem != null)
-                    scheduleManager.ToTriaz(nrDnia, listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex));
-
-                //Zamieniamy wszystkie wybrane dyżury na sale (noc).
-                if (listBoxesNoc[nrDnia].SelectedItem != null)
-                    scheduleManager.ToTriaz(nrDnia + LICZBA_DNI, listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex));
-                
+                //Zamieniamy wszystkie wybrane dyżury na triaż.
+                if (uiManager.GetSelectedIndex(nrZmiany) != -1)
+                    scheduleManager.ToTriaz(nrZmiany, uiManager.GetSelectedEmployeeNumber(nrZmiany, uiManager.GetSelectedIndex(nrZmiany)));
             }
         }
 
@@ -1749,22 +1525,15 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Usuwamy dyżur.
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
                 int nrOsoby;                        //Numer osoby;
 
-                //Usuwamy, jeśli dyżur był dzienny.
-                if (listBoxesDzien[nrDnia].SelectedIndex != -1)
+                //Usuwamy zaznaczone dyżury.
+                if (uiManager.GetSelectedIndex(nrZmiany) != -1)
                 {
-                    nrOsoby = listBoxesDzien[nrDnia].GetNumber(listBoxesDzien[nrDnia].SelectedIndex);
-                    scheduleManager.RemoveFromShift(nrDnia, nrOsoby);
-                }
-
-                //Usuwamy, jeśli dyżur był nocny.
-                if (listBoxesNoc[nrDnia].SelectedIndex != -1)
-                {
-                        nrOsoby = listBoxesNoc[nrDnia].GetNumber(listBoxesNoc[nrDnia].SelectedIndex);
-                        scheduleManager.RemoveFromShift(nrDnia + LICZBA_DNI, nrOsoby);
+                    nrOsoby = uiManager.GetSelectedEmployeeNumber(nrZmiany, uiManager.GetSelectedIndex(nrZmiany));
+                    scheduleManager.RemoveFromShift(nrZmiany, nrOsoby);
                 }
             }
         }
@@ -1810,55 +1579,32 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Usuwamy zaznaczenie.
-            for (int nrListBoxa = 0; nrListBoxa < LICZBA_DNI; nrListBoxa++)
-            {
-                listBoxesDzien[nrListBoxa].ClearSelected();
-                listBoxesNoc[nrListBoxa].ClearSelected();
-            }
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+                uiManager.GetElementById(nrZmiany).ClearSelected();
         }
 
         //Załadowanie Form1.
         public void Form1_Load(object sender, EventArgs e) { }
 
-        //Generuje listboxy i etykiety grafiku i listy pracowników. Zdarzenie asynchroniczne przycisku optymalizacji.
+        //Generuje kontrolki grafiku i etykiety grafiku i listy pracowników. Zdarzenie asynchroniczne przycisku optymalizacji.
         private void InitializeComponent2()
         {
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
-            {
-                //Tworzymy listBoxy dla dyżurów dziennych.
-                listBoxesDzien[nrDnia] = new ListBoxGrafik();
-                listBoxesDzien[nrDnia].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                listBoxesDzien[nrDnia].Size = Size = new System.Drawing.Size(40, 400);
-                listBoxesDzien[nrDnia].AllowDrop = true;
-                tableLayoutPanel2.Controls.Add(listBoxesDzien[nrDnia], nrDnia, 1);
+            //Inicjalizujemy kontrolki grafiku.
+            uiManager.InitializeControls();
 
-                //Tworzymy etykiety dla dyżurów dziennych.
-                labelsDzien[nrDnia] = new System.Windows.Forms.Label();
-                labelsDzien[nrDnia].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                labelsDzien[nrDnia].Size = Size = new System.Drawing.Size(340, 40);
-                labelsDzien[nrDnia].Text = (nrDnia + 1).ToString();
-                tableLayoutPanel2.Controls.Add(labelsDzien[nrDnia], nrDnia, 0);
-
-                //Tworzymy listBoxy dla dyżurów nocnych.
-                listBoxesNoc[nrDnia] = new ListBoxGrafik();
-                listBoxesNoc[nrDnia].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                listBoxesNoc[nrDnia].Size = Size = new System.Drawing.Size(40, 400);
-                listBoxesNoc[nrDnia].AllowDrop = true;
-                tableLayoutPanel3.Controls.Add(listBoxesNoc[nrDnia], nrDnia, 1);
-
-                //Tworzymy etykiety dla dyżurów nocnych.
-                labelsNoc[nrDnia] = new System.Windows.Forms.Label();
-                labelsNoc[nrDnia].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                labelsNoc[nrDnia].Size = Size = new System.Drawing.Size(340, 40);
-                labelsNoc[nrDnia].Text = (nrDnia + 1).ToString();
-                tableLayoutPanel3.Controls.Add(labelsNoc[nrDnia], nrDnia, 0);
-
+            for (int nrZmiany = 0; nrZmiany <  2 *LICZBA_DNI; nrZmiany++)
+            { 
                 //Przypisujemy delegaty do zdarzeń drag and drop.
-                int iter3 = nrDnia;
-                listBoxesDzien[nrDnia].DragEnter += new DragEventHandler(this.listBoxDzien_DragEnter);
-                listBoxesDzien[nrDnia].DragDrop += new DragEventHandler((sender, e) => listBoxDzien_DragDrop(sender, e, iter3));
-                listBoxesNoc[nrDnia].DragEnter += new DragEventHandler(this.listBoxNoc_DragEnter);
-                listBoxesNoc[nrDnia].DragDrop += new DragEventHandler((sender, e) => listBoxNoc_DragDrop(sender, e, iter3));
+                int iter3 = nrZmiany;
+                uiManager.GetElementById(nrZmiany).DragEnter += new DragEventHandler(this.scheduleControl_DragEnter);
+                uiManager.GetElementById(nrZmiany).DragDrop += new DragEventHandler((sender, e) => scheduleControl_DragDrop(sender, e, iter3));
+
+                //Dodawanie kontrolek do formularza.
+                if (nrZmiany < LICZBA_DNI)
+                    tableLayoutPanel2.Controls.Add(uiManager.GetElementById(nrZmiany), nrZmiany, 1);
+
+                else
+                    tableLayoutPanel3.Controls.Add(uiManager.GetElementById(nrZmiany), nrZmiany - LICZBA_DNI, 1);
             }
 
             //Tworzymy etykiety wyświetlające dane pracowników i delegaty do zdarzeń drag and drop.
@@ -1899,6 +1645,7 @@ namespace Funkcje_GA
                             control.Enabled = false;
                     }
 
+                    //Przygotowujemy dane do optymalizacji.
                     Optimization.Prepare();
 
                     //Jeśli wszystko jest w porządku uruchamia się optymalizacja i mierzony jest czas.
@@ -1938,50 +1685,6 @@ namespace Funkcje_GA
             };
         }
 
-        //Drag and drop, listBoxDzien. Efekt wizualny i kopiowanie tekstu.
-        private void listBoxDzien_DragEnter(object sender, DragEventArgs e)
-        {
-            //Jeśli etykieta nie była pusta, to kopiujemy numer osoby.
-            if (e.Data.GetDataPresent(DataFormats.Text))
-                e.Effect = DragDropEffects.Copy;
-            else
-                e.Effect = DragDropEffects.None;
-        }
-
-        //Drag and drop, listBoxDzien. Dodajemy dyżur.
-        private void listBoxDzien_DragDrop(object sender, DragEventArgs e, int nrListBoxa)
-        {
-            //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
-            string pom = e.Data.GetData(DataFormats.Text).ToString();
-            string[] subs = pom.Split('.');
-
-            //Jeśli dane są ok, to dodajemy do grafiku.
-            if (Int32.TryParse(subs[0], out int nrOsoby))
-                scheduleManager.AddToShift(nrListBoxa, nrOsoby);
-        }
-
-        //Drag and drop, listBoxNoc. Efekt wizualny i kopiowanie tekstu.
-        private void listBoxNoc_DragEnter(object sender, DragEventArgs e)
-        {
-            //Jeśli etykieta nie była pusta, to kopiujemy numer osoby.
-            if (e.Data.GetDataPresent(DataFormats.Text))
-                e.Effect = DragDropEffects.Copy;
-            else
-                e.Effect = DragDropEffects.None;
-        }
-
-        //Drag and drop, listBoxNoc. Dodajemy dyżur.
-        private void listBoxNoc_DragDrop(object sender, DragEventArgs e, int nrListBoxa)
-        {
-            //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
-            string pom = e.Data.GetData(DataFormats.Text).ToString();
-            string[] subs = pom.Split('.');
-
-            //Jeśli dane są ok, to dodajemy do grafiku.
-            if (Int32.TryParse(subs[0], out int nrOsoby))
-                scheduleManager.AddToShift(nrListBoxa + LICZBA_DNI, nrOsoby);
-        }
-
         //Drag and drop, etykieta Pracownicy.
         private void labelsPracownicy_MouseDown(object sender, MouseEventArgs e, int nrOsoby)
         {
@@ -1989,49 +1692,27 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Sprawdzamy po kolei każdy dyżur, jeśli osoba występuje to podświetlamy: czerwony - bez funkcji, zielony - sala, niebieski - triaż.
-            for (int nrDnia = 0; nrDnia < LICZBA_DNI; nrDnia++)
+            for (int nrDnia = 0; nrDnia < 2 * LICZBA_DNI; nrDnia++)
             {
-                if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+                if (employeeManager.GetEmployeeById(nrOsoby) != null)
                 {
-                    //Sprawdzamy dyżury nocne.
-                    for (int nrDyzuru = 0; nrDyzuru < listBoxesDzien[nrDnia].Items.Count; nrDyzuru++)
+                    //Sprawdzamy dyżury.
+                    for (int nrDyzuru = 0; nrDyzuru < uiManager.GetElementItemsByIdAsList(nrDnia).Count; nrDyzuru++)
                     {
-                        if (listBoxesDzien[nrDnia].GetNumber(nrDyzuru) == employeeManager.GetEmployeeById(nrOsoby).First().Numer)
+                        if (uiManager.GetSelectedEmployeeNumber(nrDnia, nrDyzuru) == employeeManager.GetEmployeeById(nrOsoby).Numer)
                         {
-                            switch (listBoxesDzien[nrDnia].GetFunction(nrDyzuru))
+                            switch (uiManager.GetSelectedEmployeeFunction(nrDnia, nrDyzuru))
                             {
                                 case 0:
-                                    listBoxesDzien[nrDnia].BackColor = Color.Red;
+                                    uiManager.GetElementById(nrDnia).BackColor = Color.Red;
                                     break;
 
                                 case 1:
-                                    listBoxesDzien[nrDnia].BackColor = Color.Green;
+                                    uiManager.GetElementById(nrDnia).BackColor = Color.Green;
                                     break;
 
                                 case 2:
-                                    listBoxesDzien[nrDnia].BackColor = Color.Blue;
-                                    break;
-                            }
-                        }
-                    }
-
-                    //Sprawdzamy dyżury nocne.
-                    for (int nrDyzuru = 0; nrDyzuru < listBoxesNoc[nrDnia].Items.Count; nrDyzuru++)
-                    {
-                        if (listBoxesNoc[nrDnia].GetNumber(nrDyzuru) == employeeManager.GetEmployeeById(nrOsoby).First().Numer)
-                        {
-                            switch (listBoxesNoc[nrDnia].GetFunction(nrDyzuru))
-                            {
-                                case 0:
-                                    listBoxesNoc[nrDnia].BackColor = Color.Red;
-                                    break;
-
-                                case 1:
-                                    listBoxesNoc[nrDnia].BackColor = Color.Green;
-                                    break;
-
-                                case 2:
-                                    listBoxesNoc[nrDnia].BackColor = Color.Blue;
+                                    uiManager.GetElementById(nrDnia).BackColor = Color.Blue;
                                     break;
                             }
                         }
@@ -2039,19 +1720,38 @@ namespace Funkcje_GA
                 }
             }
 
-            if (employeeManager.GetEmployeeById(nrOsoby).Count() > 0)
+            if (employeeManager.GetEmployeeById(nrOsoby) != null)
                 labelsPracownicy[nrOsoby - 1].DoDragDrop(labelsPracownicy[nrOsoby - 1].Text, DragDropEffects.Copy | DragDropEffects.Move);
+        }
+
+        //Drag and drop. Efekt wizualny i kopiowanie tekstu.
+        private void scheduleControl_DragEnter(object sender, DragEventArgs e)
+        {
+            //Jeśli etykieta nie była pusta, to kopiujemy numer osoby.
+            if (e.Data.GetDataPresent(DataFormats.Text))
+                e.Effect = DragDropEffects.Copy;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
+        //Drag and drop. Dodajemy dyżur.
+        private void scheduleControl_DragDrop(object sender, DragEventArgs e, int nrZmiany)
+        {
+            //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
+            string pom = e.Data.GetData(DataFormats.Text).ToString();
+            string[] subs = pom.Split('.');
+
+            //Jeśli dane są ok, to dodajemy do grafiku.
+            if (Int32.TryParse(subs[0], out int nrOsoby))
+                scheduleManager.AddToShift(nrZmiany, nrOsoby);
         }
 
         //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana.
         private void UsunPodswietlenie()
         {
             //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana.
-            for (int nrListBoxa = 0; nrListBoxa < LICZBA_DNI; nrListBoxa++)
-            {
-                listBoxesDzien[nrListBoxa].ResetBackColor();
-                listBoxesNoc[nrListBoxa].ResetBackColor();
-            }
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+                uiManager.GetElementById(nrZmiany).ResetBackColor();
         }
     }
 }
