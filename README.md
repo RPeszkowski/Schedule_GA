@@ -14,14 +14,14 @@ For additional information about the app and GA optimization please consider vis
 
 [PL]
 
-## Najważniejsze fragmenty kodu
+#### Najważniejsze fragmenty kodu
 
 <p align="justify">Kod ten składa się z kilkunastu klas, z których najważniejsze to:</p>
 
-*Employee - klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp.
-*EmployeeManagement - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach. Pracownicy są przechowywani w postaci listy, jednak zastosowanie interfejsów pozwala na zmianę implementacji w przyszłosci.
-*Optimization - jest to wydzielony obszar kodu odpowiedzialny za przeprowadzanie optymalizacji.
-*ScheduleManagement - obiekt tej klasy przechowuje aktualny grafik. Grafik jest obecnie listą 62 (po 2 zmiany na dzień) elementów typu Shift, jednak zastosowanie interfejsu pozwala na zmiany w przyszłości.
-*Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
-*UIManagement - obiekt tej klasy odpowiada za prezentację grafiku. Podstawową kontrolką przechowującą dane jest w tej chwili listbox, jednak zastosowanie interfejsu z użyciem zapytań linq daje możliwość prostej zmiany, np. na listview.
+* Employee - klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp.
+* EmployeeManagement - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach. Pracownicy są przechowywani w postaci listy, jednak zastosowanie interfejsów pozwala na zmianę implementacji w przyszłosci.
+* Optimization - jest to wydzielony obszar kodu odpowiedzialny za przeprowadzanie optymalizacji.
+* ScheduleManagement - obiekt tej klasy przechowuje aktualny grafik. Grafik jest obecnie listą 62 (po 2 zmiany na dzień) elementów typu Shift, jednak zastosowanie interfejsu pozwala na zmiany w przyszłości.
+* Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
+* UIManagement - obiekt tej klasy odpowiada za prezentację grafiku. Podstawową kontrolką przechowującą dane jest w tej chwili listbox, jednak zastosowanie interfejsu z użyciem zapytań linq daje możliwość prostej zmiany, np. na listview.
 
