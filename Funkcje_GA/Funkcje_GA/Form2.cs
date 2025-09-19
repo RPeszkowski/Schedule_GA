@@ -10,18 +10,26 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Funkcje_GA.Form1;
 using static Funkcje_GA.Constans;
+using static Funkcje_GA.FileService;
+using static Funkcje_GA.Form1;
+using TooManyEmployeesException = Funkcje_GA.CustomExceptions.TooManyEmployeesException;
 
 namespace Funkcje_GA
 {
     //Form2 do dodawania/edytowania/usuwania osób.
     public partial class Form2 : Form
-    {            
-
+    {
+        private readonly EmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
+        private readonly FileManagementPracownicy _fileManagerPracownicy;   //Instancja do zarządzania plikiem pracowników.
+        
         //Konstruktor. Aktualizacja listboxa z numerami aktywnych pracowników.
-        public Form2()
+        public Form2(EmployeeManagement empManager, FileManagementPracownicy fileManagerPracownicy)
         {
+            //Przypisujemy menagera pracowników.
+            this._employeeManager = empManager;
+            this._fileManagerPracownicy = fileManagerPracownicy;
+
             //Generuje kontrolki. Metoda stworzona przez Designera.
             InitializeComponent();
 
@@ -35,8 +43,23 @@ namespace Funkcje_GA
             //Jeśli wszystkie warunki są spełnione to dodajemy nową osobę.
             try
             {
-                //Tworzymy osobę z pierwszym wolnym numerem i danymi takimi, jakie zostały wprowadzone do boxów. Dodajemy nową osobę do listy osób. Wyświetlamy numery istniejących w systemie osób.
-                employeeManager.EmployeeAdd(textBoxImie.Text, textBoxNazwisko.Text, 0.0, Convert.ToInt32(numericUpDownZaleglosci.Value), checkBoxCzyTriazDzien.Checked, checkBoxCzyTriazNoc.Checked);
+                //Szukamy wolnego numeru.
+                int wolnyNumer = MAX_LICZBA_OSOB - 1;
+                for (int i = MAX_LICZBA_OSOB - 1; i >= 0; i--)
+                {
+                    if (_employeeManager.GetEmployeeById(i + 1) == null)
+                        wolnyNumer = i;
+                }
+
+                //Tworzymy osobę z pierwszym wolnym numerem i danymi takimi, jakie zostały wprowadzone do boxów.
+                //Dodajemy nową osobę do listy osób. Wyświetlamy numery istniejących w systemie osób.
+                _employeeManager.EmployeeAdd(wolnyNumer + 1,
+                                            textBoxImie.Text, 
+                                            textBoxNazwisko.Text, 
+                                            0.0, 
+                                            Convert.ToInt32(numericUpDownZaleglosci.Value), 
+                                            checkBoxCzyTriazDzien.Checked, 
+                                            checkBoxCzyTriazNoc.Checked);
                 UpdateListBoxNumerOsoby();
             }
 
@@ -60,14 +83,17 @@ namespace Funkcje_GA
             try
             {
                 int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
-                employeeManager.EmployeeEdit(employeeManager.GetEmployeeById(nrOsoby), 
-                                             textBoxImie.Text, 
-                                             textBoxNazwisko.Text, 
-                                             employeeManager.GetEmployeeById(nrOsoby).WymiarEtatu, 
-                                             Convert.ToInt32(numericUpDownZaleglosci.Value), 
-                                             checkBoxCzyTriazDzien.Checked, 
-                                             checkBoxCzyTriazNoc.Checked);
-                MessageBox.Show("Zmieniono dane pracownika: " + employeeManager.GetEmployeeById(nrOsoby).Numer.ToString() + " " + employeeManager.GetEmployeeById(nrOsoby).Imie + " " + employeeManager.GetEmployeeById(nrOsoby).Nazwisko);
+                _employeeManager.EmployeeEdit(_employeeManager.GetEmployeeById(nrOsoby), 
+                                         textBoxImie.Text, 
+                                         textBoxNazwisko.Text, 
+                                         _employeeManager.GetEmployeeById(nrOsoby).WymiarEtatu, 
+                                         Convert.ToInt32(numericUpDownZaleglosci.Value), 
+                                         checkBoxCzyTriazDzien.Checked, 
+                                         checkBoxCzyTriazNoc.Checked);
+                MessageBox.Show("Zmieniono dane pracownika: " 
+                                + _employeeManager.GetEmployeeById(nrOsoby).Numer.ToString() + " " 
+                                + _employeeManager.GetEmployeeById(nrOsoby).Imie + " " 
+                                + _employeeManager.GetEmployeeById(nrOsoby).Nazwisko);
             }
 
             //Obsługa wyjątku: osoba nie istnieje.
@@ -92,7 +118,7 @@ namespace Funkcje_GA
         //Zapisujemy dane pracowników do pliku "Pracownicy.txt" i zamykamy Form2.
         private void buttonSaveAndQuit_Click(object sender, EventArgs e)
         {
-            FileManagementPracownicy.ZapiszPracownikow("Pracownicy.txt");
+            _fileManagerPracownicy.ZapiszPracownikow("Pracownicy.txt");
             this.Close();
         }
 
@@ -104,8 +130,9 @@ namespace Funkcje_GA
             //Usuwamy osobę. Wyświetlamy numery istniejących w systemie osób.
             try
             {
-                employeeManager.EmployeeDelete(employeeManager.GetEmployeeById(nrOsoby));
+                _employeeManager.EmployeeDelete(_employeeManager.GetEmployeeById(nrOsoby));
                 UpdateListBoxNumerOsoby();
+                MessageBox.Show("Usunięto dane pracownika.");
             }
 
             //Jeśli się nie udało, wyświetlamy komunikat.
@@ -124,13 +151,13 @@ namespace Funkcje_GA
             int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
 
             //Jeśli osoba istnieje w systemie to wyświetlamy jej numer.
-            if (employeeManager.GetEmployeeById(nrOsoby) != null)
+            if (_employeeManager.GetEmployeeById(nrOsoby) != null)
             {
-                textBoxImie.Text = employeeManager.GetEmployeeById(nrOsoby).Imie;
-                textBoxNazwisko.Text = employeeManager.GetEmployeeById(nrOsoby).Nazwisko;
-                numericUpDownZaleglosci.Value = employeeManager.GetEmployeeById(nrOsoby).Zaleglosci;
-                checkBoxCzyTriazDzien.Checked = employeeManager.GetEmployeeById(nrOsoby).CzyTriazDzien;
-                checkBoxCzyTriazNoc.Checked = employeeManager.GetEmployeeById(nrOsoby).CzyTriazNoc;
+                textBoxImie.Text = _employeeManager.GetEmployeeById(nrOsoby).Imie;
+                textBoxNazwisko.Text = _employeeManager.GetEmployeeById(nrOsoby).Nazwisko;
+                numericUpDownZaleglosci.Value = _employeeManager.GetEmployeeById(nrOsoby).Zaleglosci;
+                checkBoxCzyTriazDzien.Checked = _employeeManager.GetEmployeeById(nrOsoby).CzyTriazDzien;
+                checkBoxCzyTriazNoc.Checked = _employeeManager.GetEmployeeById(nrOsoby).CzyTriazNoc;
 
             }
         }
@@ -142,8 +169,8 @@ namespace Funkcje_GA
             listBoxNumerOsoby.Items.Clear();
             for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
             {
-                if (employeeManager.GetEmployeeById(nrOsoby) != null)
-                    listBoxNumerOsoby.Items.Add(employeeManager.GetEmployeeById(nrOsoby).Numer.ToString());
+                if (_employeeManager.GetEmployeeById(nrOsoby) != null)
+                    listBoxNumerOsoby.Items.Add(_employeeManager.GetEmployeeById(nrOsoby).Numer.ToString());
 
             }
         }

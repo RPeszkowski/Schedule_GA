@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnumFunctionTypes.cs" />
     <Compile Include="Constans.cs" />
     <Compile Include="CustomExceptions.cs" />
     <Compile Include="Employee.cs" />
@@ -63,9 +64,14 @@
     <Compile Include="Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
     </Compile>
-    <Compile Include="IEmployees.cs" />
-    <Compile Include="IShifts.cs" />
-    <Compile Include="IUISchedule.cs" />
+    <Compile Include="IEmployeeManagement.cs" />
+    <Compile Include="IOptimization.cs" />
+    <Compile Include="IScheduleManagement.cs" />
+    <Compile Include="IUIManagement.cs" />
+    <Compile Include="ListBoxGrafik.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Optimization.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScheduleManagement.cs" />

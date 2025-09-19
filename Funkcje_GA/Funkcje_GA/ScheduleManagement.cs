@@ -8,15 +8,14 @@ using static Funkcje_GA.Constans;
 
 namespace Funkcje_GA
 {
-    public class ScheduleManagement : IShifts
+    public class ScheduleManagement : IScheduleManagement
     {
-        private IEmployees EmpManager { get; set; }                     //Instancja menadżera pracowników.
-        private IUISchedule UIControlManager { get; set; }              //Instancja do zarządzania UI.
+        private EmployeeManagement _employeeManager { get; set; }                     //Instancja menadżera pracowników.
 
         private readonly List<Shift> schedule;                          //Lista przechowuje grafik.
 
         //Konstruktor
-        public ScheduleManagement(IEmployees EmpManager, IUISchedule uIManager)
+        public ScheduleManagement(EmployeeManagement EmpManager)
         {
             //Tworzymy pusty grafik i instancję employeeManager.
             schedule = new List<Shift>(2 * LICZBA_DNI);
@@ -26,51 +25,75 @@ namespace Funkcje_GA
                 schedule.Add(newShift);
             }
 
-            this.EmpManager = EmpManager;
-            this.UIControlManager = uIManager;
+            this._employeeManager = EmpManager;
         }
+
+        //Event wywoływany przy zmianie grafiku.
+        public event Action<Shift> ShiftChanged;
 
         //Dodawanie pracownika do grafiku.
         public void AddToShift(int shiftId, int employeeId)
         {
-            Employee employee = EmpManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");       //Pracownik.
+            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");       //Pracownik.
             Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");                            //Zmiana.
 
             //Jeżeli pracownika nie ma na zmianie to go dodajemy, inkrementujemy wymiar etatu i odświeżamy listboxa.
             if (!shift.Present_employees.Contains(employee))
             {
                 shift.Present_employees.Add(employee);
-                employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
-                UpdateScheduleControls(shift);
+                _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
+                ShiftChanged?.Invoke(shift);
             }
 
         }
 
+
         //Pobierz zmianę o określonym Id.
-        public Shift GetShiftById(int id) => schedule.First(sched => (sched != null && sched.Id == id));
+        public Shift GetShiftById(int id) => schedule[id];
+
+        public IEnumerable<(int shiftId, int function)> GetShiftsForEmployee(int employeeId)
+        {
+            var result = new List<(int, int)>();
+
+            foreach (var shift in schedule)
+            {
+                if (shift.Present_employees.Any(e => e.Numer == employeeId))
+                {
+                    int function = (int)FunctionTypes.Bez_Funkcji;
+
+                    if (shift.Sala_employees.Any(e => e.Numer == employeeId))
+                        function = (int)FunctionTypes.Sala;
+
+                    if (shift.Triaz_employees.Any(e => e.Numer == employeeId))
+                        function = (int)FunctionTypes.Triaz;
+
+                    result.Add((shift.Id, function));
+                }
+            }
+
+            return result;
+        }
 
         //Usuwanie całego grafiku.
         public void RemoveAll()
         {
-            //Czyścimy wszystkie zmiany.
+            //Czyścimy wszystkie zmiany i odświeżamy kontrolki.
             foreach (Shift shift in schedule)
             {
                 schedule[shift.Id].Present_employees.Clear();
                 schedule[shift.Id].Sala_employees.Clear();
                 schedule[shift.Id].Triaz_employees.Clear();
+                ShiftChanged?.Invoke(shift);
             }
 
             //Usuwamy dane o wymiarze etatu.
-            employeeManager.EmployeeEdit(0.0);
-
-            //Usuwamy dane z listBoxów
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-                UIControlManager.ClearControlById(nrZmiany);
+            foreach (Employee employee in _employeeManager.GetAllActive())
+                _employeeManager.EmployeeEdit(employee, 0.0);
         }
 
-        public void RemoveFromShift(int shiftId, int employeeId)
+        public bool RemoveFromShift(int shiftId, int employeeId)
         {
-            Employee employee = EmpManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
+            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
             Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
 
             if (shift.Present_employees.Contains(employee))
@@ -78,14 +101,18 @@ namespace Funkcje_GA
                 shift.Present_employees.Remove(employee);
                 shift.Sala_employees.Remove(employee);
                 shift.Triaz_employees.Remove(employee);
-                employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
-                UpdateScheduleControls(shift);
+                _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
+                ShiftChanged?.Invoke(shift);
+
+                return true;
             }
+
+            else return false;
         }
 
         public void ToBezFunkcji(int shiftId, int employeeId)
         {
-            Employee employee = EmpManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
+            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
             Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
 
             if (shift.Present_employees.Contains(employee))
@@ -93,20 +120,20 @@ namespace Funkcje_GA
                 if (shift.Sala_employees.Contains(employee))
                 {
                     shift.Sala_employees.Remove(employee);
-                    UpdateScheduleControls(shift);
+                    ShiftChanged?.Invoke(shift);
                 }
 
                 else if (shift.Triaz_employees.Contains(employee))
                 {
                     shift.Triaz_employees.Remove(employee);
-                    UpdateScheduleControls(shift);
+                    ShiftChanged?.Invoke(shift);
                 }
             }
         }
 
         public void ToSala(int shiftId, int employeeId)
         {
-            Employee employee = EmpManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
+            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
             Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
 
             if (shift.Present_employees.Contains(employee) && !shift.Sala_employees.Contains(employee))
@@ -115,13 +142,13 @@ namespace Funkcje_GA
                     shift.Triaz_employees.Remove(employee);
 
                 shift.Sala_employees.Add(employee);
-                UpdateScheduleControls(shift);
+                ShiftChanged?.Invoke(shift);
             }
         }
 
         public void ToTriaz(int shiftId, int employeeId)
         {
-            Employee employee = EmpManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
+            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
             Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
 
             if (shift.Present_employees.Contains(employee) && !shift.Triaz_employees.Contains(employee))
@@ -130,29 +157,7 @@ namespace Funkcje_GA
                     shift.Sala_employees.Remove(employee);
 
                 shift.Triaz_employees.Add(employee);
-                UpdateScheduleControls(shift);
-            }
-        }
-
-        private void UpdateScheduleControls(Shift shift)
-        {
-            UIControlManager.ClearControlById(shift.Id);
-            for (int nrOsoby = 0; nrOsoby < shift.Present_employees.Count; nrOsoby++)
-            {
-                if (shift.Present_employees.Count > 0)
-                    UIControlManager.AddToControl(shift.Id, shift.Present_employees[nrOsoby].Numer.ToString());
-            }
-
-            for (int liczbaSal = 0; liczbaSal < shift.Sala_employees.Count; liczbaSal++)
-            {
-                if (shift.Sala_employees.Count > 0)
-                    UIControlManager.GetElementById(shift.Id).ToSala(UIControlManager.GetElementItemsByIdAsList(shift.Id).IndexOf(shift.Sala_employees[liczbaSal].Numer.ToString()));
-            }
-
-            for (int liczbaTriazy = 0; liczbaTriazy < shift.Triaz_employees.Count; liczbaTriazy++)
-            {
-                if (shift.Triaz_employees.Count > 0)
-                    UIControlManager.GetElementById(shift.Id).ToTriaz(UIControlManager.GetElementItemsByIdAsList(shift.Id).IndexOf(shift.Triaz_employees[liczbaTriazy].Numer.ToString()));
+                ShiftChanged?.Invoke(shift);
             }
         }
     }
