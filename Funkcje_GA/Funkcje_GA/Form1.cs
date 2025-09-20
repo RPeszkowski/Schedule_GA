@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using Serilog;
 using static Funkcje_GA.Constans;
 using static Funkcje_GA.FileService;
 
@@ -57,7 +58,6 @@ namespace Funkcje_GA
             this._fileManagerPracownicy = fileManagerPracownicy;
             this._optimization = optimization;
 
-
             //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
 
@@ -66,7 +66,14 @@ namespace Funkcje_GA
             InitializeComponent2();
 
             //Wczytujemy pracowników z pliku tekstowego przy starcie programu.
-            _fileManagerPracownicy.WczytajPracownikow("Pracownicy.txt");
+            try 
+            {
+                _fileManagerPracownicy.WczytajPracownikow("Pracownicy.txt");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
 
             //Jeśli plik z grafikiem istnieje, to wyświetlane jest zapytanie, czy go wczytać.
             if (File.Exists("Grafik.txt"))
@@ -83,9 +90,10 @@ namespace Funkcje_GA
                         MessageBox.Show("Grafik wczytany.");
                     }
 
-                    catch
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("Grafik nie został wczytany.");
+                        Log.Error(ex.ToString());
+                        MessageBox.Show("Grafik nie wczytany.");
                     }
                 }
             }
@@ -153,10 +161,7 @@ namespace Funkcje_GA
             //Próbujemy usunąć zaznaczone. Jeśli się nie uda, wyświetlamy powiadomienie.
             foreach (var (shiftId, employeeId) in _uiManager.GetAllSelectedEmployeeIds())
             {
-                bool success = _scheduleManager.RemoveFromShift(shiftId, employeeId);
-
-                if (!success)
-                    MessageBox.Show("Nie udało się usunąć pracownika.");
+                _scheduleManager.RemoveFromShift(shiftId, employeeId);
             }
         }
 
@@ -194,23 +199,15 @@ namespace Funkcje_GA
             catch { MessageBox.Show("Grafik nie został zapisany."); }
         }
 
-        //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana i usuwamy zaznaczenie.
-        private void formClick(object sender, EventArgs e)
-        {
-            //Usuwamy podświetlenie, jeśli jakaś osoba jest wybrana.
-            UsunPodswietlenie();
-
-            //Usuwamy zaznaczenie.
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-                _uiManager.ClearIndex(nrZmiany);
-        }
-
         //Załadowanie Form1.
         public void Form1_Load(object sender, EventArgs e) { }
 
         //Generuje kontrolki grafiku i etykiety grafiku i listy pracowników. Zdarzenie asynchroniczne przycisku optymalizacji.
         private void InitializeComponent2()
         {
+            //Akcja globalna wywołana po naciśnięciu formularza.
+            this.Click += (sender, e) => EventGlobal.RaiseForm1Click();
+
             for (int nrZmiany = 0; nrZmiany <  2 *LICZBA_DNI; nrZmiany++)
             {
                 //Tworzymy etykiety dla dyżurów dziennych.
@@ -329,7 +326,6 @@ namespace Funkcje_GA
 
                 else
                     labelRaport.Text = raport;
-
             };
         }
 
@@ -339,7 +335,7 @@ namespace Funkcje_GA
             //Usuwamy podświetlenie, jeśli ktoś był zaznaczony.
             UsunPodswietlenie();
 
-            //Sprawdzamy po kolei każdy dyżur, jeśli osoba występuje to podświetlamy: czerwony - bez funkcji, zielony - sala, niebieski - triaż.
+            //Sprawdzamy dyżury gdzie osoba występuje i podświetlamy: czerwony - bez funkcji, zielony - sala, niebieski - triaż.
             for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
                 Employee employee = _employeeManager.GetEmployeeById(nrOsoby + 1);              //Pracownik.
@@ -359,8 +355,8 @@ namespace Funkcje_GA
                 }
             }
 
-            //Animacja i efekt drag nad drop.
-            _uiManager.GetEmployeeControlById(nrOsoby).DoDragDrop(_uiManager.GetEmployeeData(nrOsoby), DragDropEffects.Copy | DragDropEffects.Move);
+            //Efekty drag nad drop.
+            _uiManager.GetEmployeeControlById(nrOsoby).DoDragDrop((nrOsoby + 1).ToString(), DragDropEffects.Copy | DragDropEffects.Move);
         }
 
         //Drag and drop. Efekt wizualny i kopiowanie tekstu.
@@ -376,13 +372,9 @@ namespace Funkcje_GA
         //Drag and drop. Dodajemy dyżur.
         private void scheduleControl_DragDrop(object sender, DragEventArgs e, int nrZmiany)
         {
-            //Pobieramy dane, dzielimy i uzyskujemy numer osoby.
+            //Pobieramy dane i dodajemy osobę do zmiany.
             string pom = e.Data.GetData(DataFormats.Text).ToString();
-            string[] subs = pom.Split('.');
-
-            //Jeśli dane są ok, to dodajemy do grafiku.
-            if (Int32.TryParse(subs[0], out int nrOsoby))
-                _scheduleManager.AddToShift(nrZmiany, nrOsoby);
+            _scheduleManager.AddToShift(nrZmiany, Convert.ToInt32(pom));
         }
 
         //Usuwamy podświetlenie, jeśli jakaś osoba jest zaznaczona.

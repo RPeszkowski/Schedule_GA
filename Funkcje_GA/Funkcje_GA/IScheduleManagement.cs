@@ -11,20 +11,29 @@ namespace Funkcje_GA
     {
         //Event wywoływany przy zmianie grafiku.
         event Action<Shift> ShiftChanged;
+
+        //Dodawanie pracownika do zmiany.
         void AddToShift(int shiftId, int employeeId);
 
+        //Zwraca zmianę.
         Shift GetShiftById(int id);
 
+        //Zwraca zmiany pracownika i pełnione funkcje.
         IEnumerable<(int shiftId, int function)> GetShiftsForEmployee(int employeeId);
 
+        //Czyści wszystkie zmiany.
         void RemoveAll();
 
-        bool RemoveFromShift(int shiftId, int employeeId);
+        //Usuwa pracownika z funkcji.
+        void RemoveFromShift(int shiftId, int employeeId);
 
+        //Zmienia funkcję pracownika na bez funkcji.
         void ToBezFunkcji(int shiftId, int employeeId);
 
+        //Zmienia funkcję pracownika na salę.
         void ToSala(int shiftId, int employeeId);
 
+        //Zmienia funkcję pracownika na triaż.
         void ToTriaz(int shiftId, int employeeId);
     }
 }

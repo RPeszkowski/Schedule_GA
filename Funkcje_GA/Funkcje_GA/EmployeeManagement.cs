@@ -38,19 +38,13 @@ namespace Funkcje_GA
             //Dodawanie pracownika o konkretnym numerze.
             //Sprawdzamy, czy nie osiągnięto maksymalne liczby pracowników.
             if (GetAllActive().Count() >= MAX_LICZBA_OSOB)
-                throw new TooManyEmployeesException("Maksymalna liczba osób to: " + MAX_LICZBA_OSOB.ToString() + " .");
+                throw new TooManyEmployeesException($"Maksymalna liczba osób to: {MAX_LICZBA_OSOB}.");
 
-            //Sprawdzamy, czy numer osoby jest poprawny.
-            if (numer < 1 || numer > MAX_LICZBA_OSOB)
-                throw new InvalidDataException("Maksymalna liczba osób to: " + MAX_LICZBA_OSOB.ToString() + " .");
+            //Sprawdzamy poprawność pozostałych danych
+            EmployeeValidate(numer, imie, nazwisko, wymiarEtatu, zaleglosci);
 
-            //Sprawdzamy, czy imię i nazwisko nie zawierają spacji.
-            if (imie.Contains(' ') || nazwisko.Contains(' '))
-                throw new InvalidDataException("Imię i nazwisko nie mogą zawierać spacji.");
-
-            //Sprawdzamy, czy imię i nazwisko nie są puste.
-            else if (imie == "" || nazwisko == "")
-                throw new InvalidDataException("Imię i nazwisko nie mogą mogą być puste.");
+            if (employees[numer] != null && employees.Any(emp => emp.Numer == numer))
+                throw new EmployeeAlreadyExistException($"Pracownik o numerze {numer} jest już w bazie.");
 
             //Tworzymy nową osobę, sprawdzamy, dodajemy.
             Employee newEmployee = new Employee(numer, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
@@ -62,27 +56,20 @@ namespace Funkcje_GA
         public void EmployeeEdit(Employee employee, double wymiarEtatu)
         {
             //Edycja danych jednej osoby. Tylko wymiar etatu.
-            //Sprawdzamy, czy osoba istnieje.
-            if (employee == null)
-                throw new NullReferenceException("Dana osoba nie istnieje");
 
+            //Sprawdzamy, czy wymiar etatu jest poprawny.
+            if (wymiarEtatu < -0.00001)
+                throw new InvalidDataException($"Ujemny wymiar etatu pracownika o numerze: {employee.Numer}.");
+
+            //Jeśli jest ok, to zmieniamy dane.
             employee.WymiarEtatu = wymiarEtatu;
             EmployeeChanged?.Invoke(employee);
         }
         public void EmployeeEdit(Employee employee, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc)
         {
             //Edycja danych jednej osoby. Pełne dane.
-            //Sprawdzamy, czy osoba istnieje.
-            if (employee == null)
-                throw new NullReferenceException("Dana osoba nie istnieje");
-
-            //Sprawdzamy, czy imię i nazwisko nie zawierają spacji.
-            if (imie.Contains(' ') || nazwisko.Contains(' '))
-                throw new InvalidDataException("Imię i nazwisko nie mogą zawierać spacji.");
-
-            //Sprawdzamy, czy imię i nazwisko nie są puste.
-            else if (imie == "" || nazwisko == "")
-                throw new InvalidDataException("Imię i nazwisko nie mogą mogą być puste.");
+            //Sprawdzamy poprawność pozostałych danych
+            EmployeeValidate(employee.Numer, imie, nazwisko, wymiarEtatu, zaleglosci);
 
             employee.Imie = imie;
             employee.Nazwisko = nazwisko;
@@ -96,23 +83,43 @@ namespace Funkcje_GA
         //Usuwanie pracownika.
         public void EmployeeDelete(Employee employee)
         {
-            //Próbujemy usunąć osobę z grafiku.
-            if (employees[employee.Numer - 1] == null)
-                throw new NullReferenceException("Pracownik nie istnieje w systemie");
+            //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
+            EmployeeDeleted?.Invoke(employee.Numer - 1);
+            // _uiManager.ClearEmployeeData(employee.Numer - 1);
+            employees[employee.Numer - 1] = null;
+        }
+        //Sprawdzanie poprawności danych.
+        private void EmployeeValidate(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci)
+        {
+            //Sprawdzamy, czy numer osoby jest poprawny.
+            if (numer < 1 || numer > MAX_LICZBA_OSOB)
+                throw new EmployeeNumberOutOfRangeException($"Numer: {numer} jest poza przedziałem dopuszczalnych wartości od 1 do {MAX_LICZBA_OSOB}.");
 
-            else
-            {
-                //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
-                EmployeeDeleted?.Invoke(employee.Numer - 1);
-                // _uiManager.ClearEmployeeData(employee.Numer - 1);
-                employees[employee.Numer - 1] = null;
-            }
+            //Sprawdzamy, czy imię i nazwisko nie zawierają spacji.
+            if (imie.Contains(' ') || nazwisko.Contains(' '))
+                throw new EmployeeNameSurnameException("Imię lub nazwisko zawierało spację.");
+
+            //Sprawdzamy, czy imię i nazwisko nie są puste.
+            else if (imie == "" || nazwisko == "")
+                throw new EmployeeNameSurnameException("Imię lub nazwisko było puste.");
+
+            //Sprawdzamy, czy wymiar etatu i zaległości są poprawne.
+            if (wymiarEtatu < -0.00001 || zaleglosci < -10 || zaleglosci > 10)
+                throw new InvalidDataException($"Ujemny wymiar etatu lub zaległości poza przedziałem -10 ... 10 pracownika o numerze: {numer}.");
         }
 
-        //Interfejs do wybierani wszystkich pracowników (tylko pola niepuste).
+        //Interfejs do wybierania wszystkich pracowników (tylko pola niepuste).
         public IEnumerable<Employee> GetAllActive() => employees.Where(emp => emp != null);
 
         //Interfejs do wybierania pracowników.
-        public Employee GetEmployeeById(int numer) => employees[numer - 1];
+        public Employee GetEmployeeById(int numer)
+        {
+            //Sprawdzamy, czy numer jest poprawny.
+            if(numer < 1 || numer > MAX_LICZBA_OSOB)
+                throw new EmployeeNumberOutOfRangeException($"Numer: {numer} jest poza przedziałem dopuszczalnych wartości od 1 do {MAX_LICZBA_OSOB}.");
+
+            //Jeśli nuemr jest poprawny zwracamy pracownika.
+            else return employees[numer - 1];
+        }
     }
 }

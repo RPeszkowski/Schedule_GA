@@ -6,14 +6,16 @@ using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Serilog;
 using static Funkcje_GA.Constans;
 using static Funkcje_GA.FileService;
 using static Funkcje_GA.Form1;
-using TooManyEmployeesException = Funkcje_GA.CustomExceptions.TooManyEmployeesException;
+using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
@@ -44,16 +46,14 @@ namespace Funkcje_GA
             try
             {
                 //Szukamy wolnego numeru.
-                int wolnyNumer = MAX_LICZBA_OSOB - 1;
-                for (int i = MAX_LICZBA_OSOB - 1; i >= 0; i--)
-                {
-                    if (_employeeManager.GetEmployeeById(i + 1) == null)
-                        wolnyNumer = i;
-                }
+                int wolnyNumer = Enumerable.Range(1, MAX_LICZBA_OSOB).FirstOrDefault(i => _employeeManager.GetEmployeeById(i) == null);
+
+                if (wolnyNumer == 0)
+                    throw new TooManyEmployeesException($"Maksymalna liczba osób to: {MAX_LICZBA_OSOB}.");
 
                 //Tworzymy osobę z pierwszym wolnym numerem i danymi takimi, jakie zostały wprowadzone do boxów.
                 //Dodajemy nową osobę do listy osób. Wyświetlamy numery istniejących w systemie osób.
-                _employeeManager.EmployeeAdd(wolnyNumer + 1,
+                _employeeManager.EmployeeAdd(wolnyNumer,
                                             textBoxImie.Text, 
                                             textBoxNazwisko.Text, 
                                             0.0, 
@@ -79,40 +79,40 @@ namespace Funkcje_GA
         //Edycja danych pracownika.
         private void buttonEdytujPracownika_Click(object sender, EventArgs e)
         {
-            //Zczytujemy z listBoxa numer osoby i próbujemy edytować dane. Jeśli się udało, wyświetlamy informację.
-            try
+            //Sprawdzamy, czy wybrano osobę.
+            if (listBoxNumerOsoby.SelectedIndex != -1)
             {
-                int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
-                _employeeManager.EmployeeEdit(_employeeManager.GetEmployeeById(nrOsoby), 
-                                         textBoxImie.Text, 
-                                         textBoxNazwisko.Text, 
-                                         _employeeManager.GetEmployeeById(nrOsoby).WymiarEtatu, 
-                                         Convert.ToInt32(numericUpDownZaleglosci.Value), 
-                                         checkBoxCzyTriazDzien.Checked, 
-                                         checkBoxCzyTriazNoc.Checked);
-                MessageBox.Show("Zmieniono dane pracownika: " 
-                                + _employeeManager.GetEmployeeById(nrOsoby).Numer.ToString() + " " 
-                                + _employeeManager.GetEmployeeById(nrOsoby).Imie + " " 
-                                + _employeeManager.GetEmployeeById(nrOsoby).Nazwisko);
+                //Zczytujemy z listBoxa numer osoby i próbujemy edytować dane. Jeśli się udało, wyświetlamy informację.
+                try
+                {
+                    int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
+                    Employee employee = _employeeManager.GetEmployeeById(nrOsoby);       //Pracownik.                                            
+                    _employeeManager.EmployeeEdit(_employeeManager.GetEmployeeById(nrOsoby),
+                                             textBoxImie.Text,
+                                             textBoxNazwisko.Text,
+                                             employee.WymiarEtatu,
+                                             Convert.ToInt32(numericUpDownZaleglosci.Value),
+                                             checkBoxCzyTriazDzien.Checked,
+                                             checkBoxCzyTriazNoc.Checked);
+                    MessageBox.Show("Zmieniono dane pracownika: " + employee.Numer.ToString() + " " + employee.Imie + " " + employee.Nazwisko);
+                }
+
+                //Obsługa wyjątku: niepoprawne dane.
+                catch (EmployeeNameSurnameException ex)
+                {
+                    Log.Warning(ex, "Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
+                    MessageBox.Show("Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
+                }
+
+                //Inne poważne wyjątki.
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Błędne dane pracownika");
+                }
             }
 
-            //Obsługa wyjątku: osoba nie istnieje.
-            catch (NullReferenceException)
-            {
-                MessageBox.Show("Dana osoba nie istnieje");
-            }
-
-            //Obsługa wyjątku: niepoprawne dane.
-            catch (InvalidDataException)
-            {
-                MessageBox.Show("Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
-            }
-
-            //Jeśli się nie udało, to wyświetlamy informację.
-            catch
-            {
+            else
                 MessageBox.Show("Wybierz osobę, której dane chcesz zmienić.");
-            }
         }
 
         //Zapisujemy dane pracowników do pliku "Pracownicy.txt" i zamykamy Form2.
@@ -128,18 +128,24 @@ namespace Funkcje_GA
             int nrOsoby = Convert.ToInt32(listBoxNumerOsoby.SelectedItem);      //Numer wybranej osoby.
 
             //Usuwamy osobę. Wyświetlamy numery istniejących w systemie osób.
-            try
+            if (listBoxNumerOsoby.SelectedIndex != -1)
             {
-                _employeeManager.EmployeeDelete(_employeeManager.GetEmployeeById(nrOsoby));
-                UpdateListBoxNumerOsoby();
-                MessageBox.Show("Usunięto dane pracownika.");
+                try
+                {
+                    _employeeManager.EmployeeDelete(_employeeManager.GetEmployeeById(nrOsoby));
+                    UpdateListBoxNumerOsoby();
+                    MessageBox.Show("Usunięto dane pracownika.");
+                }
+
+                catch(Exception ex)
+                {
+                    Log.Error(ex, "Usuwanie pracownika nie powiodło się.");
+                }
             }
 
             //Jeśli się nie udało, wyświetlamy komunikat.
-            catch 
-            {
+            else
                 MessageBox.Show("Wybierz osobę, której dane chcesz usunąć.");
-            };
         }
 
         //Załadowanie Form2.

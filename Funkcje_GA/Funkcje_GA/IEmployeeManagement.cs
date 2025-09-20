@@ -15,11 +15,20 @@ namespace Funkcje_GA
         //Event, który zostaje wywołany, gdy pracownik zostaje usunięty.
         event Action<int> EmployeeDeleted;
 
+        //Doddawanie pracownika.
         void EmployeeAdd(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc);
+
+        //Edycja danych pracownika.
         void EmployeeEdit(Employee employee, double wymiarEtatu);
         void EmployeeEdit(Employee employee, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc);
+
+        //Usuwanie pracownika.
         void EmployeeDelete(Employee employee);
+
+        //Pobieranie aktywnych pracowników.
         IEnumerable<Employee> GetAllActive();
+
+        //Pobiera pracownika o określonym id.
         Employee GetEmployeeById(int numer);
     }
 }

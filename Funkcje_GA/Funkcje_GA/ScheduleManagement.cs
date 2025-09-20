@@ -5,14 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using static Funkcje_GA.Form1;
 using static Funkcje_GA.Constans;
+using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
     public class ScheduleManagement : IScheduleManagement
     {
         private EmployeeManagement _employeeManager { get; set; }                     //Instancja menadżera pracowników.
-
-        private readonly List<Shift> schedule;                          //Lista przechowuje grafik.
+        private readonly List<Shift> schedule;                                     //Lista przechowuje grafik.
 
         //Konstruktor
         public ScheduleManagement(EmployeeManagement EmpManager)
@@ -34,36 +34,79 @@ namespace Funkcje_GA
         //Dodawanie pracownika do grafiku.
         public void AddToShift(int shiftId, int employeeId)
         {
-            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");       //Pracownik.
-            Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");                            //Zmiana.
+            //Sprawdzamy, czy Id jest poprawne.
+            ShiftValidate(shiftId, employeeId);
+
+            Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
+            Shift shift = schedule[shiftId];        //Zmiana.                           //Zmiana.
 
             //Jeżeli pracownika nie ma na zmianie to go dodajemy, inkrementujemy wymiar etatu i odświeżamy listboxa.
             if (!shift.Present_employees.Contains(employee))
             {
+                //Próbujemy dodać pracownika do zmiany.
                 shift.Present_employees.Add(employee);
-                _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
+                try
+                {
+                    _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
+                }
+
+                //Jeśli się nie uda to rzucamy wyjatek.
+                catch(Exception ex)
+                {
+                    throw new ScheduleEmployeeManagerException($"Nie udało się dodać pracownika do zmiany {ex.Message}.", ex);
+                }
+
                 ShiftChanged?.Invoke(shift);
             }
-
         }
 
-
         //Pobierz zmianę o określonym Id.
-        public Shift GetShiftById(int id) => schedule[id];
+        public Shift GetShiftById(int id)
+        {
+            //Sprawdzamy, czy Id jest poprawne.
+            if (id < 0 || id >= schedule.Count)
+                throw new ScheduleInvalidScheduleIdException($"Numer zmiany {id} jest niepoprawny");
 
+            return schedule[id];
+        }
+
+        //Walidacja Id.
+        private void ShiftValidate(int shiftId, int employeeId)
+        {
+            //Sprawdzamy, czy Id jest poprawne.
+            if (shiftId < 0 || shiftId >= schedule.Count)
+                throw new ScheduleInvalidScheduleIdException($"Numer zmiany {shiftId} jest niepoprawny");
+
+            //Sprawdzamy, czy Id jest poprawne.
+            if (employeeId < 1 || employeeId > MAX_LICZBA_OSOB)
+                throw new ScheduleInvalidEmployeeIdException($"Numer pracownika {employeeId} jest niepoprawny");
+
+            if(_employeeManager.GetEmployeeById(employeeId) == null) throw new ArgumentNullException("Osoba nie istnieje.");     //Pracownik.
+            if(schedule[shiftId] == null) throw new ArgumentNullException("Zmiana nie została utworzona.");        //Zmiana.
+        }
+
+        //Zwraca zmiany i pełnione na nich funkcje danego pracownika.
         public IEnumerable<(int shiftId, int function)> GetShiftsForEmployee(int employeeId)
         {
-            var result = new List<(int, int)>();
+            var result = new List<(int, int)>();                        //Lista zmian i pełnionych funkcji.
 
+            //Sprawdzamy, czy Id jest poprawne.
+            if (employeeId < 1 || employeeId > MAX_LICZBA_OSOB)
+                throw new ScheduleInvalidEmployeeIdException($"Numer pracownika {employeeId} jest niepoprawny");
+
+            //Sprawdzamy po kolei każdą zmianę.
             foreach (var shift in schedule)
             {
+                //Sprawdzamy, czy pracownik występuje.
                 if (shift.Present_employees.Any(e => e.Numer == employeeId))
                 {
-                    int function = (int)FunctionTypes.Bez_Funkcji;
+                    int function = (int)FunctionTypes.Bez_Funkcji;          //Funkcja pracownika.
 
+                    //Sprawdzamy, czy pracownik ma salę.
                     if (shift.Sala_employees.Any(e => e.Numer == employeeId))
                         function = (int)FunctionTypes.Sala;
 
+                    //Sprawdzamy, czy pracownik ma triaż.
                     if (shift.Triaz_employees.Any(e => e.Numer == employeeId))
                         function = (int)FunctionTypes.Triaz;
 
@@ -80,9 +123,9 @@ namespace Funkcje_GA
             //Czyścimy wszystkie zmiany i odświeżamy kontrolki.
             foreach (Shift shift in schedule)
             {
-                schedule[shift.Id].Present_employees.Clear();
-                schedule[shift.Id].Sala_employees.Clear();
-                schedule[shift.Id].Triaz_employees.Clear();
+                shift.Present_employees.Clear();
+                shift.Sala_employees.Clear();
+                shift.Triaz_employees.Clear();
                 ShiftChanged?.Invoke(shift);
             }
 
@@ -91,71 +134,108 @@ namespace Funkcje_GA
                 _employeeManager.EmployeeEdit(employee, 0.0);
         }
 
-        public bool RemoveFromShift(int shiftId, int employeeId)
+        public void RemoveFromShift(int shiftId, int employeeId)
         {
-            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
-            Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+            //Sprawdzamy, czy Id jest poprawne.
+            ShiftValidate(shiftId, employeeId);
 
+            Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
+            Shift shift = schedule[shiftId];        //Zmiana.
+
+            //Jeśli pracownik był na zmianie to go usuwamy.
             if (shift.Present_employees.Contains(employee))
             {
                 shift.Present_employees.Remove(employee);
                 shift.Sala_employees.Remove(employee);
                 shift.Triaz_employees.Remove(employee);
-                _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
+
+                //Próbujemy usunąć pracownika.
+                try
+                {
+                    _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
+                }
+
+                //Jeśli się nie udało rzucamy wyjątek.
+                catch (Exception ex)
+                {
+                    throw new ScheduleEmployeeManagerException($"Nie udało się dodać pracownika do zmiany {ex.Message}.", ex);
+                }
                 ShiftChanged?.Invoke(shift);
-
-                return true;
             }
-
-            else return false;
         }
 
+        //Przydziela pracownikowi dyżur bez funkcji. 
         public void ToBezFunkcji(int shiftId, int employeeId)
         {
-            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
-            Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+            bool flagInvoke = false;            //Określa, czy nastąpi wywołanie.
+            //Sprawdzamy, czy Id jest poprawne.
+            ShiftValidate(shiftId, employeeId);
 
+            Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
+            Shift shift = schedule[shiftId];        //Zmiana.
+
+            //Sprawdzamy, czy pracownik jest na zmianie.
             if (shift.Present_employees.Contains(employee))
             {
+                //Jeśli miał salę to usuwamy i wzywamy.
                 if (shift.Sala_employees.Contains(employee))
                 {
                     shift.Sala_employees.Remove(employee);
-                    ShiftChanged?.Invoke(shift);
+                    flagInvoke = true;
                 }
 
+                //Jeśli miał triaż to usuwamy i wzywamy.
                 else if (shift.Triaz_employees.Contains(employee))
                 {
                     shift.Triaz_employees.Remove(employee);
-                    ShiftChanged?.Invoke(shift);
+                    flagInvoke = true;
                 }
+
+                //Wywołanie po zmianie funkcji.
+                if(flagInvoke)
+                    ShiftChanged?.Invoke(shift);
             }
         }
 
+        //Przydziela pracownikowi o wybranym Id salę na danej zmianie. 
         public void ToSala(int shiftId, int employeeId)
         {
-            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
-            Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+            //Sprawdzamy, czy Id jest poprawne.
+            ShiftValidate(shiftId, employeeId);
 
+            Employee employee = _employeeManager.GetEmployeeById(employeeId); //Pracownik.
+            Shift shift = schedule[shiftId];        //Zmiana.
+
+            //Sprawdzamy, czy pracownik jest na zmianie i czy nie ma już sali.
             if (shift.Present_employees.Contains(employee) && !shift.Sala_employees.Contains(employee))
             {
+                //Jeśli miał triaż to usuwamy.
                 if (shift.Triaz_employees.Contains(employee))
                     shift.Triaz_employees.Remove(employee);
 
+                //Dodajemy do sali i wzywamy subskrybentów.
                 shift.Sala_employees.Add(employee);
                 ShiftChanged?.Invoke(shift);
             }
         }
 
+        //Przydziela pracownikowi o wybranym Id triaż na danej zmianie. 
         public void ToTriaz(int shiftId, int employeeId)
         {
-            Employee employee = _employeeManager.GetEmployeeById(employeeId) ?? throw new ArgumentNullException("Osoba nie istnieje.");
-            Shift shift = schedule[shiftId] ?? throw new ArgumentNullException("Zmiana nie została utworzona.");
+            //Sprawdzamy, czy Id jest poprawne.
+            ShiftValidate(shiftId, employeeId);
 
+            Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
+            Shift shift = schedule[shiftId];        //Zmiana.
+
+            //Sprawdzamy, czy pracownik jest na zmianie i czy nie ma już triażu.
             if (shift.Present_employees.Contains(employee) && !shift.Triaz_employees.Contains(employee))
             {
+                //Jeśli miał salę to usuwamy.
                 if (shift.Sala_employees.Contains(employee))
                     shift.Sala_employees.Remove(employee);
 
+                //Dodajemy do triażu i wzywamy subskrybentów.
                 shift.Triaz_employees.Add(employee);
                 ShiftChanged?.Invoke(shift);
             }

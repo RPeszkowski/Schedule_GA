@@ -284,7 +284,6 @@
             this.Name = "Form1";
             this.Text = "Przydzielanie funkcji";
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.Click += new System.EventHandler(this.formClick);
             this.ResumeLayout(false);
             this.PerformLayout();
 
