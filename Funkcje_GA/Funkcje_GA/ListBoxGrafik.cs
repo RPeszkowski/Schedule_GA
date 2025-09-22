@@ -38,60 +38,6 @@ namespace Funkcje_GA
             return Convert.ToInt32(str);
         }
 
-        //Zmienia funkcję wybranej osoby na salę.
-        public void ToSala(int index)
-        {
-            //Jeśli nie wybrano elementu to kończymy.
-            if (index == -1)
-                return;
-
-            //Sprawdzamy poprawność danych.
-            CheckData(index);
-
-            string str = Items[index].ToString();              //Wartość pobrana z listBoxa.
-
-            //Jeśli jest literka s to nic nie robimy.
-            if (str[str.Length - 1] == 's')
-                Items[index] = str;
-
-            //Jeśli jest literka t to podmieniamy na s.
-            else if (str[str.Length - 1] == 't')
-            {
-                str = str.Remove(str.Length - 1);
-                Items[index] = str + 's';
-            }
-
-            //Jeśli nie ma literki to dopisujemy s.
-            else Items[index] = str + 's';
-        }
-
-        //Zmienia funkcję wybranej osoby na triaż.
-        public void ToTriaz(int index)
-        {
-            //Jeśli nie wybrano elementu to kończymy.
-            if (index == -1)
-                return;
-
-            //Sprawdzamy poprawność danych.
-            CheckData(index);
- 
-            string str = Items[index].ToString();                  //Wartość pobrana z listBoxa.
-
-            //Jeśli jest literka t to nic nie robimy.
-            if (str[str.Length - 1] == 't')
-                Items[index] = str;
-
-            //Jeśli jest literka s to podmieniamy na t.
-            else if (str[str.Length - 1] == 's')
-            {
-                str = str.Remove(str.Length - 1);
-                Items[index] = str + 't';
-            }
-
-            //Jeśli nie ma literki to dopisujemy t.
-            else Items[index] = str + 't';
-        }
-
         //Sprawdzamy poprawność danych.
         private void CheckData(int index)
         {

@@ -43,7 +43,7 @@ namespace Funkcje_GA
             //Sprawdzamy poprawność pozostałych danych
             EmployeeValidate(numer, imie, nazwisko, wymiarEtatu, zaleglosci);
 
-            if (employees[numer] != null && employees.Any(emp => emp.Numer == numer))
+            if (employees[numer - 1] != null)
                 throw new EmployeeAlreadyExistException($"Pracownik o numerze {numer} jest już w bazie.");
 
             //Tworzymy nową osobę, sprawdzamy, dodajemy.
@@ -104,7 +104,7 @@ namespace Funkcje_GA
                 throw new EmployeeNameSurnameException("Imię lub nazwisko było puste.");
 
             //Sprawdzamy, czy wymiar etatu i zaległości są poprawne.
-            if (wymiarEtatu < -0.00001 || zaleglosci < -10 || zaleglosci > 10)
+            if (wymiarEtatu < -0.00001 || zaleglosci < -MAX_MIN_ZALEGLOSCI || zaleglosci > MAX_MIN_ZALEGLOSCI)
                 throw new InvalidDataException($"Ujemny wymiar etatu lub zaległości poza przedziałem -10 ... 10 pracownika o numerze: {numer}.");
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
@@ -11,16 +12,58 @@ namespace Funkcje_GA
     //Ten interfejs odpowiada za połączenie klasy UIManagement z resztą kodu.
     public interface IUIManagement
     {
-        //Podświetlenie wybranego pracownika.
-        void ChangeColor(int id, int color);
+        //Akcja zmiana danych pracownika.
+        event Action<int, (string, int)> EmployeeLabelChanged;
 
-        //Pobieramy id wszystkich wybranych pracowników.
-        IEnumerable<(int ShiftId, int EmployeeId)> GetAllSelectedEmployeeIds();
+        //Akcja zmiana kontrolki grafiku.
+        event Action<int, List<string>> ScheduleControlChanged;
 
-        //Pobieramy pracowników na danej zmianie jako listę.
-        List<string> GetElementItemsByIdAsList(int id);
+        //Podświetlanie etykiet podczas drag and drop.
+        event Action<int, Color> ScheduleHighlightRaise;
+
+        //Powiadomienie użytkownika.
+        event Action<string> UserNotificationRaise;
+
+        //Dodawanie pracownika do zmiany.
+        void AddEmployeeToShift(int shiftId, int employeeId);
 
         //Usuwanie danych pracownika.
         void ClearEmployeeData(int id);
+
+        //Usuwanie grafiku.
+        void ClearSchedule();
+
+        //Wczytywanie pracowników.
+        void LoadEmployees(string filePath);
+
+        //Wczytywanie grafiku.
+        void LoadSchedule(string filePath);
+
+        //Zapisywanie grafiku.
+        void SaveSchedule(string filepath);
+
+        //Drag and drop etykiety pracownika.
+        void HandleEmployeeMouseDown(int employeeId);
+
+        //Uruchamiamy optymalizację.
+        Task RunOptimizationAsync();
+
+        //Przypisujemy wybranym pracownikom brak funkcji.
+        void SetSelectedShiftsToBezFunkcji(IEnumerable<(int ShiftId, int EmployeeId)> selected);
+
+        //Przypisujemy wybranym pracownikom sale.
+        void SetSelectedShiftsToSala(IEnumerable<(int ShiftId, int EmployeeId)> selected);
+
+        //Przypisujemy wybranym pracownikom triaz.
+        void SetSelectedShiftsToTriaz(IEnumerable<(int ShiftId, int EmployeeId)> selected);
+
+        //Usuwamy wybrane dyżury.
+        void RemoveSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected);
+
+        //Wyświetlamy dane wybranej zmiany.
+        void UpdateEmployeeLabel(Employee employee);
+
+        //Wyświetlamy dane wybranej zmiany.
+        void UpdateScheduleControl(Shift shift);
     }
 }

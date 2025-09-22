@@ -12,16 +12,16 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za operacje na plikach.
-    public class FileService
+    public class FileServiceTxt
     {
         //Klasa odpowiada za zapis i odczyt danych grafiku do pliku "Grafik.txt".
-        public class FileManagementGrafik
+        public class FileManagementGrafik : IScheduleFileService
         {
-            private readonly EmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
-            private readonly ScheduleManagement _scheduleManager;         //Instancja do zarządzania grafikiem.
+            private readonly IEmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
+            private readonly IScheduleManagement _scheduleManager;         //Instancja do zarządzania grafikiem.
 
             //Konstruktor
-            public FileManagementGrafik(EmployeeManagement empManager, ScheduleManagement scheduleManager)
+            public FileManagementGrafik(IEmployeeManagement empManager, IScheduleManagement scheduleManager)
             {
                 //Przypisanie instancji.
                 this._employeeManager = empManager;
@@ -51,19 +51,19 @@ namespace Funkcje_GA
             private string FormatShiftLine(Shift shift)
             {
                 //Jeśli zmiana nie obsadzona zwracamy pusty string.
-                if (shift.Present_employees.Count == 0)
+                if (shift.PresentEmployees.Count == 0)
                     return string.Empty;
 
                 List <string> tokens = new List<string>();                        //Lista przechowuje numery pracowników na zmianie wraz z funkcjami.
 
                 //Dla każdego pracownika sprawdzamy funkcję i dopisujemy do listy.
-                foreach (Employee employee in shift.Present_employees)
+                foreach (Employee employee in shift.PresentEmployees)
                 {
                     string entry = employee.Numer.ToString();
 
-                    if (shift.Sala_employees.Contains(employee))
+                    if (shift.SalaEmployees.Contains(employee))
                         entry += "s";
-                    else if (shift.Triaz_employees.Contains(employee))
+                    else if (shift.TriazEmployees.Contains(employee))
                         entry += "t";
 
                     tokens.Add(entry);
@@ -138,7 +138,7 @@ namespace Funkcje_GA
                             catch(Exception ex)
                             {
                                 //Czyścimy grafik.
-                                foreach (Employee employee in _scheduleManager.GetShiftById(nrLinii).Present_employees)
+                                foreach (Employee employee in _scheduleManager.GetShiftById(nrLinii).PresentEmployees)
                                     _scheduleManager.RemoveFromShift(nrLinii, employee.Numer);
 
                                 //Wiadomość o błędzie.
@@ -181,9 +181,9 @@ namespace Funkcje_GA
         }
 
         //Klasa odpowiada za zapis i odczyt danych pracowników do pliku "Pracownicy.txt".
-        public class FileManagementPracownicy
+        public class FileManagementPracownicy : IEmployeesFileService
         {
-            private readonly EmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
+            private readonly IEmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
 
             //Ten słownik zawiera informacje o formacie danych w pliku "Pracownicy.txt".
             private static readonly Dictionary<string, int> pracownicy_txt = new Dictionary<string, int>()
@@ -192,7 +192,7 @@ namespace Funkcje_GA
             };
 
             //Konstruktor
-            public FileManagementPracownicy(EmployeeManagement empManager)
+            public FileManagementPracownicy(IEmployeeManagement empManager)
             {
                 //Przypisanie instancji.
                 this._employeeManager = empManager;

@@ -13,8 +13,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
 using static Funkcje_GA.Constans;
-using static Funkcje_GA.FileService;
-using static Funkcje_GA.Form1;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -22,11 +20,11 @@ namespace Funkcje_GA
     //Form2 do dodawania/edytowania/usuwania osób.
     public partial class Form2 : Form
     {
-        private readonly EmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
-        private readonly FileManagementPracownicy _fileManagerPracownicy;   //Instancja do zarządzania plikiem pracowników.
+        private readonly IEmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
+        private readonly IEmployeesFileService _fileManagerPracownicy;   //Instancja do zarządzania plikiem pracowników.
         
         //Konstruktor. Aktualizacja listboxa z numerami aktywnych pracowników.
-        public Form2(EmployeeManagement empManager, FileManagementPracownicy fileManagerPracownicy)
+        public Form2(IEmployeeManagement empManager, IEmployeesFileService fileManagerPracownicy)
         {
             //Przypisujemy menagera pracowników.
             this._employeeManager = empManager;

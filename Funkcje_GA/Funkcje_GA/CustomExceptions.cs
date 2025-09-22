@@ -58,6 +58,26 @@ namespace Funkcje_GA
             public FileServiceInvalidScheduleFormat(string message, Exception inner) : base(message, inner) { }
         }
 
+        //Wyjątek rzucany, gdy grafik jest nie przystosowany do optymalizacji.
+        public class OptimizationInvalidScheduleException : Exception
+        {
+            public OptimizationInvalidScheduleException() { }
+
+            public OptimizationInvalidScheduleException(string message) : base(message) { }
+
+            public OptimizationInvalidScheduleException(string message, Exception inner) : base(message, inner) { }
+        }
+
+        //Wyjatek rzucany, gdy dane do optymalizacji nie są poprawne, i uniemożliwia to przeprowadzenie optymalizacji.
+        public class OptimizationInvalidDataException : Exception
+        {
+            public OptimizationInvalidDataException() { }
+
+            public OptimizationInvalidDataException(string message) : base(message) { }
+
+            public OptimizationInvalidDataException(string message, Exception inner) : base(message, inner) { }
+        }
+
         //Wyjątek rzucamy, gdy employeeManager zwróci błąd.
         public class ScheduleEmployeeManagerException : Exception
         {
@@ -118,6 +138,24 @@ namespace Funkcje_GA
             public UIInvalidScheduleControlIdException(string message, Exception inner) : base(message, inner) { }
         }
 
+        //Wyjatek zwracany, gdy plik grafiku jest uszkodzony.
+        public class UIInvalidScheduleFileException : Exception
+        {
+            public UIInvalidScheduleFileException() { }
 
+            public UIInvalidScheduleFileException(string message) : base(message) { }
+
+            public UIInvalidScheduleFileException(string message, Exception inner) : base(message, inner) { }
+        }
+
+        //Wyjatek zwracany, gdy plik pracowników jest uszkodzony.
+        public class UIInvalidEmployeeFileException : Exception
+        {
+            public UIInvalidEmployeeFileException() { }
+
+            public UIInvalidEmployeeFileException(string message) : base(message) { }
+
+            public UIInvalidEmployeeFileException(string message, Exception inner) : base(message, inner) { }
+        }
     }
 }

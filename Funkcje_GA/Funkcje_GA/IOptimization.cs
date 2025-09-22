@@ -11,13 +11,13 @@ namespace Funkcje_GA
         //Informacja o przebiegu optymalizacji.
         event Action<string> ProgressUpdated;
 
+        //Event do powiadamiania o ostrzeżeniach.
+        event Action<string> WarningRaised;
+
         //Algorytm optymalizacji genetycznej.
         bool[] OptymalizacjaGA(int liczbaZmiennych, int liczbaOsobnikow, decimal tol, decimal tolX, int maxKonsekwentnychIteracji, int maxIteracji);
 
         //Przygotowanie danych do optymalizacji.
         void Prepare();
-
-        //Dodawanie funkcji do grafiku.
-        void DodajFunkcje(bool[] optymalneRozwiazanie);
     }
 }

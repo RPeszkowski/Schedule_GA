@@ -10,16 +10,16 @@ namespace Funkcje_GA
     public class Shift
     {
         public int Id { get; set; }                                 //Numer id zmiany 0 - 30 dzienne zmiany, 31 - 61 nocne zmiany.
-        public List<Employee> Present_employees { get; set; }       //Pracownicy na zmianie.
-        public List<Employee> Sala_employees { get; set; }          //Pracownicy na sali.
-        public List<Employee> Triaz_employees { get; set; }         //Pracownicy na triażu.
+        public List<Employee> PresentEmployees { get; set; }       //Pracownicy na zmianie.
+        public List<Employee> SalaEmployees { get; set; }          //Pracownicy na sali.
+        public List<Employee> TriazEmployees { get; set; }         //Pracownicy na triażu.
 
         //Konstruktor.
         public Shift(int Id)
         {
-            Present_employees = new List<Employee>();
-            Sala_employees = new List<Employee>();
-            Triaz_employees = new List<Employee>();
+            PresentEmployees = new List<Employee>();
+            SalaEmployees = new List<Employee>();
+            TriazEmployees = new List<Employee>();
             this.Id = Id;
         }
     }

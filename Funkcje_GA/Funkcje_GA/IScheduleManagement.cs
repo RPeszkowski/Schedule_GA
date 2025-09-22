@@ -15,6 +15,9 @@ namespace Funkcje_GA
         //Dodawanie pracownika do zmiany.
         void AddToShift(int shiftId, int employeeId);
 
+        //Dopisywanie funkcji po zakończonej optymalizacji.
+        void DodajFunkcje(bool[] optymalneRozwiazanie);
+
         //Zwraca zmianę.
         Shift GetShiftById(int id);
 
