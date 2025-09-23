@@ -23,5 +23,7 @@ For additional information about the app and GA optimization please consider vis
 * Optimization - jest to wydzielony obszar kodu odpowiedzialny za przeprowadzanie optymalizacji.
 * ScheduleManagement - obiekt tej klasy przechowuje aktualny grafik. Grafik jest obecnie listą 62 (po 2 zmiany na dzień) elementów typu Shift, jednak zastosowanie interfejsu pozwala na zmiany w przyszłości.
 * Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
-* UIManagement - obiekt tej klasy odpowiada za prezentację grafiku. Podstawową kontrolką przechowującą dane jest w tej chwili listbox, jednak zastosowanie interfejsu z użyciem zapytań linq daje możliwość prostej zmiany, np. na listview.
+
+<p align="justify">
+Projekt skłąda się z warstwy modelu (IOptimization, IEmployeeManagement, IScheduleManagement, Shift, Employee), warstwy prezentera (IViewFileService, IViewEmployee, IViewSchedule, IViewOptimization) oraz warstwy view (Form1 i Form2). Zaimplementowano testy jednostkowe dla klasy EmployeeManagement.</p>
 
