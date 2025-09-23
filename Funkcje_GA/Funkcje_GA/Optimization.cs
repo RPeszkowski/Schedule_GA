@@ -11,11 +11,9 @@ using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
+    //Ta klasa zajmuje się przeprowadzaniem optymalizacji genetycznej.
     public class Optimization : IOptimization
     {
-        //Informacja o przebiegu optymalizacji.
-        public event Action<string> ProgressUpdated;
-
         //Obiekty tej klasy są wykorzystywane w optymalizacji genetycznej.
         private class Osobnik
         {
@@ -59,6 +57,9 @@ namespace Funkcje_GA
             this._scheduleManager = scheduleManager;
         }
 
+        //Informacja o przebiegu optymalizacji.
+        public event Action<string> ProgressUpdated;
+
         //Event do powiadamiania o ostrzeżeniach.
         public event Action<string> WarningRaised;
 
@@ -82,21 +83,17 @@ namespace Funkcje_GA
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
                 dyzuryRozstaw[i] = new bool[Convert.ToInt32(wymiarEtatu[i])];
-
                 nrDyzuru[i] = 0;
+
+                liczbaSalOsobaDzien[i] = 0;
+                liczbaSalOsobaNoc[i] = 0;
+                liczbaTriazyOsobaDzien[i] = 0;
+                liczbaTriazyOsobaNoc[i] = 0;
             }
 
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
                 liczbaStazystowNaTriazu[i] = 0;
-            }
-
-            for (int i = 0; i < MAX_LICZBA_OSOB; i++)
-            {
-                liczbaSalOsobaDzien[i] = 0;
-                liczbaSalOsobaNoc[i] = 0;
-                liczbaTriazyOsobaDzien[i] = 0;
-                liczbaTriazyOsobaNoc[i] = 0;
             }
 
             for (int i = 0; i < LICZBA_DNI; i++)
@@ -119,30 +116,6 @@ namespace Funkcje_GA
 
                     nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaSalOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
-                    }
-
                     if (nrOsobySala == nrOsobyTriaz1)
                         a += 1000000.0m;
 
@@ -151,6 +124,33 @@ namespace Funkcje_GA
 
                     if (nrOsobyTriaz1 == nrOsobyTriaz2)
                         a += 1000000.0m;
+
+                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaSalOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
+                    }
+
+                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
+                    }
+
+                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
+                    }
 
                     for (int j = 0; j < nieTriazDzien.Length; j++)
                     {
@@ -189,30 +189,6 @@ namespace Funkcje_GA
 
                     nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
 
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaSalOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
-                        a += 1000000.0m;
-                    else
-                    {
-                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
-                    }
-
                     if (nrOsobySala == nrOsobyTriaz1)
                         a += 1000000.0m;
 
@@ -221,6 +197,33 @@ namespace Funkcje_GA
 
                     if (nrOsobyTriaz1 == nrOsobyTriaz2)
                         a += 1000000.0m;
+
+                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaSalOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
+                    }
+
+                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
+                    }
+
+                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
+                        a += 1000000.0m;
+
+                    else
+                    {
+                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
+                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
+                    }
 
                     for (int j = 0; j < nieTriazNoc.Length; j++)
                     {
@@ -335,28 +338,33 @@ namespace Funkcje_GA
             return nieTriazNoc;
         }
 
+        //Oblcizamy oczekiwaną liczbę dyzurów funkcyjnych dla każdego pracownika.
         private double[] OczekiwanaLiczbaFunkcji()
         {
-            const double MAX_LICZBA_FUNKCJI = 8.5;
-            const double MIN_LICZBA_FUNKCJI = 2.5;
-            double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB];
-            int liczbaDniRoboczych = 0;
-            double sumaEtatow = 0.0;
+            const double MAX_LICZBA_FUNKCJI = 8.5;                      //Maksymalna oczekiwana liczba funkcji.
+            const double MIN_LICZBA_FUNKCJI = 2.5;                      //Minimalna oczekiwana liczba funkcji.
+            double[] oczekiwanaLiczbaFunkcji = new double[MAX_LICZBA_OSOB]; //Tablica z oczekiwanymi wartościami dla wszystkich pracowników.
+            int liczbaDniRoboczych = 0;                                     //Liczba dni, w których są dyżury.
+            double sumaEtatow = 0.0;                                        //Suma etatów wszytskich pracowników.
 
+            //Sprawdzamy, które dni są robocze.
             for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
             {
                 if (_scheduleManager.GetShiftById(shiftId).PresentEmployees.Count() > 0)
                     liczbaDniRoboczych++;
             }
 
+            //Liczymy sumę etatów.
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
-            {
                 sumaEtatow += Convert.ToInt32(wymiarEtatu[i]);
-            }
 
+            //Obliczamy oczekiwaną liczbę funkcji dla każdgo pracownika.
+            //Liczba wszystkich funkcji na wszystkich zmianach: 3 * liczbaDniRoboczych (po 3 funkcje na zmianie).
+            //Liczba danego pracownika funkcji jest proporcjonalna do wymiaru etatu (3 * liczbaDniRoboczych * wymiarEtatu[i] / sumaEtatow).
+            //Odejmujemy/dodajemy funkcje w zalezności od zaległości. Na koniec sprawdzamy, czy liczba mieści się w zakresie.
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
-                if (wymiarEtatu[i] > 0.1)
+                if (wymiarEtatu[i] > 0.000001)
                 {
                     oczekiwanaLiczbaFunkcji[i] = Math.Min(Math.Max(((3 * liczbaDniRoboczych * wymiarEtatu[i] / sumaEtatow) - zaleglosci[i]), 0), MAX_LICZBA_FUNKCJI);
                     oczekiwanaLiczbaFunkcji[i] = Math.Max(oczekiwanaLiczbaFunkcji[i], MIN_LICZBA_FUNKCJI);

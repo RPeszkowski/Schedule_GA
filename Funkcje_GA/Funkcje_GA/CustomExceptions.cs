@@ -88,6 +88,16 @@ namespace Funkcje_GA
             public ScheduleEmployeeManagerException(string message, Exception inner) : base(message, inner) { }
         }
 
+        //Wyjątek rzucamy, gdy dodaj funkcje zgłosi błąd.
+        public class ScheduleFunctionEncodingException : Exception
+        {
+            public ScheduleFunctionEncodingException() { }
+
+            public ScheduleFunctionEncodingException(string message) : base(message) { }
+
+            public ScheduleFunctionEncodingException(string message, Exception inner) : base(message, inner) { }
+        }
+
         //Wyjątek rzucamy, gdy employeeManager zwróci błąd.
         public class ScheduleInvalidEmployeeIdException : Exception
         {

@@ -3,40 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|c:\\users\\lenovo\\documents\\github\\schedule_ga\\funkcje_ga\\funkcje_ga\\schedulemanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\schedulemanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\eventglobal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\eventglobal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\iuimanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\iuimanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\uimanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\uimanagement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\optimization.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\optimization.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\form2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\form2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\form2.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}",
-      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\form2.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}"
+      "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|solutionrelative:funkcje_ga\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}|Funkcje_GA\\Funkcje_GA.csproj|C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\funkcje_ga\\form2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
@@ -50,126 +30,69 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "ScheduleManagement.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\ScheduleManagement.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\ScheduleManagement.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\ScheduleManagement.cs",
-              "RelativeToolTip": "Funkcje_GA\\ScheduleManagement.cs",
-              "ViewState": "AgIAAIQAAAAAAAAAAAAAAC8BAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "Form1.cs [Projekt]",
+              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs",
+              "RelativeDocumentMoniker": "Funkcje_GA\\Form1.cs",
+              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs [Projekt]",
+              "RelativeToolTip": "Funkcje_GA\\Form1.cs [Projekt]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T19:21:02.302Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "IUIManagement.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\IUIManagement.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\IUIManagement.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\IUIManagement.cs",
-              "RelativeToolTip": "Funkcje_GA\\IUIManagement.cs",
-              "ViewState": "AgIAABwAAAAAAAAAAAAgwCoAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T15:10:53.43Z"
+              "WhenOpened": "2025-09-23T18:09:38.675Z",
+              "EditorCaption": " [Projekt]"
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "UIManagement.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\UIManagement.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\UIManagement.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\UIManagement.cs",
-              "RelativeToolTip": "Funkcje_GA\\UIManagement.cs",
-              "ViewState": "AgIAACgAAAAAAAAAAAAiwDEAAACIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T08:16:05.484Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Form1.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\Form1.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs",
-              "RelativeToolTip": "Funkcje_GA\\Form1.cs",
-              "ViewState": "AgIAANAAAAAAAAAAAADwv+8AAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-20T16:37:30.75Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Optimization.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Optimization.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\Optimization.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Optimization.cs",
-              "RelativeToolTip": "Funkcje_GA\\Optimization.cs",
-              "ViewState": "AgIAADgBAAAAAAAAAADwv7ACAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-20T20:13:04.764Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Program.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\Program.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Program.cs",
-              "RelativeToolTip": "Funkcje_GA\\Program.cs",
-              "ViewState": "AgIAABsAAAAAAAAAAAAhwCoAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T10:36:28.61Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
               "Title": "Form2.cs [Projekt]",
               "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.cs",
               "RelativeDocumentMoniker": "Funkcje_GA\\Form2.cs",
               "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.cs [Projekt]",
               "RelativeToolTip": "Funkcje_GA\\Form2.cs [Projekt]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T14:45:03.296Z"
+              "WhenOpened": "2025-09-22T14:45:03.296Z",
+              "EditorCaption": " [Projekt]"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 0,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs",
+              "RelativeDocumentMoniker": "Funkcje_GA\\Form1.cs",
+              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form1.cs",
+              "RelativeToolTip": "Funkcje_GA\\Form1.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAABQAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-20T16:37:30.75Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Program.cs",
+              "RelativeDocumentMoniker": "Funkcje_GA\\Program.cs",
+              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Program.cs",
+              "RelativeToolTip": "Funkcje_GA\\Program.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAADgvzMAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-22T10:36:28.61Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Form2.cs",
               "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.cs",
               "RelativeDocumentMoniker": "Funkcje_GA\\Form2.cs",
               "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.cs",
               "RelativeToolTip": "Funkcje_GA\\Form2.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAAAWAAAAAAAAAA==",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAqwBYAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-22T14:45:06.748Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "Form2.resx",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.resx",
-              "RelativeDocumentMoniker": "Funkcje_GA\\Form2.resx",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\Form2.resx",
-              "RelativeToolTip": "Funkcje_GA\\Form2.resx",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-09-22T14:45:07.059Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "EventGlobal.cs",
-              "DocumentMoniker": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\EventGlobal.cs",
-              "RelativeDocumentMoniker": "Funkcje_GA\\EventGlobal.cs",
-              "ToolTip": "C:\\Users\\lenovo\\Documents\\GitHub\\Schedule_GA\\Funkcje_GA\\Funkcje_GA\\EventGlobal.cs",
-              "RelativeToolTip": "Funkcje_GA\\EventGlobal.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAADgvw8AAABKAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-20T20:16:56.978Z"
+              "WhenOpened": "2025-09-22T14:45:06.748Z",
+              "EditorCaption": ""
             }
           ]
         }

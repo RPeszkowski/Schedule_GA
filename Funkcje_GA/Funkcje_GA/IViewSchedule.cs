@@ -9,17 +9,11 @@ using static Funkcje_GA.Form1;
 
 namespace Funkcje_GA
 {
-    //Ten interfejs odpowiada za połączenie klasy UIManagement z resztą kodu.
-    public interface IUIManagement
+    //Ten interfejs odpowiada za połączenie klasy ViewSchedule z resztą kodu.
+    public interface IViewSchedule
     {
-        //Akcja zmiana danych pracownika.
-        event Action<int, (string, int)> EmployeeLabelChanged;
-
         //Akcja zmiana kontrolki grafiku.
         event Action<int, List<string>> ScheduleControlChanged;
-
-        //Podświetlanie etykiet podczas drag and drop.
-        event Action<int, Color> ScheduleHighlightRaise;
 
         //Powiadomienie użytkownika.
         event Action<string> UserNotificationRaise;
@@ -27,26 +21,8 @@ namespace Funkcje_GA
         //Dodawanie pracownika do zmiany.
         void AddEmployeeToShift(int shiftId, int employeeId);
 
-        //Usuwanie danych pracownika.
-        void ClearEmployeeData(int id);
-
         //Usuwanie grafiku.
         void ClearSchedule();
-
-        //Wczytywanie pracowników.
-        void LoadEmployees(string filePath);
-
-        //Wczytywanie grafiku.
-        void LoadSchedule(string filePath);
-
-        //Zapisywanie grafiku.
-        void SaveSchedule(string filepath);
-
-        //Drag and drop etykiety pracownika.
-        void HandleEmployeeMouseDown(int employeeId);
-
-        //Uruchamiamy optymalizację.
-        Task RunOptimizationAsync();
 
         //Przypisujemy wybranym pracownikom brak funkcji.
         void SetSelectedShiftsToBezFunkcji(IEnumerable<(int ShiftId, int EmployeeId)> selected);
@@ -59,9 +35,6 @@ namespace Funkcje_GA
 
         //Usuwamy wybrane dyżury.
         void RemoveSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected);
-
-        //Wyświetlamy dane wybranej zmiany.
-        void UpdateEmployeeLabel(Employee employee);
 
         //Wyświetlamy dane wybranej zmiany.
         void UpdateScheduleControl(Shift shift);

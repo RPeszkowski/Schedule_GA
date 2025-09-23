@@ -33,11 +33,14 @@ namespace Funkcje_GA
             IScheduleFileService _fileManagerGrafik = new FileManagementGrafik(_employeeManager, _scheduleManager);//Instancja do zarządzania plikiem grafiku.
             IEmployeesFileService _fileManagerPracownicy = new FileManagementPracownicy(_employeeManager);     //Instancja do zarządzania plikiem pracowników.
             IOptimization _optimization = new Optimization(_employeeManager, _scheduleManager); //Instancja do optymalizacji.
-            IUIManagement _uiManager = new UIManagement(_employeeManager, _scheduleManager, _fileManagerPracownicy, _fileManagerGrafik, _optimization);  //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
-
-            _employeeManager.EmployeeChanged += (emp) => _uiManager.UpdateEmployeeLabel(emp);           //Zdarzenie: dodanie lub zmiana danych pracownika.
-            _employeeManager.EmployeeDeleted += (id) => _uiManager.ClearEmployeeData(id);               //Zdarzenie: usunięcie pracownika.
-            _scheduleManager.ShiftChanged += (shift) => _uiManager.UpdateScheduleControl(shift);       //Zdarzenie: modyfikacja zmiany.
+            IViewSchedule _viewSchedule = new ViewSchedule(_scheduleManager);  //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
+            IViewFile _viewFile = new ViewFile(_fileManagerPracownicy, _fileManagerGrafik);                 //Instancja do zarządzania plikami grafiku i pracowników w warstwie prezentera.
+            IViewEmployee _viewEmployee = new ViewEmployee(_employeeManager, _scheduleManager);         //Instancja do zarządzania etykietami pracowników w warstwie prezentera.
+            IViewOptimization _viewOptimization = new ViewOptimization(_optimization, _scheduleManager, _viewFile); //Instanjca do zarządzania optymalizacją w warstwie prezentera.
+            
+            _employeeManager.EmployeeChanged += (emp) => _viewEmployee.UpdateEmployeeLabel(emp);           //Zdarzenie: dodanie lub zmiana danych pracownika.
+            _employeeManager.EmployeeDeleted += (id) => _viewEmployee.ClearEmployeeLabel(id);               //Zdarzenie: usunięcie pracownika.
+            _scheduleManager.ShiftChanged += (shift) => _viewSchedule.UpdateScheduleControl(shift);       //Zdarzenie: modyfikacja zmiany.
 
             //Tworzymy logger.
             Log.Logger = new LoggerConfiguration()
@@ -46,7 +49,7 @@ namespace Funkcje_GA
                 rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            Application.Run(new Form1(_uiManager, _employeeManager, _scheduleManager, _fileManagerGrafik, _fileManagerPracownicy, _optimization));
+            Application.Run(new Form1(_viewSchedule, _employeeManager, _viewFile, _viewEmployee, _viewOptimization));
         }
     }
 }

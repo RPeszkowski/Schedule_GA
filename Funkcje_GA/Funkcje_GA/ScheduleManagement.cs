@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Funkcje_GA.Form1;
 using static Funkcje_GA.Constans;
 using static Funkcje_GA.CustomExceptions;
 
@@ -61,7 +60,7 @@ namespace Funkcje_GA
         }
 
         //Dodajemy funkcje do grafiku.
-        public void DodajFunkcje(bool[] optymalneRozwiazanie)
+        public void ApplyOptimizationToSchedule(bool[] optymalneRozwiazanie)
         {
             int nrSala;                                     //Numer pracownika, który ma salę.
             int nrTriaz1;                                   //Numer pierwszego pracownika, który ma triaż.
@@ -72,50 +71,67 @@ namespace Funkcje_GA
             //Dla każdej zmiany zdekoduj i dodaj funkcje.
             for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
+                shift = schedule[nrZmiany];             //Zmiana.
+
+                //Sprawdzamy, czy w danym miesiącu istnieje ta zmiana.
+                if (shift.PresentEmployees.Count == 0)
+                    continue;
+
                 //Sprawdzamy, czy danego dnia są dyzury.
                 if (schedule[nrZmiany].PresentEmployees.Count > 0)
                 {
-                    //Pobieramy zapisany binarnie numer osoby, która ma salę.
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * nrZmiany + j];
+                    //Pobieramy zapisany binarnie numer osoby, która ma salę i dekodujemy.
+                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany, numerOsoby, 0, MAX_LICZBA_BITOW);
+                    nrSala = DecodeEmployeeNumber(numerOsoby);
+
+                    //Pobieramy zapisany binarnie numer pierwszej osoby, która ma triaż i dekodujemy.
+                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
 
                     //Dekodujemy numer.
-                    nrSala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                    nrTriaz1 = DecodeEmployeeNumber(numerOsoby);
 
-                    //Pobieramy zapisany binarnie numer pierwszej osoby, która ma triaż.
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * nrZmiany + MAX_LICZBA_BITOW + j];
-
-                    //Dekodujemy numer.
-                    nrTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
-
-                    //Pobieramy zapisany binarnie numer drugiej osoby, która ma triaż.
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = optymalneRozwiazanie[3 * MAX_LICZBA_BITOW * nrZmiany + 2 * MAX_LICZBA_BITOW + j];
-
-                    //Dekodujemy numer.
-                    nrTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                    //Pobieramy zapisany binarnie numer drugiej osoby, która ma triaż i dekodujemy.
+                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + 2 * MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
+                    nrTriaz2 = DecodeEmployeeNumber(numerOsoby);
 
                     //Pobieramy numer zmiany.
-                    shift = schedule[nrZmiany];
-
-                    //Dodaj dyżury dla dziennej zmiany.
-                    if (nrZmiany < LICZBA_DNI)
-                    {
-                        ToSala(nrZmiany, schedule[nrZmiany].PresentEmployees[nrSala].Numer);
-                        ToTriaz(nrZmiany, schedule[nrZmiany].PresentEmployees[nrTriaz1].Numer);
-                        ToTriaz(nrZmiany, schedule[nrZmiany].PresentEmployees[nrTriaz2].Numer);
-                    }
-
-                    //Dodaj dyżury dla nocnej zmiany.
-                    else
-                    {
-                        ToSala(nrZmiany, schedule[nrZmiany].PresentEmployees[nrSala].Numer);
-                        ToTriaz(nrZmiany, schedule[nrZmiany].PresentEmployees[nrTriaz1].Numer);
-                        ToTriaz(nrZmiany, schedule[nrZmiany].PresentEmployees[nrTriaz2].Numer);
-                    }
+                    AssignShiftFunctions(shift, nrSala, nrTriaz1, nrTriaz2);
                 }
             }
+        }
+
+        //Dopisujemy funkcje do zmiany.
+        private void AssignShiftFunctions(Shift shift, int nrSala, int nrTriaz1, int nrTriaz2)
+        {
+            //Pobieramy numer zmiany i sprawdzamy, czy dane z optymalizacji są poprawne.            
+            if (nrSala >= shift.PresentEmployees.Count
+                || nrTriaz1 >= shift.PresentEmployees.Count
+                || nrTriaz2 >= shift.PresentEmployees.Count)
+            {
+                throw new ScheduleFunctionEncodingException(
+                    $"Numer: {nrSala}, {nrTriaz1} lub {nrTriaz2} jest większy bądź równy liczbie pracowników");
+            }
+
+            //Przypisanie funkcji.
+            ToSala(shift.Id, shift.PresentEmployees[nrSala].Numer);
+            ToTriaz(shift.Id, shift.PresentEmployees[nrTriaz1].Numer);
+            ToTriaz(shift.Id, shift.PresentEmployees[nrTriaz2].Numer);
+        }
+
+        //Dekodujemy numer pracownika na podstawie danych z rozwiązania problemu optymalizacji.
+        private int DecodeEmployeeNumber(bool[] bits)
+        {
+            //Sprawdzamy, czy tablica nie jest pusta.
+            if (bits == null || bits.Length == 0)
+                throw new ArgumentException("Tablica bitów nie może być pusta.");
+
+            //Dekodujemy numer pracownika.
+            int number = 0;
+            foreach (bool bit in bits)
+            {
+                number = (number * 2) + (bit ? 1 : 0);
+            }
+            return number;
         }
 
         //Pobierz zmianę o określonym Id.
@@ -151,6 +167,8 @@ namespace Funkcje_GA
             //Sprawdzamy, czy Id jest poprawne.
             if (employeeId < 1 || employeeId > MAX_LICZBA_OSOB)
                 throw new ScheduleInvalidEmployeeIdException($"Numer pracownika {employeeId} jest niepoprawny");
+
+            if (_employeeManager.GetEmployeeById(employeeId) == null) throw new ArgumentNullException("Osoba nie istnieje.");     //Pracownik - sprawdzamy null.
 
             //Sprawdzamy po kolei każdą zmianę.
             foreach (var shift in schedule)

@@ -13,17 +13,13 @@ namespace Funkcje_GA
     //Ta klasa odpowiada za zarządzanie pracownikami.
     public class EmployeeManagement : IEmployeeManagement
     {
-        private readonly List<Employee> employees;                                 //Deklaracja listy pracowników.
+        private readonly Dictionary<int, Employee> employees;                                 //Deklaracja listy pracowników.
 
         //Konstruktor.
         public EmployeeManagement()
         {
             //Tworzymy listę i wypełniamy wartościami null. Tworzymy menadżera UI.
-            employees = new List<Employee>(MAX_LICZBA_OSOB);                        //Lista pracowników.
-            for (int i = 0; i < MAX_LICZBA_OSOB; i++)
-            {
-                employees.Add(null);
-            }
+            employees = new Dictionary<int, Employee>(MAX_LICZBA_OSOB);                        //Lista pracowników.
         }
 
         //Event, który zostaje wywołany gdy zmienią się dane pracownika.
@@ -43,19 +39,23 @@ namespace Funkcje_GA
             //Sprawdzamy poprawność pozostałych danych
             EmployeeValidate(numer, imie, nazwisko, wymiarEtatu, zaleglosci);
 
-            if (employees[numer - 1] != null)
+            if (employees.ContainsKey(numer))
                 throw new EmployeeAlreadyExistException($"Pracownik o numerze {numer} jest już w bazie.");
 
             //Tworzymy nową osobę, sprawdzamy, dodajemy.
             Employee newEmployee = new Employee(numer, imie, nazwisko, wymiarEtatu, zaleglosci, czyTriazDzien, czyTriazNoc);
-            employees[numer - 1] = newEmployee;
-            EmployeeChanged?.Invoke(employees[numer - 1]);
+            employees.Add(newEmployee.Numer, newEmployee);
+            EmployeeChanged?.Invoke(employees[numer]);
         }
 
         //Edycja danych pracownika.
         public void EmployeeEdit(Employee employee, double wymiarEtatu)
         {
             //Edycja danych jednej osoby. Tylko wymiar etatu.
+
+            //Jeśli pracownika nie ma to rzucamy wyjątek.
+            if (!employees.ContainsKey(employee.Numer))
+                throw new ArgumentNullException("Pracownik nie istnieje w systemie.");
 
             //Sprawdzamy, czy wymiar etatu jest poprawny.
             if (wymiarEtatu < -0.00001)
@@ -83,10 +83,13 @@ namespace Funkcje_GA
         //Usuwanie pracownika.
         public void EmployeeDelete(Employee employee)
         {
+            //Jeśli pracownika nie ma to rzucamy wyjątek.
+            if (!employees.ContainsKey(employee.Numer))
+                throw new ArgumentNullException("Pracownik nie istnieje w systemie.");
+
             //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
-            EmployeeDeleted?.Invoke(employee.Numer - 1);
-            // _uiManager.ClearEmployeeData(employee.Numer - 1);
-            employees[employee.Numer - 1] = null;
+            EmployeeDeleted?.Invoke(employee.Numer);
+            employees.Remove(employee.Numer);
         }
         //Sprawdzanie poprawności danych.
         private void EmployeeValidate(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci)
@@ -109,17 +112,21 @@ namespace Funkcje_GA
         }
 
         //Interfejs do wybierania wszystkich pracowników (tylko pola niepuste).
-        public IEnumerable<Employee> GetAllActive() => employees.Where(emp => emp != null);
+        public IEnumerable<Employee> GetAllActive() => employees.Values.OrderBy(emp => (emp.Numer));
 
-        //Interfejs do wybierania pracowników.
+        //Interfejs do wybierania pracowników. Zwraca null, gdy pracownika nie ma w systemie.
         public Employee GetEmployeeById(int numer)
         {
             //Sprawdzamy, czy numer jest poprawny.
             if(numer < 1 || numer > MAX_LICZBA_OSOB)
                 throw new EmployeeNumberOutOfRangeException($"Numer: {numer} jest poza przedziałem dopuszczalnych wartości od 1 do {MAX_LICZBA_OSOB}.");
 
-            //Jeśli nuemr jest poprawny zwracamy pracownika.
-            else return employees[numer - 1];
+            //Jeśli numer jest poprawny zwracamy pracownika.
+            if (employees.ContainsKey(numer))
+                return employees[numer];
+
+            //Jeśli nie to zwracamy null.
+            else return null;
         }
     }
 }

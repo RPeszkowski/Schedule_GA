@@ -31,33 +31,30 @@ namespace Funkcje_GA
 {
     public partial class Form1 : Form
     {
-        private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];     //Tworzenie etykiet wyświetlających numer dziennej zmiany.
-        private readonly System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];       //Tworzenie etykiet wyświetlających numer nocnej zmiany.
-        private readonly System.Windows.Forms.Label[] labelsPracownicy = new System.Windows.Forms.Label[MAX_LICZBA_OSOB]; //Tworzenie etykiet pracowników.
-        private readonly ListBoxGrafik[] listboxesSchedule = new ListBoxGrafik[2 * LICZBA_DNI]; //Tworzenie listboxów grafiku.
+        private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];             //Tworzenie etykiet wyświetlających numer dziennej zmiany.
+        private readonly System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];               //Tworzenie etykiet wyświetlających numer nocnej zmiany.
+        private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
+        private readonly ListBoxGrafik[] listboxesSchedule = new ListBoxGrafik[2 * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
      
-        private readonly IEmployeeManagement _employeeManager;                                                       //Instancja do zarządzania pracownikami. 
-        private readonly IScheduleFileService _fileManagerGrafik;                                                   //Instancja do zarządzania plikiem grafiku.
-        private readonly IEmployeesFileService _fileManagerPracownicy;                                           //Instancja do zarządzania plikiem pracowników
-        private readonly IOptimization _optimization;                                                                //Instancja do optymzalicaji.
-        private readonly IScheduleManagement _scheduleManager;                                                       //Instancja do zarządzania grafikiem.
-        private readonly IUIManagement _uiManager;                                                              //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
+        private readonly IEmployeeManagement _employeeManager;                      //Instancja do zarządzania pracownikami.
+        private readonly IViewSchedule _viewSchedule;                               //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
+        private readonly IViewEmployee _viewEmployee;                               //Instancja prezentera zajmująca się obsługą plików.
+        private readonly IViewFile _viewFile;                                       //Instancja prezentera zajmująca się wyświetlaniem etykiet pracowników.
+        private readonly IViewOptimization _viewOptimization;                       //Instancja prezentera zajmująca się wyświetlaniem optymalizacji.
 
         //Konstruktor.
-        public Form1(IUIManagement uiManager, 
-                     IEmployeeManagement employeeManager, 
-                     IScheduleManagement scheduleManager,
-                     IScheduleFileService fileManagerGrafik,
-                     IEmployeesFileService fileManagerPracownicy,
-                     IOptimization optimization)
+        public Form1(IViewSchedule viewSchedule, 
+                     IEmployeeManagement employeeManager,
+                     IViewFile viewFile,
+                     IViewEmployee viewEmployee,
+                     IViewOptimization viewOptimization)
         {
             //Przypisujemy menadżery.
-            this._uiManager = uiManager;
+            this._viewSchedule = viewSchedule;
             this._employeeManager = employeeManager;
-            this._scheduleManager = scheduleManager;
-            this._fileManagerGrafik = fileManagerGrafik;
-            this._fileManagerPracownicy = fileManagerPracownicy;
-            this._optimization = optimization;
+            this._viewFile = viewFile;
+            this._viewEmployee = viewEmployee;
+            this._viewOptimization = viewOptimization;
 
             //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
@@ -74,7 +71,7 @@ namespace Funkcje_GA
             //Wczytujemy pracowników z pliku tekstowego przy starcie programu.
             try
             {
-                _uiManager.LoadEmployees("Pracownicy.txt");
+                _viewFile.LoadEmployees("Pracownicy.txt");
             }
 
             catch (Exception ex)
@@ -93,7 +90,7 @@ namespace Funkcje_GA
                 {
                     try
                     {
-                        _uiManager.LoadSchedule("Grafik.txt");
+                        _viewFile.LoadSchedule("Grafik.txt");
                     }
 
                     catch (Exception ex)
@@ -106,7 +103,7 @@ namespace Funkcje_GA
         }
 
         //Akcja powiadomienia użytkownika.
-        public Action<string> OnUserNotification;
+        public Action<string> UserNotificationRaise;
 
         //Zmieniamy na bez funkcji.
         private void buttonBezFunkcji_Click(object sender, EventArgs e)
@@ -116,14 +113,14 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na bez funkcji.
             var selected = GetAllSelectedEmployeeIds();
-            _uiManager.SetSelectedShiftsToBezFunkcji(selected);
+            _viewSchedule.SetSelectedShiftsToBezFunkcji(selected);
         }
 
         //Czyścimy grafik.
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
             //Usuwamy grafik i wyświetlamy powiadomienie.
-            _uiManager.ClearSchedule();
+            _viewSchedule.ClearSchedule();
         }
 
         //Wyświetlamy Form2.
@@ -133,7 +130,7 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Wyświetlamy Form2.
-            Form2 dialog = new Form2(_employeeManager, _fileManagerPracownicy);
+            Form2 dialog = new Form2(_employeeManager, _viewFile);
             dialog.ShowDialog();
         }
 
@@ -145,7 +142,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na sale.
             var selected = GetAllSelectedEmployeeIds();
-            _uiManager.SetSelectedShiftsToSala(selected);
+            _viewSchedule.SetSelectedShiftsToSala(selected);
         }
 
         //Zamieniamy wszystkie wybrane dyżury na triaż.
@@ -156,7 +153,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na triaż.
             var selected = GetAllSelectedEmployeeIds();
-            _uiManager.SetSelectedShiftsToTriaz(selected);
+            _viewSchedule.SetSelectedShiftsToTriaz(selected);
         }
 
         //Usuwamy wszystkie wybrane dyżury.
@@ -167,7 +164,7 @@ namespace Funkcje_GA
 
             //Próbujemy usunąć zaznaczone dyżury.
             var selected = GetAllSelectedEmployeeIds();
-            _uiManager.RemoveSelectedShifts(selected);
+            _viewSchedule.RemoveSelectedShifts(selected);
         }
 
         //Wczytujemy grafik z pliku "Grafik.txt" i jeśli się uda, wyświetlamy informację.
@@ -177,7 +174,7 @@ namespace Funkcje_GA
             UsunPodswietlenie();
             try
             {
-                _uiManager.LoadSchedule("Grafik.txt");
+                _viewFile.LoadSchedule("Grafik.txt");
             }
 
             catch (Exception ex)
@@ -196,7 +193,7 @@ namespace Funkcje_GA
             //Próbujemy zapisać grafik
             try
             {
-                _uiManager.SaveSchedule("Grafik.txt");
+                _viewFile.SaveSchedule("Grafik.txt");
             }
 
             catch (Exception ex)
@@ -231,8 +228,7 @@ namespace Funkcje_GA
                     catch (Exception ex)
                     {
                         throw new FormatException($"Kontrolka: {shiftId} ma niepoprawne dane {ex.Message}.", ex);
-                    }
-                    ;
+                    };
                 }
             }
 
@@ -243,7 +239,7 @@ namespace Funkcje_GA
         private void InitializeLabels()
         {
             //Dodajemy etykiety wyświetlające dane pracowników do furmularza.
-            for (int nrOsoby = 0; nrOsoby < MAX_LICZBA_OSOB; nrOsoby++)
+            for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
             {
                 //Dodawanie etykiet.
                 labelsPracownicy[nrOsoby] = new System.Windows.Forms.Label();
@@ -259,14 +255,16 @@ namespace Funkcje_GA
                     UsunPodswietlenie();
 
                     //Wywołujemy event w presenterze.
-                    _uiManager.HandleEmployeeMouseDown(_nrOsoby);
+                    var highlights = _viewEmployee.HandleEmployeeMouseDown(_nrOsoby);
+                    foreach (var (shiftId, color) in highlights)
+                        listboxesSchedule[shiftId].BackColor = color;
 
                     //Rozpoczynamy drag & drop.
                     if (e.Button == MouseButtons.Left)
-                        labelsPracownicy[_nrOsoby].DoDragDrop((_nrOsoby + 1).ToString(), DragDropEffects.Copy | DragDropEffects.Move);
+                        labelsPracownicy[_nrOsoby].DoDragDrop((_nrOsoby).ToString(), DragDropEffects.Copy | DragDropEffects.Move);
                 };
 
-                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], nrOsoby / 10, nrOsoby % 10);
+                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
             }
         }
 
@@ -296,7 +294,7 @@ namespace Funkcje_GA
                 {
                     //Pobieramy dane i dodajemy osobę do zmiany.
                     string pom = e.Data.GetData(DataFormats.Text).ToString();
-                    _uiManager.AddEmployeeToShift(_nrZmiany, Convert.ToInt32(pom));
+                    _viewSchedule.AddEmployeeToShift(_nrZmiany, Convert.ToInt32(pom));
                 };
 
                 //Tworzymy etykiety dla dyżurów dziennych.
@@ -332,47 +330,12 @@ namespace Funkcje_GA
         //Wzywamy subskrybenta OnUserNotification.
         protected virtual void RaiseUserNotification(string message)
         {
-            OnUserNotification?.Invoke(message);
+            UserNotificationRaise?.Invoke(message);
         }
 
         //Subskrybujemy eventy form1.
         private void SubscribeToEvents()
         {
-            //Usunięcia zaznaczenia i podświetlenia po kliknięciu form1.
-            this.Click += (sender, e) =>
-            {
-                for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-                {
-                    listboxesSchedule[nrZmiany].ResetBackColor();
-                    listboxesSchedule[nrZmiany].ClearSelected();
-                }
-            };
-
-            //Wyświetlenie wiadomości dla użytkownika.
-            OnUserNotification += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            _uiManager.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            //Subskrybujemy event odświeżono etykietę pracownika.
-            _uiManager.EmployeeLabelChanged += (id, info) =>
-            {
-                //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
-                labelsPracownicy[id].Text = info.Item1;
-                labelsPracownicy[id].ForeColor = info.Item2 == 0 ? Color.Black : Color.Orange;
-            };
-
-            //Subskrybujemy event odświezono kontrolkę grafiku.
-            _uiManager.ScheduleControlChanged += (id, lista) =>
-            {
-                listboxesSchedule[id].Items.Clear();
-                foreach (var item in lista)
-                    listboxesSchedule[id].Items.Add(item);
-            };
-
-            _uiManager.ScheduleHighlightRaise += (shiftId, color) =>
-            {
-                listboxesSchedule[shiftId].BackColor = color;
-            };
-
             //Zdarzenie asynchroniczne po kliknięciu przycisku "Opt".
             buttonOptymalizacja.Click += async (sender, e) =>
             {
@@ -387,7 +350,7 @@ namespace Funkcje_GA
                 }
 
                 //Uruchamiamy optymalizację.
-                await _uiManager.RunOptimizationAsync();
+                await _viewOptimization.RunOptimizationAsync();
 
                 //Po skończonej optymalizacji aktywujemy kontrolki.
                 foreach (Control control in this.Controls)
@@ -395,8 +358,32 @@ namespace Funkcje_GA
                         control.Enabled = true;
             };
 
+            //Usunięcia zaznaczenia i podświetlenia po kliknięciu form1.
+            this.Click += (sender, e) =>
+            {
+                for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+                {
+                    listboxesSchedule[nrZmiany].ResetBackColor();
+                    listboxesSchedule[nrZmiany].ClearSelected();
+                }
+            };
+
+            //Wyświetlenie wiadomości dla użytkownika.
+            UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _viewFile.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _viewOptimization.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _viewSchedule.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            //Subskrybujemy event odświeżono etykietę pracownika.
+            _viewEmployee.EmployeeLabelChanged += (id, info) =>
+            {
+                //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
+                labelsPracownicy[id].Text = info.Item1;
+                labelsPracownicy[id].ForeColor = info.Item2 == 0 ? Color.Black : Color.Orange;
+            };
+
             //Subskrybujemy zdarzenie nowych informacji o optymalizacji.
-            _optimization.ProgressUpdated += raport =>
+            _viewOptimization.ProgressUpdated += raport =>
             {
                 //Odświeżamy UI bezpośrednio w bezpieczny sposób.
                 if (labelRaport.InvokeRequired)
@@ -407,10 +394,18 @@ namespace Funkcje_GA
             };
 
             //Informacja, gdy wystąpił warning podczas optymalizacji.
-            _optimization.WarningRaised += message =>
+            _viewOptimization.UserNotificationRaiseWarning += message =>
             {
                 Log.Error(message);
                 MessageBox.Show(message, "Ostrzeżenie", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            };
+
+            //Subskrybujemy event odświezono kontrolkę grafiku.
+            _viewSchedule.ScheduleControlChanged += (id, lista) =>
+            {
+                listboxesSchedule[id].Items.Clear();
+                foreach (var item in lista)
+                    listboxesSchedule[id].Items.Add(item);
             };
         }
 

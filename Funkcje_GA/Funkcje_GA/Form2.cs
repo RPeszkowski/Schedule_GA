@@ -21,14 +21,14 @@ namespace Funkcje_GA
     public partial class Form2 : Form
     {
         private readonly IEmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
-        private readonly IEmployeesFileService _fileManagerPracownicy;   //Instancja do zarządzania plikiem pracowników.
-        
+        private readonly IViewFile _viewFile;                           //Instancja do zarządzania plikami.
+
         //Konstruktor. Aktualizacja listboxa z numerami aktywnych pracowników.
-        public Form2(IEmployeeManagement empManager, IEmployeesFileService fileManagerPracownicy)
+        public Form2(IEmployeeManagement empManager, IViewFile viewFile)
         {
             //Przypisujemy menagera pracowników.
             this._employeeManager = empManager;
-            this._fileManagerPracownicy = fileManagerPracownicy;
+            this._viewFile = viewFile;
 
             //Generuje kontrolki. Metoda stworzona przez Designera.
             InitializeComponent();
@@ -98,7 +98,7 @@ namespace Funkcje_GA
                 //Obsługa wyjątku: niepoprawne dane.
                 catch (EmployeeNameSurnameException ex)
                 {
-                    Log.Warning(ex, "Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
+                    Log.Error(ex, "Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
                     MessageBox.Show("Imię i nazwisko nie mogą mogą być puste ani zawierać spacji.");
                 }
 
@@ -116,7 +116,7 @@ namespace Funkcje_GA
         //Zapisujemy dane pracowników do pliku "Pracownicy.txt" i zamykamy Form2.
         private void buttonSaveAndQuit_Click(object sender, EventArgs e)
         {
-            _fileManagerPracownicy.ZapiszPracownikow("Pracownicy.txt");
+            _viewFile.SaveEmployees("Pracownicy.txt");
             this.Close();
         }
 
@@ -162,7 +162,6 @@ namespace Funkcje_GA
                 numericUpDownZaleglosci.Value = _employeeManager.GetEmployeeById(nrOsoby).Zaleglosci;
                 checkBoxCzyTriazDzien.Checked = _employeeManager.GetEmployeeById(nrOsoby).CzyTriazDzien;
                 checkBoxCzyTriazNoc.Checked = _employeeManager.GetEmployeeById(nrOsoby).CzyTriazNoc;
-
             }
         }
 
@@ -175,7 +174,6 @@ namespace Funkcje_GA
             {
                 if (_employeeManager.GetEmployeeById(nrOsoby) != null)
                     listBoxNumerOsoby.Items.Add(_employeeManager.GetEmployeeById(nrOsoby).Numer.ToString());
-
             }
         }
     }

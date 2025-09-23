@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funkcje_GA", "Funkcje_GA\Funkcje_GA.csproj", "{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funkcje_GA_xUnit_Test", "Funkcje_GA_xUnit_Test\Funkcje_GA_xUnit_Test.csproj", "{BB1310AC-3521-4071-9AFC-2FFA110DDED5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B67764E0-3FA0-4ECC-89C3-0C083D4A385E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
