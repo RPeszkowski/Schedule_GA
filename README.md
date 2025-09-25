@@ -22,9 +22,18 @@ Pełniejszy opis w zakładce Wiki.
 | Miękki          | S2      | Liczba funkcji powinna być proporcjonalna do ogólnej liczby zmian pracownika i uwzględniać zaległości.                                                                        |
 | Miękki          | S3      | Funkcje powinny być rozmieszczone równomiernie.                                                                                                                               |
 
-Wykonano testy algotyrmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe były nastepujące:
+<p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w mysl zasad powinieć pełnic triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algotyrmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe były nastepujące:</p>
 
+* Średnia liczba iteracji: 5461
+* Najmniejsza liczba iteracji: 2032
+* Największa liczba iteracji: 11109
+* Odchylenie standardowe liczby iteracji: 2099
+* Średni czas: 00:00:26
+* Najkrótszy czas: 00:00:10
+* Najdłuższy czas: 00:00:54
+* Odchylenie standardowe czasu: 00:00:10
 
+<p align="justify">Jak widać przydzielanie funkcji trwa zaledwie kilkadziesiąt sekund, co stanowi duży zysk względem ręcznego przydzielania, które mogło trwać nawet 2 godziny. Ręczne przydzielanie pozwalało na spełnienie zwykle tylko warunków H1 - H4, a warunki S1 - S3 były często naruszane. Dodatkowo, konieczne były czasochłonne zmiany grafiku, gdy pracownicy zamieniali się dyżurami.</p>
  
 ## Kod
 
