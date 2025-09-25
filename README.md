@@ -19,7 +19,7 @@
 * FileServiceTxt - klasa zaawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
 * ListBoxGrafik - zmodyfikowane listboxy z dodatkowymi metodami.
 * Optimization - obiekt tej klasy odpowiada za przeprowadzanie optymalizacji.
-* ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik. Grafik jest obecnie listą 62 (po 2 zmiany na dzień) elementów typu Shift, jednak zastosowanie interfejsu pozwala na zmiany w przyszłości.
+* ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik.
 * Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
 
 #### Warstwa prezentacji
