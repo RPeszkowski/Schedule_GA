@@ -1,7 +1,7 @@
 [PL]
 # Funkcje_GA
 <i>C#, WinForms, VisualStudio.</i>
-<p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracowników szpitalnego oddziału ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest takie przydzielenie funkcji, aby na każdej zmianie znajdowała się jedna pielęgniarka/pielęgniarz salowy oraz aby dwoje pracowników zajmowało się triażem. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego oraz stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
+<p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracowników szpitalnego oddziału ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest takie przydzielenie funkcji, aby na każdej zmianie znajdowała się jedna pielęgniarka/pielęgniarz salowy oraz aby dwoje pracowników zajmowało się triażem. Inne wymagania obejmują np. ograniczenia dotyczące stażystów, równomierne rozłożenie funkcji pomiędzy dyżury nocne i dzienne danego pracownika, uwzględnienie wymiaru etatu i zaległości. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego oraz stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
 
 <p align="justify">Uruchomienie aplikacji: Funkcje_GA => Funkcje_GA => Funkcje_GA.exe</p>
  
@@ -31,11 +31,12 @@
 *  ViewOptimization - klasa pośrednicząca pomięzy UI a procesem optymalizacji.
 *  ViewSchedule - klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem.
 
-## Wykorzystane biblioteki
+## Wykorzystane technologie
 
+* C#, WinForms.
 * Moq - do testów jednostkowych.
-* xUnit - do testów jednostkowych.
 * Serilog - do logowania zdarzeń.
+* xUnit - do testów jednostkowych.
 
 # Schedule_GA
 [ENG]
