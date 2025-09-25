@@ -17,7 +17,7 @@
 * EmployeeManagement (wraz z klasą do testów jednostkowych z sufiksem EmployeeManagementTests) - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach.
 * EnumFunctionTypes - enumerator przypisujący liczby możliwym funkcjom pracowników.
 * FileServiceTxt - klasa zawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
-* ListBoxGrafik - zmodyfikowane listboxy z dodatkowymi metodami.
+* ListBoxGrafik - zmodyfikowane list boxy z dodatkowymi metodami.
 * Optimization - obiekt tej klasy odpowiada za przeprowadzanie optymalizacji.
 * ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik.
 * Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
@@ -38,6 +38,44 @@
 * Serilog - do logowania zdarzeń.
 * xUnit - do testów jednostkowych.
 
-# Schedule_GA
-[ENG]
-To run the app go to Funkcje_GA => Funkcje_GA => Funkcje_GA.exe
+[ENG]<br>
+# Funkcje_GA
+
+<i>C#, WinForms, Visual Studio.</i>
+
+<p align="justify"> The main purpose of the application is to automatically assign roles (orderly nurse, triage) according to the schedule among the staff of the hospital emergency department. To automate this task, a specially implemented genetic algorithm (GA) is used. Its goal is to assign roles so that each shift has one nurse/orderly staff and two employees assigned to triage. Other requirements include, for example, restrictions on interns, balanced distribution of roles between day and night shifts, consideration of employment fraction and leave, and distribution of roles throughout the month. Instructions on how to use the application and a detailed description of the genetic algorithm and its requirements can be found in the repository's wiki. </p> 
+
+<p align="justify"> Application execution: Funkcje_GA => Funkcje_GA => Funkcje_GA.exe </p>
+
+## Code
+
+<p align="justify"> Below are the classes used in the code along with a brief description of their responsibilities. </p>
+
+#### Model / Logic
+
+* Constants – stores constant values used throughout the project.
+* CustomExceptions – custom exceptions created for the project.
+* Employee – class storing information about an employee such as ID, name, whether they are an intern, etc.
+* EmployeeManagement (together with EmployeeManagementTests) – manages the employee system, including adding, removing, and editing employee information.
+* EnumFunctionTypes – enumerator assigning numbers to possible employee roles.
+* FileServiceTxt – contains FileServiceGrafik and FileServicePracownicy for handling respective files
+* ListBoxGrafik – customized list boxes with additional methods.
+* Optimization – responsible for performing the optimization process.
+* ScheduleManagement (together with ScheduleManagementTests) – stores the current schedule.
+* Shift – class storing information about a shift, including shift ID, present employees, and assigned roles.
+
+#### Presentation Layer
+
+* Form1 – main application form containing employee data and schedule.
+* Form2 – form for adding/removing/editing employees.
+* ViewEmployee – handles the UI related to employee management.
+* ViewFile – intermediates between the UI and file reading/writing.
+* ViewOptimization – intermediates between the UI and the optimization process.
+* ViewSchedule – intermediates between the UI and schedule management.
+
+## Technologies Used
+
+* C#, WinForms.
+* Moq – for unit testing.
+* Serilog – for logging.
+* xUnit – for unit testing.
