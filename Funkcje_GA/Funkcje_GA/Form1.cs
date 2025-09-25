@@ -29,7 +29,7 @@ using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form, IViewForm1
     {
         private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];             //Tworzenie etykiet wyświetlających numer dziennej zmiany.
         private readonly System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];               //Tworzenie etykiet wyświetlających numer nocnej zmiany.
@@ -37,20 +37,17 @@ namespace Funkcje_GA
         private readonly ListBoxGrafik[] listboxesSchedule = new ListBoxGrafik[2 * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
      
         private readonly IEmployeeManagement _employeeManager;                      //Instancja do zarządzania pracownikami.
-        private readonly IViewSchedule _viewSchedule;                               //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
         private readonly IViewEmployee _viewEmployee;                               //Instancja prezentera zajmująca się obsługą plików.
         private readonly IViewFile _viewFile;                                       //Instancja prezentera zajmująca się wyświetlaniem etykiet pracowników.
         private readonly IViewOptimization _viewOptimization;                       //Instancja prezentera zajmująca się wyświetlaniem optymalizacji.
 
         //Konstruktor.
-        public Form1(IViewSchedule viewSchedule, 
-                     IEmployeeManagement employeeManager,
+        public Form1(IEmployeeManagement employeeManager,
                      IViewFile viewFile,
                      IViewEmployee viewEmployee,
                      IViewOptimization viewOptimization)
         {
             //Przypisujemy menadżery.
-            this._viewSchedule = viewSchedule;
             this._employeeManager = employeeManager;
             this._viewFile = viewFile;
             this._viewEmployee = viewEmployee;
@@ -60,50 +57,26 @@ namespace Funkcje_GA
             InitializeComponent();
 
             //Tworzymy listboxy i ich etykiety.
-            InitializeListboxes();
+            InitializeScheduleControls();
 
             //Tworzymy etykiety pracowników.
-            InitializeLabels();
+            InitializeEmployeeControls();
 
             //Subskrybujemy eventy kliknięcia w form1, przycisku optymalizacji, powiadomień itd.
             SubscribeToEvents();
-
-            //Wczytujemy pracowników z pliku tekstowego przy starcie programu.
-            try
-            {
-                _viewFile.LoadEmployees("Pracownicy.txt");
-            }
-
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-                RaiseUserNotification("Plik 'Pracownicy.txt' jest uszkodzony.");
-            }
-
-            //Jeśli plik z grafikiem istnieje, to wyświetlane jest zapytanie, czy go wczytać.
-            if (File.Exists("Grafik.txt"))
-            {
-                var result = MessageBox.Show("Wczytać ostatni grafik?", "Wczytywanie grafiku", MessageBoxButtons.YesNo);
-
-                //Jeśli wybrano opcje "Tak" to wczytywany jest grafik.
-                if (result == DialogResult.Yes)
-                {
-                    try
-                    {
-                        _viewFile.LoadSchedule("Grafik.txt");
-                    }
-
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex.ToString());
-                        RaiseUserNotification("Plik 'Grafik.txt' jest uszkodzony.");
-                    }
-                }
-            }
         }
 
-        //Akcja powiadomienia użytkownika.
-        public Action<string> UserNotificationRaise;
+        //Zdarzenie zgłaszające, że użytkownik chce dodać pracownika do zmiany.
+        public event Action<int, int> EmployeeAddedToShift;
+
+        //Zdarzenie zgłaszające, że użytkownik chce wyczyścić grafik.
+        public event Action ScheduleCleared;
+
+        //Zdarzenie zgłaszające, że użytkownik chce przypisać funkcję
+        public event Action<IEnumerable<(int ShiftId, int EmployeeId)>, FunctionTypes> SelectedShiftsAssigned;
+
+        //Zdarzenie zgłaszające, że użytkownik chce usunąć pracownika ze zmiany.
+        public event Action<IEnumerable<(int ShiftId, int EmployeeId)>> SelectedShiftsRemoved;
 
         //Zmieniamy na bez funkcji.
         private void buttonBezFunkcji_Click(object sender, EventArgs e)
@@ -113,14 +86,14 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na bez funkcji.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Bez_Funkcji);
+            SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Bez_Funkcji);
         }
 
         //Czyścimy grafik.
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
             //Usuwamy grafik i wyświetlamy powiadomienie.
-            _viewSchedule.ClearSchedule();
+            ScheduleCleared?.Invoke();
         }
 
         //Wyświetlamy Form2.
@@ -142,7 +115,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na sale.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Sala);
+            SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Sala);
         }
 
         //Zamieniamy wszystkie wybrane dyżury na triaż.
@@ -153,7 +126,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na triaż.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Triaz);
+            SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Triaz);
         }
 
         //Usuwamy wszystkie wybrane dyżury.
@@ -164,7 +137,7 @@ namespace Funkcje_GA
 
             //Próbujemy usunąć zaznaczone dyżury.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.RemoveSelectedShifts(selected);
+            SelectedShiftsRemoved?.Invoke(selected);
         }
 
         //Wczytujemy grafik z pliku "Grafik.txt" i jeśli się uda, wyświetlamy informację.
@@ -207,7 +180,7 @@ namespace Funkcje_GA
         public void Form1_Load(object sender, EventArgs e) { }
 
         //Pobieramy numery zaznaczonych pracowników na wszytskich zmianach.
-        private IEnumerable<(int ShiftId, int EmployeeId)> GetAllSelectedEmployeeIds()
+        protected virtual IEnumerable<(int ShiftId, int EmployeeId)> GetAllSelectedEmployeeIds()
         {
             var result = new List<(int ShiftId, int EmployeeId)>();     //Zwracamy pracy element pracownik.
 
@@ -235,8 +208,45 @@ namespace Funkcje_GA
             return result;
         }
 
+        //Wczytanie pracowników i grafiku.
+        public virtual void LoadEmployeeAndSchedule()
+        {
+            //Wczytujemy pracowników z pliku tekstowego przy starcie programu.
+            try
+            {
+                _viewFile.LoadEmployees("Pracownicy.txt");
+            }
+
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+                RaiseUserNotification("Plik 'Pracownicy.txt' jest uszkodzony.");
+            }
+
+            //Jeśli plik z grafikiem istnieje, to wyświetlane jest zapytanie, czy go wczytać.
+            if (File.Exists("Grafik.txt"))
+            {
+                var result = MessageBox.Show("Wczytać ostatni grafik?", "Wczytywanie grafiku", MessageBoxButtons.YesNo);
+
+                //Jeśli wybrano opcje "Tak" to wczytywany jest grafik.
+                if (result == DialogResult.Yes)
+                {
+                    try
+                    {
+                        _viewFile.LoadSchedule("Grafik.txt");
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex.ToString());
+                        RaiseUserNotification("Plik 'Grafik.txt' jest uszkodzony.");
+                    }
+                }
+            }
+        }
+
         //Tworzymy etykiety pracowników.
-        private void InitializeLabels()
+        protected virtual void InitializeEmployeeControls()
         {
             //Dodajemy etykiety wyświetlające dane pracowników do furmularza.
             for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
@@ -269,7 +279,7 @@ namespace Funkcje_GA
         }
 
         //Tworzymy listboxy i etykiety grafiku.
-        private void InitializeListboxes()
+        protected virtual void InitializeScheduleControls()
         {
             //Tworzenie etykiet i dodawanie kontrolek grafiku.
             for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
@@ -294,7 +304,7 @@ namespace Funkcje_GA
                 {
                     //Pobieramy dane i dodajemy osobę do zmiany.
                     string pom = e.Data.GetData(DataFormats.Text).ToString();
-                    _viewSchedule.AddEmployeeToShift(_nrZmiany, Convert.ToInt32(pom));
+                    EmployeeAddedToShift?.Invoke(_nrZmiany, Convert.ToInt32(pom));
                 };
 
                 //Tworzymy etykiety dla dyżurów dziennych.
@@ -328,9 +338,9 @@ namespace Funkcje_GA
         }
 
         //Wzywamy subskrybenta OnUserNotification.
-        protected virtual void RaiseUserNotification(string message)
+        public virtual void RaiseUserNotification(string message)
         {
-            UserNotificationRaise?.Invoke(message);
+            MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         //Subskrybujemy eventy form1.
@@ -368,11 +378,9 @@ namespace Funkcje_GA
                 }
             };
 
-            //Wyświetlenie wiadomości dla użytkownika.
-            UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //Wyświetlenie wiadomości dla użytkownika. 
             _viewFile.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
             _viewOptimization.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            _viewSchedule.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             //Subskrybujemy event odświeżono etykietę pracownika.
             _viewEmployee.EmployeeLabelChanged += (id, info) =>
@@ -399,18 +407,18 @@ namespace Funkcje_GA
                 Log.Error(message);
                 MessageBox.Show(message, "Ostrzeżenie", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             };
+        }
 
-            //Subskrybujemy event odświezono kontrolkę grafiku.
-            _viewSchedule.ScheduleControlChanged += (id, lista) =>
-            {
-                listboxesSchedule[id].Items.Clear();
-                foreach (var item in lista)
-                    listboxesSchedule[id].Items.Add(item);
-            };
+        //Odświeżanie listboxów.
+        public virtual void UpdateShift(int shiftId, List<string> lista)
+        {
+            listboxesSchedule[shiftId].Items.Clear();
+            foreach (var item in lista)
+                listboxesSchedule[shiftId].Items.Add(item);
         }
 
         //Usuwamy podświetlenie.
-        private void UsunPodswietlenie()
+        protected virtual void UsunPodswietlenie()
         {
             for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
             {
