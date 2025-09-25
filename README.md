@@ -1,7 +1,7 @@
 [PL]
 # Funkcje_GA
 <i>C#, WinForms, VisualStudio.</i>
-<p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracowników szpitalnego oddziału ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest takie przydzielenie funkcji, aby na każdej zmianie znajdowała się jedna pielęgniarka/pielęgniarz salowy oraz aby dwoje pracowników zajmowało się triażem. Inne wymagania obejmują np. ograniczenia dotyczące stażystów, równomierne rozłożenie funkcji pomiędzy dyżury nocne i dzienne danego pracownika, uwzględnienie wymiaru etatu i zaległości, równomierne rozłożenie funkcji w ciągu miesiąca. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego oraz stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
+<p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracownikami Szpitalnego Oddziału Ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest przydzielenie funkcji zgodnie z przyjętymi założeniami. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego i stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
 
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
 
@@ -9,7 +9,7 @@
 
 Pełniejszy opis w zakładce Wiki.
 
-<p align="justify">Algorytm genetyczny zajmuje się przypisywanie funkcji pracownikom. Na każdej zmianie musi znaleźć się jedna salowa pielęgniarka/pielęgniarz oraz dwie osoby pracujące na triażu. Z przyczyn praktycznych maksymalna liczba osób na zmianie to 8. Do zakodowania numeru pracownika potrzebne są więc 3 bity. W połączeniu z 3 funkcjami na każdej zmianie i 62 zmianami w miesiącu daje to 556 zmiennych binarnych. Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literka H oznaczono wymagania twarde (konieczne do spełnienia, chyba, że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).</p>
+<p align="justify">Algorytm genetyczny zajmuje się przypisywaniem funkcji pracownikom. Na każdej zmianie musi znaleźć się jedna salowa pielęgniarka/pielęgniarz oraz dwie osoby pracujące na triażu. Z przyczyn praktycznych, maksymalna liczba osób na zmianie to 8. Do zakodowania numeru pracownika potrzebne są więc 3 bity. W połączeniu z 3 funkcjami na każdej zmianie i 62 zmianami w miesiącu daje to 558 zmiennych binarnych. Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literką H oznaczono wymagania twarde (konieczne do spełnienia, chyba że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).</p>
 
 | **Typ warunku** | **Kod** | **Opis**                                                                                                                                                                      |
 | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -17,23 +17,19 @@ Pełniejszy opis w zakładce Wiki.
 | Twardy          | H2      | Jeden pracownik nie może być przypisany do dwóch funkcji jednocześnie.                                                                                                        |
 | Twardy          | H3a     | Stażyści nie powinni być przypisywani do triażu na zmianach nocnych, chyba że harmonogram nie pozwala inaczej*.                                                               |
 | Twardy          | H3b     | Stażyści z okresem zatrudnienia krótszym niż 3 miesiące nie powinni być przypisywani do triażu, ani na zmianach dziennych, ani nocnych.                                       |
-| Twardy          | H4      | Nie więcej niż jeden stażysta powinnien być przypisany do triażu na jednej zmianie, chyba że harmonogram nie pozwala inaczej.                                                 |
+| Twardy          | H4      | Nie więcej niż jeden stażysta powinien być przypisany do triażu na jednej zmianie, chyba że harmonogram nie pozwala inaczej.                                                 |
 | Miękki          | S1      | Przypisanie równej liczby funkcji dziennych i nocnych dla każdego pracownika (jeśli liczba funkcji jest nieparzysta, liczba funkcji dziennych i nocnych może różnić się o 1). |
 | Miękki          | S2      | Liczba funkcji powinna być proporcjonalna do ogólnej liczby zmian pracownika i uwzględniać zaległości.                                                                        |
 | Miękki          | S3      | Funkcje powinny być rozmieszczone równomiernie.                                                                                                                               |
 
-<p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w mysl zasad powinieć pełnic triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algotyrmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe były nastepujące:</p>
+<p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w myśl zasad powinieć pełnić triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algorytmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe były nastepujące:</p>
 
-* Średnia liczba iteracji: 5461
-* Najmniejsza liczba iteracji: 2032
-* Największa liczba iteracji: 11109
-* Odchylenie standardowe liczby iteracji: 2099
-* Średni czas: 00:00:26
-* Najkrótszy czas: 00:00:10
-* Najdłuższy czas: 00:00:54
-* Odchylenie standardowe czasu: 00:00:10
+| **Metryka**     | **Wartość średnia** | **Najmniejsza wartość** | **Największa wartość** | **Odchylenie standardowe** |
+| --------------- | ------------------- | ----------------------- | ---------------------- | -------------------------- |
+| Liczba iteracji | 5461                | 2032                    | 11109                  | 2099                       |
+| Czas wykonania  | 00:00:26            | 00:00:10                | 00:00:54               | 00:00:10                   |
 
-<p align="justify">Jak widać przydzielanie funkcji trwa zaledwie kilkadziesiąt sekund, co stanowi duży zysk względem ręcznego przydzielania, które mogło trwać nawet 2 godziny. Ręczne przydzielanie pozwalało na spełnienie zwykle tylko warunków H1 - H4, a warunki S1 - S3 były często naruszane. Dodatkowo, konieczne były czasochłonne zmiany grafiku, gdy pracownicy zamieniali się dyżurami.</p>
+<p align="justify">Przydzielanie funkcji trwa zaledwie kilkadziesiąt sekund, co stanowi duży zysk względem ręcznego przydzielania, które mogło trwać nawet 2 godziny. Ręczne przydzielanie pozwalało na spełnienie zwykle tylko warunków H1 - H4, a warunki S1 - S3 były często naruszane. Dodatkowo, konieczne były czasochłonne zmiany grafiku, gdy pracownicy zamieniali się dyżurami.</p>
  
 ## Kod
 
@@ -59,7 +55,7 @@ Pełniejszy opis w zakładce Wiki.
 *  PresenterSchedule - klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem.
 *  ViewEmployee - klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami.
 *  ViewFile - klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików.
-*  ViewOptimization - klasa pośrednicząca pomięzy UI a procesem optymalizacji.
+*  ViewOptimization - klasa pośrednicząca pomiędzy UI a procesem optymalizacji.
 
 ## Wykorzystane technologie
 
