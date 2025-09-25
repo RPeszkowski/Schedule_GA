@@ -4,6 +4,12 @@
 <p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracowników szpitalnego oddziału ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest takie przydzielenie funkcji, aby na każdej zmianie znajdowała się jedna pielęgniarka/pielęgniarz salowy oraz aby dwoje pracowników zajmowało się triażem. Inne wymagania obejmują np. ograniczenia dotyczące stażystów, równomierne rozłożenie funkcji pomiędzy dyżury nocne i dzienne danego pracownika, uwzględnienie wymiaru etatu i zaległości, równomierne rozłożenie funkcji w ciągu miesiąca. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego oraz stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
 
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
+
+## Algorytm genetyczny
+
+Pełniejszy opis w zakładce Wiki.
+
+Algorytm genetyczny zajmuje się przypisywanie funkcji pracownikom. Na każdej zmianie musi znaleźć się jedna salowa pielęgniarka/pielęgniarz oraz dwie osoby pracujące na triażu. Z przyczyn praktycznych maksymalna liczba osób na zmianie to 8. Do zakodowania numeru pracownika potrzebne są więc 3 bity. W połączeniu z 3 funkcjami na każdej zmianie i 62 zmianami w miesiącu daje to 556 zmiennych binarnych. Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literka H oznaczono wymagania twarde (konieczne do spełnienia, chyba, że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).
  
 ## Kod
 
