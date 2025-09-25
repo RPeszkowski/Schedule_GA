@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 
 using static Funkcje_GA.CustomExceptions;
 
@@ -66,6 +66,7 @@ namespace Funkcje_GA
             {
                 Color color;
 
+                //Wybieramy kolor w zalezności od funkcji. Bez funkcji - czerwony, sala - zielony, triaż - niebieski.
                 switch (function)
                 {
                     case (int)FunctionTypes.Bez_Funkcji:

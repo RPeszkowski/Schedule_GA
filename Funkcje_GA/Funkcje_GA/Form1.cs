@@ -24,7 +24,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using Serilog;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -113,7 +113,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na bez funkcji.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShiftsToBezFunkcji(selected);
+            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Bez_Funkcji);
         }
 
         //Czyścimy grafik.
@@ -142,7 +142,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na sale.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShiftsToSala(selected);
+            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Sala);
         }
 
         //Zamieniamy wszystkie wybrane dyżury na triaż.
@@ -153,7 +153,7 @@ namespace Funkcje_GA
 
             //Zamieniamy zaznaczone dyżury na triaż.
             var selected = GetAllSelectedEmployeeIds();
-            _viewSchedule.SetSelectedShiftsToTriaz(selected);
+            _viewSchedule.SetSelectedShifts(selected, FunctionTypes.Triaz);
         }
 
         //Usuwamy wszystkie wybrane dyżury.

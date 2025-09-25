@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Serilog;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -80,8 +80,7 @@ namespace Funkcje_GA
                 UserNotificationRaise?.Invoke("Liczba zmiennych musi być większa niż 0.");
             }
 
-            //Jeśli był inny błąd to powiadamiamy.
-            catch (Exception ex)
+            catch (ScheduleFunctionEncodingException ex)
             {
                 Log.Error(ex.Message);
                 UserNotificationRaise?.Invoke(ex.Message);

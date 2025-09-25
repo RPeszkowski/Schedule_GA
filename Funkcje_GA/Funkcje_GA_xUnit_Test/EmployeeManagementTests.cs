@@ -5,11 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using Funkcje_GA;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA_xUnit_Test
 {
+    //Testy jednostkowe klasy EmployeeManagement.
     public class EmployeeManagementTests
     {
         //Testujemy dodawanie pracowników.
@@ -163,7 +164,7 @@ namespace Funkcje_GA_xUnit_Test
             manager.EmployeeAdd(1, "Jan", "Kowalski", 1.0, 0, true, false);
 
             // Act
-            manager.EmployeeDelete(manager.GetEmployeeById(1));
+            manager.EmployeeDelete(1);
 
             // Assert
             Assert.Null(manager.GetEmployeeById(1));
@@ -178,7 +179,7 @@ namespace Funkcje_GA_xUnit_Test
             var manager = new EmployeeManagement();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => manager.EmployeeDelete(null));
+            Assert.Throws<ArgumentNullException>(() => manager.EmployeeDelete(1));
         }
 
         //Pobieranie poprawnego pracownika.
@@ -280,7 +281,7 @@ namespace Funkcje_GA_xUnit_Test
                 case "Delete":
                     manager.EmployeeAdd(1, "Jan", "Kowalski", 1.0, 0, true, false);
                     changedRaised = false;
-                    manager.EmployeeDelete(manager.GetEmployeeById(1));
+                    manager.EmployeeDelete(1);
                     break;
             }
 

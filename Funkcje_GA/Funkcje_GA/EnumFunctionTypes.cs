@@ -1,7 +1,7 @@
 ﻿namespace Funkcje_GA
 {  
     //Informacje o typach pełnionej funkcji przez pracownika.
-    enum FunctionTypes
+    public enum FunctionTypes
     {
         Bez_Funkcji = 0,
         Sala = 1,

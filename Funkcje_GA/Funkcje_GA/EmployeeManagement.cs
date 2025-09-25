@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -81,15 +81,15 @@ namespace Funkcje_GA
         }
 
         //Usuwanie pracownika.
-        public void EmployeeDelete(Employee employee)
+        public void EmployeeDelete(int numer)
         {
             //Jeśli pracownika nie ma to rzucamy wyjątek.
-            if (!employees.ContainsKey(employee.Numer))
+            if (!employees.ContainsKey(numer))
                 throw new ArgumentNullException("Pracownik nie istnieje w systemie.");
 
             //Usuwamy etykietę, usuwamy osobę, na koniec wyświetlamy komunikat.
-            EmployeeDeleted?.Invoke(employee.Numer);
-            employees.Remove(employee.Numer);
+            EmployeeDeleted?.Invoke(numer);
+            employees.Remove(numer);
         }
         //Sprawdzanie poprawności danych.
         private void EmployeeValidate(int numer, string imie, string nazwisko, double wymiarEtatu, int zaleglosci)

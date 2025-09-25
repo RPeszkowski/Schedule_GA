@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -40,10 +40,10 @@ namespace Funkcje_GA
                     _scheduleManager.AddToShift(nrZmiany, nrOsoby);
 
                     if (suffix == 's')
-                        _scheduleManager.ToSala(nrZmiany, nrOsoby);
+                        _scheduleManager.AssignFunctionToEmployee(nrZmiany, nrOsoby, FunctionTypes.Sala);
 
                     if (suffix == 't')
-                        _scheduleManager.ToTriaz(nrZmiany, nrOsoby);
+                        _scheduleManager.AssignFunctionToEmployee(nrZmiany, nrOsoby, FunctionTypes.Triaz);
                 }
             }
 

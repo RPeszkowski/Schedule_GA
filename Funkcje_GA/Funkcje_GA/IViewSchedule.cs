@@ -24,14 +24,8 @@ namespace Funkcje_GA
         //Usuwanie grafiku.
         void ClearSchedule();
 
-        //Przypisujemy wybranym pracownikom brak funkcji.
-        void SetSelectedShiftsToBezFunkcji(IEnumerable<(int ShiftId, int EmployeeId)> selected);
-
-        //Przypisujemy wybranym pracownikom sale.
-        void SetSelectedShiftsToSala(IEnumerable<(int ShiftId, int EmployeeId)> selected);
-
-        //Przypisujemy wybranym pracownikom triaz.
-        void SetSelectedShiftsToTriaz(IEnumerable<(int ShiftId, int EmployeeId)> selected);
+        //Przypisujemy funkcje.
+        void SetSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected, FunctionTypes function);
 
         //Usuwamy wybrane dyżury.
         void RemoveSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected);

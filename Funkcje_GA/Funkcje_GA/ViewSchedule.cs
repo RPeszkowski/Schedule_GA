@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -68,25 +68,12 @@ namespace Funkcje_GA
             }
         }
 
-        //Przypisujemy wybranym pracownikom brak funkcji.
-        public void SetSelectedShiftsToBezFunkcji(IEnumerable<(int ShiftId, int EmployeeId)> selected)
+        //Przypisujemy funkcje.
+        public void SetSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected, FunctionTypes function)
         {
+            //Przypisujemy w oparciu o argument function.
             foreach (var (shiftId, employeeId) in selected)
-                _scheduleManager.ToBezFunkcji(shiftId, employeeId);
-        }
-
-        //Przypisujemy wybranym pracownikom sale.
-        public void SetSelectedShiftsToSala(IEnumerable<(int ShiftId, int EmployeeId)> selected)
-        {
-            foreach (var (shiftId, employeeId) in selected)
-                _scheduleManager.ToSala(shiftId, employeeId);
-        }
-
-        //Przypisujemy wybranym pracownikom triaz.
-        public void SetSelectedShiftsToTriaz(IEnumerable<(int ShiftId, int EmployeeId)> selected)
-        {
-            foreach (var (shiftId, employeeId) in selected)
-                _scheduleManager.ToTriaz(shiftId, employeeId);
+                _scheduleManager.AssignFunctionToEmployee(shiftId, employeeId, function);
         }
 
         //Wyświetlamy dane wybranej zmiany.

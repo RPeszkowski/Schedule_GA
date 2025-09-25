@@ -18,6 +18,9 @@ namespace Funkcje_GA
         //Dopisywanie funkcji po zakończonej optymalizacji.
         void ApplyOptimizationToSchedule(bool[] optymalneRozwiazanie);
 
+        //Przypisuje funkcje wybranemu pracownikowi.
+        void AssignFunctionToEmployee(int shiftId, int employeeId, FunctionTypes function);
+
         //Zwraca zmianę.
         Shift GetShiftById(int id);
 
@@ -29,14 +32,5 @@ namespace Funkcje_GA
 
         //Usuwa pracownika z funkcji.
         void RemoveFromShift(int shiftId, int employeeId);
-
-        //Zmienia funkcję pracownika na bez funkcji.
-        void ToBezFunkcji(int shiftId, int employeeId);
-
-        //Zmienia funkcję pracownika na salę.
-        void ToSala(int shiftId, int employeeId);
-
-        //Zmienia funkcję pracownika na triaż.
-        void ToTriaz(int shiftId, int employeeId);
     }
 }

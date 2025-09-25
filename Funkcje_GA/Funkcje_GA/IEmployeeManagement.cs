@@ -23,7 +23,7 @@ namespace Funkcje_GA
         void EmployeeEdit(Employee employee, string imie, string nazwisko, double wymiarEtatu, int zaleglosci, bool czyTriazDzien, bool czyTriazNoc);
 
         //Usuwanie pracownika.
-        void EmployeeDelete(Employee employee);
+        void EmployeeDelete(int numer);
 
         //Pobieranie aktywnych pracowników.
         IEnumerable<Employee> GetAllActive();

@@ -118,7 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnumFunctionTypes.cs" />
-    <Compile Include="Constans.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="CustomExceptions.cs" />
     <Compile Include="Employee.cs" />
     <Compile Include="EmployeeManagement.cs" />

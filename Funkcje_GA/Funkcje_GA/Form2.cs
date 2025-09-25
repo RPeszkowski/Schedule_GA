@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Serilog;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -130,7 +130,7 @@ namespace Funkcje_GA
             {
                 try
                 {
-                    _employeeManager.EmployeeDelete(_employeeManager.GetEmployeeById(nrOsoby));
+                    _employeeManager.EmployeeDelete(nrOsoby);
                     UpdateListBoxNumerOsoby();
                     MessageBox.Show("Usunięto dane pracownika.");
                 }

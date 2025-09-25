@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Funkcje_GA.Constans;
+using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
@@ -744,7 +744,7 @@ namespace Funkcje_GA
                 nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));
                 if (_scheduleManager.GetShiftById(nrZmiany).PresentEmployees.Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
                 {
-                    _scheduleManager.ToBezFunkcji(nrZmiany, _scheduleManager.GetShiftById(nrZmiany).PresentEmployees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer);
+                    _scheduleManager.AssignFunctionToEmployee(nrZmiany, _scheduleManager.GetShiftById(nrZmiany).PresentEmployees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer, FunctionTypes.Bez_Funkcji);
                     dyzuryGrafik[nrDyzuru] = _scheduleManager.GetShiftById(nrZmiany).PresentEmployees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
                 }
 
