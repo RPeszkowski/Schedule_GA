@@ -16,7 +16,7 @@
 * Employee - klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp.
 * EmployeeManagement (wraz z klasą do testów jednostkowych z sufiksem EmployeeManagementTests) - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach.
 * EnumFunctionTypes - enumerator przypisujący liczby możliwym funkcjom pracowników.
-* FileServiceTxt - klasa zaawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
+* FileServiceTxt - klasa zawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
 * ListBoxGrafik - zmodyfikowane listboxy z dodatkowymi metodami.
 * Optimization - obiekt tej klasy odpowiada za przeprowadzanie optymalizacji.
 * ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik.
