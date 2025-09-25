@@ -15,8 +15,8 @@
 * CustomExceptions - niestandardowe wyjątki stworzone na potrzeby projektu.
 * Employee - klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp.
 * EmployeeManagement (wraz z klasą do testów jednostkowych z sufiksem EmployeeManagementTests) - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach.
+* EnumFunctionTypes - enumerator przypisujący liczby możliwym funkcjom pracowników.
 * FileServiceTxt - klasa zaawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
-* FunctionTypes - enumerator przypisujący liczby możliwym funkcjom pracowników.
 * ListBoxGrafik - zmodyfikowane listboxy z dodatkowymi metodami.
 * Optimization - obiekt tej klasy odpowiada za przeprowadzanie optymalizacji.
 * ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik. Grafik jest obecnie listą 62 (po 2 zmiany na dzień) elementów typu Shift, jednak zastosowanie interfejsu pozwala na zmiany w przyszłości.
