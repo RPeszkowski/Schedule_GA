@@ -26,10 +26,10 @@
 
 *  Form1 - główny formularz aplikacji zawierający dane pracowników oraz grafik.
 *  Form2 - formularz dodawania/usuwania/edytowania pracowników.
+*  PresenterSchedule - klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem.
 *  ViewEmployee - klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami.
 *  ViewFile - klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików.
 *  ViewOptimization - klasa pośrednicząca pomięzy UI a procesem optymalizacji.
-*  ViewSchedule - klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem.
 
 ## Wykorzystane technologie
 
