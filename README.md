@@ -9,19 +9,21 @@
 
 Pełniejszy opis w zakładce Wiki.
 
-Algorytm genetyczny zajmuje się przypisywanie funkcji pracownikom. Na każdej zmianie musi znaleźć się jedna salowa pielęgniarka/pielęgniarz oraz dwie osoby pracujące na triażu. Z przyczyn praktycznych maksymalna liczba osób na zmianie to 8. Do zakodowania numeru pracownika potrzebne są więc 3 bity. W połączeniu z 3 funkcjami na każdej zmianie i 62 zmianami w miesiącu daje to 556 zmiennych binarnych. Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literka H oznaczono wymagania twarde (konieczne do spełnienia, chyba, że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).
+<p align="justify">Algorytm genetyczny zajmuje się przypisywanie funkcji pracownikom. Na każdej zmianie musi znaleźć się jedna salowa pielęgniarka/pielęgniarz oraz dwie osoby pracujące na triażu. Z przyczyn praktycznych maksymalna liczba osób na zmianie to 8. Do zakodowania numeru pracownika potrzebne są więc 3 bity. W połączeniu z 3 funkcjami na każdej zmianie i 62 zmianami w miesiącu daje to 556 zmiennych binarnych. Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literka H oznaczono wymagania twarde (konieczne do spełnienia, chyba, że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).</p>
 
 | **Typ warunku** | **Kod** | **Opis**                                                                                                                                                                      |
 | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Twardy          | H1      | Zawsze powinna być przypisana jedna funkcja porządkowego i dwie funkcje triage. Wszystkie pozostałe zmiany muszą być niefunkcjonalne — spełnione, jeśli unikamy wyboru 0.     |
+| Twardy          | H1      | Zawsze powinna być przypisana jedna funkcja salowej i dwie funkcje triaż. Wszystkie pozostałe zmiany muszą być niefunkcjonalne.                                               |
 | Twardy          | H2      | Jeden pracownik nie może być przypisany do dwóch funkcji jednocześnie.                                                                                                        |
-| Twardy          | H3a     | Stażyści nie powinni być przypisywani do triage na zmianach nocnych, chyba że harmonogram nie pozwala inaczej*.                                                               |
-| Twardy          | H3b     | Stażyści z okresem zatrudnienia krótszym niż 3 miesiące nie powinni być przypisywani do żadnych funkcji, ani na zmiany dzienne, ani nocne.                                    |
-| Twardy          | H4      | Nie więcej niż dwóch stażystów powinno być przypisanych do triage na jednej zmianie, chyba że harmonogram nie pozwala inaczej.                                                |
+| Twardy          | H3a     | Stażyści nie powinni być przypisywani do triażu na zmianach nocnych, chyba że harmonogram nie pozwala inaczej*.                                                               |
+| Twardy          | H3b     | Stażyści z okresem zatrudnienia krótszym niż 3 miesiące nie powinni być przypisywani do triażu, ani na zmianach dziennych, ani nocnych.                                       |
+| Twardy          | H4      | Nie więcej niż jeden stażysta powinnien być przypisany do triażu na jednej zmianie, chyba że harmonogram nie pozwala inaczej.                                                 |
 | Miękki          | S1      | Przypisanie równej liczby funkcji dziennych i nocnych dla każdego pracownika (jeśli liczba funkcji jest nieparzysta, liczba funkcji dziennych i nocnych może różnić się o 1). |
 | Miękki          | S2      | Liczba funkcji powinna być proporcjonalna do ogólnej liczby zmian pracownika i uwzględniać zaległości.                                                                        |
 | Miękki          | S3      | Funkcje powinny być rozmieszczone równomiernie.                                                                                                                               |
-                                                                                                                                                   |
+
+Wykonano testy algotyrmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe były nastepujące:
+
 
  
 ## Kod
