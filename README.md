@@ -76,6 +76,6 @@ Pełniejszy opis w zakładce Wiki.
 * xUnit - do testów jednostkowych.
 
 ## Informacje o wersji:
-.Net: 4.7.2
-MS Visual Studio: 17.14.13
-C#: 7.3
+* .Net: 4.7.2
+* MS Visual Studio: 17.14.13
+* C#: 7.3
