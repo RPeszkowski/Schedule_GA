@@ -25,6 +25,8 @@ Pełniejszy opis w zakładce Wiki.
 
 <p align="justify">Poniżej przytoczone są wymagania, jakie musi spełniać rozwiązanie problemu optymalizacji. Literką H oznaczono wymagania twarde (konieczne do spełnienia, chyba że nie pozwala na to grafik), a literką S miękkie (do spełnienia w miarę możliwości).</p>
 
+<div align="center">
+
 | **Typ warunku** | **Kod** | **Opis**                                                                                                                                                                      |
 | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Twardy          | H1      | Zawsze powinna być przypisana jedna funkcja salowej i dwie funkcje triaż. Wszystkie pozostałe zmiany muszą być niefunkcjonalne.                                               |
@@ -36,12 +38,18 @@ Pełniejszy opis w zakładce Wiki.
 | Miękki          | S2      | Liczba funkcji powinna być proporcjonalna do ogólnej liczby zmian pracownika i uwzględniać zaległości.                                                                        |
 | Miękki          | S3      | Funkcje powinny być rozmieszczone równomiernie.                                                                                                                               |
 
+</div>
+
 <p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w myśl zasad powinien pełnić triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algorytmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe dla grafiku znajdującego się w pliku Grafik_test1.txt były nastepujące:</p>
+
+<div align="center">
 
 | **Metryka**     | **Wartość średnia** | **Najmniejsza wartość** | **Największa wartość** | **Odchylenie standardowe** |
 | --------------- | ------------------- | ----------------------- | ---------------------- | -------------------------- |
 | Liczba iteracji | 5461                | 2032                    | 11109                  | 2099                       |
 | Czas wykonania  | 00:00:26            | 00:00:10                | 00:00:54               | 00:00:10                   |
+
+</div>
 
 #### Obserwacje i wnioski
 
@@ -52,6 +60,8 @@ Pełniejszy opis w zakładce Wiki.
 <p align="justify">Poniżej zamieszczono klasy wykorzystane w kodzie wraz z krótkim opisem ich odpowiedzialności.</p>
 
 #### Model/logika
+
+<div align="center">
 
 | Nazwa klasy | Odpowiedzialność |
 |-------------|-----------------|
@@ -66,8 +76,12 @@ Pełniejszy opis w zakładce Wiki.
 | ScheduleManagement | Obiekt tej klasy przechowuje aktualny grafik (wraz z klasą do testów jednostkowych ScheduleManagementTests). |
 | Shift | Klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni. |
 
+</div>
+
 #### Warstwa prezentacji
 
+<div align="center">
+ 
 | Nazwa klasy | Odpowiedzialność |
 |-------------|-----------------|
 | Form1 | Główny formularz aplikacji zawierający dane pracowników oraz grafik. |
@@ -76,6 +90,8 @@ Pełniejszy opis w zakładce Wiki.
 | ViewEmployee | Klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami. |
 | ViewFile | Klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików. |
 | ViewOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
+
+</div>
 
 ## Wykorzystane technologie
 
