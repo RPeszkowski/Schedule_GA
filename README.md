@@ -6,8 +6,11 @@
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
 
 <div align = center>
- <img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Getting_started_UI" width="600" style="border-radius: 100px;">
- <p><em>Rys. 1: Interfejs główny aplikacji.</em></p>
+ <img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Main_UI" width="600">
+ <p><em>Rys. 1: Interfejs główny aplikacji przed przydzieleniem funkcji.</em></p><br>
+
+ <img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Main_UI_functions_assigned" width="600">
+ <p><em>Rys. 1: Interfejs główny aplikacji po przydzieleniu funkcji.</em></p>
 </div>
 
 ## Algorytm genetyczny
