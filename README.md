@@ -6,7 +6,7 @@
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
 
 <p align = center>
-<img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Getting_started_UI" style=rounded-corners: 10>
+<img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Getting_started_UI" style="border-radius: 10px;">
 </p>
 
 ## Algorytm genetyczny
