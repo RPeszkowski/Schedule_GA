@@ -52,6 +52,7 @@ Pełniejszy opis w zakładce Wiki.
 
 #### Model/logika
 
+<p align = center>
 | Nazwa klasy | Odpowiedzialność |
 |-------------|-----------------|
 | Constants | Przechowuje wartości stałe używane w całym projekcie. |
@@ -64,9 +65,11 @@ Pełniejszy opis w zakładce Wiki.
 | Optimization | Obiekt tej klasy odpowiada za przeprowadzanie optymalizacji. |
 | ScheduleManagement | Obiekt tej klasy przechowuje aktualny grafik (wraz z klasą do testów jednostkowych ScheduleManagementTests). |
 | Shift | Klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni. |
+</p>
 
 #### Warstwa prezentacji
 
+<p align = center>
 | Nazwa klasy | Odpowiedzialność |
 |-------------|-----------------|
 | Form1 | Główny formularz aplikacji zawierający dane pracowników oraz grafik. |
@@ -75,6 +78,7 @@ Pełniejszy opis w zakładce Wiki.
 | ViewEmployee | Klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami. |
 | ViewFile | Klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików. |
 | ViewOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
+</p>
 
 ## Wykorzystane technologie
 
