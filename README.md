@@ -52,25 +52,29 @@ Pełniejszy opis w zakładce Wiki.
 
 #### Model/logika
 
-* Constants - przechowuje wartości stałe używane w całym projekcie.
-* CustomExceptions - niestandardowe wyjątki stworzone na potrzeby projektu.
-* Employee - klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp.
-* EmployeeManagement (wraz z klasą do testów jednostkowych z sufiksem EmployeeManagementTests) - obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach.
-* EnumFunctionTypes - enumerator przypisujący liczby możliwym funkcjom pracowników.
-* FileServiceTxt - klasa zawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików.
-* ListBoxGrafik - zmodyfikowane list boxy z dodatkowymi metodami.
-* Optimization - obiekt tej klasy odpowiada za przeprowadzanie optymalizacji.
-* ScheduleManagement - (wraz z klasą do testów jednostkowych z sufiksem ScheduleManagementTests) obiekt tej klasy przechowuje aktualny grafik.
-* Shift - klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni.
+| Nazwa klasy | Odpowiedzialność |
+|-------------|-----------------|
+| Constants | Przechowuje wartości stałe używane w całym projekcie. |
+| CustomExceptions | Niestandardowe wyjątki stworzone na potrzeby projektu. |
+| Employee | Klasa przechowuje informacje na temat pracownika takie jak numer id, imię, czy jest stażystą, itp. |
+| EmployeeManagement | Obiekt tej klasy zarządza systemem pracowników. Dodaje, usuwa i edytuje informacje o pracownikach (wraz z klasą do testów jednostkowych EmployeeManagementTests). |
+| EnumFunctionTypes | Enumerator przypisujący liczby możliwym funkcjom pracowników. |
+| FileServiceTxt | Klasa zawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików. |
+| ListBoxGrafik | Zmodyfikowane list boxy z dodatkowymi metodami. |
+| Optimization | Obiekt tej klasy odpowiada za przeprowadzanie optymalizacji. |
+| ScheduleManagement | Obiekt tej klasy przechowuje aktualny grafik (wraz z klasą do testów jednostkowych ScheduleManagementTests). |
+| Shift | Klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni. |
 
 #### Warstwa prezentacji
 
-*  Form1 - główny formularz aplikacji zawierający dane pracowników oraz grafik.
-*  Form2 - formularz dodawania/usuwania/edytowania pracowników.
-*  PresenterSchedule - klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem.
-*  ViewEmployee - klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami.
-*  ViewFile - klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików.
-*  ViewOptimization - klasa pośrednicząca pomiędzy UI a procesem optymalizacji.
+| Nazwa klasy | Odpowiedzialność |
+|-------------|-----------------|
+| Form1 | Główny formularz aplikacji zawierający dane pracowników oraz grafik. |
+| Form2 | Formularz do dodawania, usuwania i edytowania pracowników. |
+| PresenterSchedule | Klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem. |
+| ViewEmployee | Klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami. |
+| ViewFile | Klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików. |
+| ViewOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
 
 ## Wykorzystane technologie
 
