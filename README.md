@@ -1,5 +1,5 @@
 [PL]
-# Funkcje_GA
+# Aplikacja do tworzenia grafiku pracowników szpitala z wykorzystaniem algorytmu genetycznego
 <i>C#, WinForms, VisualStudio.</i>
 <p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracownikami Szpitalnego Oddziału Ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest przydzielenie funkcji zgodnie z przyjętymi założeniami. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego i stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
 
