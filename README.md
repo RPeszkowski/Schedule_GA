@@ -6,11 +6,11 @@
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
 
 <div align = center>
- <img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Main_UI" width="600">
+ <img src="https://github.com/user-attachments/assets/419952d2-d3f3-460d-82ff-158093b60690" alt="Main_UI" width="600">
  <p><em>Rys. 1: Interfejs główny aplikacji przed przydzieleniem funkcji.</em></p><br>
 
- <img src="https://github.com/user-attachments/assets/24bcf20e-4eca-4056-8e42-0a0609255c4f" alt="Main_UI_functions_assigned" width="600">
- <p><em>Rys. 1: Interfejs główny aplikacji po przydzieleniu funkcji.</em></p>
+ <img src="https://github.com/user-attachments/assets/461f78e5-4229-45ee-8e5f-d2b42c35dbd2" alt="Main_UI_functions_assigned" width="600">
+ <p><em>Rys. 1: Interfejs główny aplikacji po przydzieleniu funkcji. Kolorami oznaczono dyżury wybranego pracownika.</em></p>
 </div>
 
 ## Algorytm genetyczny
