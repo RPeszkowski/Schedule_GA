@@ -98,23 +98,20 @@ namespace Funkcje_GA
 
             for (int i = 0; i < LICZBA_DNI; i++)
             {
+                nrOsobySala = 0;
+                nrOsobyTriaz1 = 0;
+                nrOsobyTriaz2 = 0;
                 // Dzien
                 if (liczbaDyzurow[i] > 0)
                 {
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + j];
-
-                    nrOsobySala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobySala = (nrOsobySala * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j];
-
-                    nrOsobyTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobyTriaz1 = (nrOsobyTriaz1 * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * i * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j];
-
-                    nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobyTriaz2 = (nrOsobyTriaz2 * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     if (nrOsobySala == nrOsobyTriaz1)
                         a += 1000000.0m;
@@ -171,23 +168,20 @@ namespace Funkcje_GA
                     }
                 }
 
+                nrOsobySala = 0;
+                nrOsobyTriaz1 = 0;
+                nrOsobyTriaz2 = 0;
                 //Noc
                 if (liczbaDyzurow[i + LICZBA_DNI] > 0)
                 {
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + j];
-
-                    nrOsobySala = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobySala = (nrOsobySala * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j];
-
-                    nrOsobyTriaz1 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobyTriaz1 = (nrOsobyTriaz1 * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        numerOsoby[j] = funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j];
-
-                    nrOsobyTriaz2 = numerOsoby.Aggregate(0, (sum, val) => (sum * 2) + (val ? 1 : 0));
+                        nrOsobyTriaz2 = (nrOsobyTriaz2 * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
                     if (nrOsobySala == nrOsobyTriaz1)
                         a += 1000000.0m;
@@ -579,7 +573,6 @@ namespace Funkcje_GA
                     }
                 }
 
-
                 // Mutacje wszystkich nieelitarnych osobników.
                 for (int i = liczbaElitarnych; i < liczbaOsobnikow; i++)
                 {
@@ -593,7 +586,6 @@ namespace Funkcje_GA
                         }
                     }
                 }
-
 
                 //Obliczanie funkcji celu dla wszystkich osobników, z wyjątkiem elitarnych
                 //(których nie trzeba obliczać, bo zostały z poprzedniej iteracji).

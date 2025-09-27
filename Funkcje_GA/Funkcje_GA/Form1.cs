@@ -29,29 +29,29 @@ using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
-    public partial class Form1 : Form, IViewForm1
+    public partial class Form1 : Form, IViewSchedule, IViewEmployee, IViewOptimization, IViewFile
     {
         private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];             //Tworzenie etykiet wyświetlających numer dziennej zmiany.
-        private readonly System.Windows.Forms.Label[] labelsNoc = new System.Windows.Forms.Label[LICZBA_DNI];               //Tworzenie etykiet wyświetlających numer nocnej zmiany.
         private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
         private readonly ListBoxGrafik[] listboxesSchedule = new ListBoxGrafik[2 * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
-     
-        private readonly IEmployeeManagement _employeeManager;                      //Instancja do zarządzania pracownikami.
-        private readonly IViewEmployee _viewEmployee;                               //Instancja prezentera zajmująca się obsługą plików.
-        private readonly IViewFile _viewFile;                                       //Instancja prezentera zajmująca się wyświetlaniem etykiet pracowników.
-        private readonly IViewOptimization _viewOptimization;                       //Instancja prezentera zajmująca się wyświetlaniem optymalizacji.
+        
+        private readonly IEmployeeForm _form2;                                              //Form2.
+        protected readonly Dictionary<int, string> months = new Dictionary<int, string>(12)   //Miesiące.
+        {
+            {1, "Styczeń" }, {2, "Luty" }, {3, "Marzec" },
+            {4, "Kwiecień" }, {5, "Maj" }, {6, "Czerwiec" },
+            {7, "Lipiec" }, {8, "Sierpień" }, {9, "Wrzesień" },
+            {10, "Październik" }, {11, "Listopad" }, {12, "Grudzień" },
+        };
+
+        private string currentMonth;                                 //Obecny miesiąc.
+        private int currentYear;                                 //Obecny rok.
 
         //Konstruktor.
-        public Form1(IEmployeeManagement employeeManager,
-                     IViewFile viewFile,
-                     IViewEmployee viewEmployee,
-                     IViewOptimization viewOptimization)
+        public Form1(IEmployeeForm form2)
         {
             //Przypisujemy menadżery.
-            this._employeeManager = employeeManager;
-            this._viewFile = viewFile;
-            this._viewEmployee = viewEmployee;
-            this._viewOptimization = viewOptimization;
+            this._form2 = form2;
 
             //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
@@ -61,13 +61,22 @@ namespace Funkcje_GA
 
             //Tworzymy etykiety pracowników.
             InitializeEmployeeControls();
-
-            //Subskrybujemy eventy kliknięcia w form1, przycisku optymalizacji, powiadomień itd.
-            SubscribeToEvents();
         }
+
+        //Zdarzenie - zmiana daty.
+        public event Action<string, string> DateChanged;
 
         //Zdarzenie zgłaszające, że użytkownik chce dodać pracownika do zmiany.
         public event Action<int, int> EmployeeAddedToShift;
+
+        //Zdarzenie zgłaszające, że uzytkownik kliknął na etykietę pracownika.
+        public event Action<int> EmployeeLabelMouseDown;
+
+        //Zdarzenie - załaduj grafik i pracowników przy starcie programu.
+        public event Action LoadAtStart;
+
+        //Wywołano optymalizację.
+        public event Func<int, decimal, decimal, int, int, Task> OptimizationRequested;
 
         //Zdarzenie zgłaszające, że użytkownik chce wyczyścić grafik.
         public event Action ScheduleCleared;
@@ -77,6 +86,24 @@ namespace Funkcje_GA
 
         //Zdarzenie zgłaszające, że użytkownik chce usunąć pracownika ze zmiany.
         public event Action<IEnumerable<(int ShiftId, int EmployeeId)>> SelectedShiftsRemoved;
+
+        //Zdarzenie - zapisanie grafiku po optymalizacji.
+        public event Action SaveOptimalSchedule;
+
+        //Zdarzenie - zapisanie grafiku.
+        public event Action ViewLoadSchedule;
+
+        //Zdarzenie - zapisanie grafiku.
+        public event Action ViewSaveSchedule;
+
+        //Pytamy użytkownika.
+        public bool AskUserConfirmation(string message)
+        {
+            //Wyświetlamy MessageBox.
+            var result = MessageBox.Show(message, "Potwierdzenie", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            return result == DialogResult.Yes;
+        }
 
         //Zmieniamy na bez funkcji.
         private void buttonBezFunkcji_Click(object sender, EventArgs e)
@@ -92,6 +119,9 @@ namespace Funkcje_GA
         //Czyścimy grafik.
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
+            //Usuwamy podświetlenie.
+            UsunPodswietlenie();
+
             //Usuwamy grafik i wyświetlamy powiadomienie.
             ScheduleCleared?.Invoke();
         }
@@ -103,8 +133,7 @@ namespace Funkcje_GA
             UsunPodswietlenie();
 
             //Wyświetlamy Form2.
-            Form2 dialog = new Form2(_employeeManager, _viewFile);
-            dialog.ShowDialog();
+            _form2.ShowForm();
         }
 
         //Zamieniamy wszystkie wybrane dyżury na sale.
@@ -145,16 +174,7 @@ namespace Funkcje_GA
         {
             //Usuwamy podświetlenie i wczytujemy grafik.
             UsunPodswietlenie();
-            try
-            {
-                _viewFile.LoadSchedule("Grafik.txt");
-            }
-
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-                RaiseUserNotification("Plik 'Grafik.txt' jest uszkodzony.");
-            }
+            ViewLoadSchedule?.Invoke();
         }
 
         //Zapisujemy grafik do pliku "Grafik.txt" i jeśli się uda, wyświetlamy informację.
@@ -162,18 +182,7 @@ namespace Funkcje_GA
         {
             //Usuwamy podświetlenie i zapisujemy grafk.
             UsunPodswietlenie();
-
-            //Próbujemy zapisać grafik
-            try
-            {
-                _viewFile.SaveSchedule("Grafik.txt");
-            }
-
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-                RaiseUserNotification("Plik 'Grafik.txt' jest uszkodzony.");
-            }
+            ViewSaveSchedule?.Invoke();
         }
 
         //Załadowanie Form1.
@@ -208,39 +217,25 @@ namespace Funkcje_GA
             return result;
         }
 
-        //Wczytanie pracowników i grafiku.
-        public virtual void LoadEmployeeAndSchedule()
+        //Wyświetlanie kolorów.
+        public virtual void HandleEmployeeMouseDown(IEnumerable<(int shiftId, FunctionTypes function)> highlights)
         {
-            //Wczytujemy pracowników z pliku tekstowego przy starcie programu.
-            try
+            //Wyświetlamy kolory.
+            foreach (var (shiftId, function) in highlights)
             {
-                _viewFile.LoadEmployees("Pracownicy.txt");
-            }
-
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-                RaiseUserNotification("Plik 'Pracownicy.txt' jest uszkodzony.");
-            }
-
-            //Jeśli plik z grafikiem istnieje, to wyświetlane jest zapytanie, czy go wczytać.
-            if (File.Exists("Grafik.txt"))
-            {
-                var result = MessageBox.Show("Wczytać ostatni grafik?", "Wczytywanie grafiku", MessageBoxButtons.YesNo);
-
-                //Jeśli wybrano opcje "Tak" to wczytywany jest grafik.
-                if (result == DialogResult.Yes)
+                switch (function)
                 {
-                    try
-                    {
-                        _viewFile.LoadSchedule("Grafik.txt");
-                    }
+                    case FunctionTypes.Bez_Funkcji:
+                        listboxesSchedule[shiftId].BackColor = Color.Red;
+                        break;
 
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex.ToString());
-                        RaiseUserNotification("Plik 'Grafik.txt' jest uszkodzony.");
-                    }
+                    case FunctionTypes.Sala:
+                        listboxesSchedule[shiftId].BackColor = Color.Green;
+                        break;
+
+                    case FunctionTypes.Triaz:
+                        listboxesSchedule[shiftId].BackColor = Color.Blue;
+                        break;
                 }
             }
         }
@@ -264,14 +259,15 @@ namespace Funkcje_GA
                     //Usuwamy podświetlenie.
                     UsunPodswietlenie();
 
+                    //Sprawdzamy, czy etykieta nie jest pusta.
+                    if (labelsPracownicy[_nrOsoby].Tag == null)
+                        return;
+
                     //Wywołujemy event w presenterze.
-                    var highlights = _viewEmployee.HandleEmployeeMouseDown(_nrOsoby);
-                    foreach (var (shiftId, color) in highlights)
-                        listboxesSchedule[shiftId].BackColor = color;
+                    EmployeeLabelMouseDown?.Invoke(_nrOsoby);
 
                     //Rozpoczynamy drag & drop.
-                    if (e.Button == MouseButtons.Left)
-                        labelsPracownicy[_nrOsoby].DoDragDrop((_nrOsoby).ToString(), DragDropEffects.Copy | DragDropEffects.Move);
+                    labelsPracownicy[_nrOsoby].DoDragDrop(labelsPracownicy[_nrOsoby].Tag.ToString(), DragDropEffects.Copy | DragDropEffects.Move);
                 };
 
                 tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
@@ -294,7 +290,7 @@ namespace Funkcje_GA
                 listboxesSchedule[nrZmiany].DragEnter += (sender, e) =>
                 {
                     //Jeśli etykieta nie była pusta, to kopiujemy numer osoby.
-                    if (e.Data.GetDataPresent(DataFormats.Text))
+                    if (e.Data.GetDataPresent(DataFormats.Text) && e.Data.GetData(DataFormats.Text).ToString().Length != 0)
                         e.Effect = DragDropEffects.Copy;
                     else
                         e.Effect = DragDropEffects.None;
@@ -321,30 +317,53 @@ namespace Funkcje_GA
                     tableLayoutPanel2.Controls.Add(listboxesSchedule[nrZmiany], nrZmiany, 1);
                 }
 
-                //Tworzymy etykiety dla dyżurów nocnych.
+                //Dodajemy listboxy dla dyżurów nocnych.
                 else
-                {
-                    //Tworzenie etykiet.
-                    labelsNoc[nrZmiany - LICZBA_DNI] = new System.Windows.Forms.Label();
-                    labelsNoc[nrZmiany - LICZBA_DNI].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                    labelsNoc[nrZmiany - LICZBA_DNI].Size = new System.Drawing.Size(340, 40);
-                    labelsNoc[nrZmiany - LICZBA_DNI].Text = (nrZmiany + 1 - LICZBA_DNI).ToString();
-
-                    //Dodawanie kontrolek do formularza.
-                    tableLayoutPanel3.Controls.Add(labelsNoc[nrZmiany - LICZBA_DNI], nrZmiany - LICZBA_DNI, 0);
-                    tableLayoutPanel3.Controls.Add(listboxesSchedule[nrZmiany], nrZmiany - LICZBA_DNI, 1);
-                }
+                    tableLayoutPanel2.Controls.Add(listboxesSchedule[nrZmiany], nrZmiany - LICZBA_DNI, 2);
             }
         }
 
-        //Wzywamy subskrybenta OnUserNotification.
-        public virtual void RaiseUserNotification(string message)
+        //Zmieniamy atrybut listboxów w zależności od miesiąca.
+        private void ListBoxesDropable(string currMonth, int currYear)
         {
-            MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //Odblokowujemy allow drop we wszystkich listboxach.
+            foreach (var ctrl in listboxesSchedule)
+                ctrl.AllowDrop = true;
+
+            //Sprawdzamy, czy miesiąc ma 31 dni.
+            if (currMonth == "Styczeń" || currMonth == "Marzec" || currMonth == "Maj" || currMonth == "Lipiec"
+             || currMonth == "Sierpień" || currMonth == "Październik" || currMonth == "Grudzień")
+                return;
+
+            //Sprawdzamy, czy miesiąc ma 30 dni
+            if (currMonth == "Kwiecień" || currMonth == "Czerwiec" || currMonth == "Wrzesień" || currMonth == "Listopad")
+            {
+                listboxesSchedule[30].AllowDrop = false;
+                listboxesSchedule[61].AllowDrop = false;
+                return;
+            }
+
+            //Sprawdzamy, czy wybralismy luty.
+            if(currMonth == "Luty")
+            {
+                listboxesSchedule[29].AllowDrop = false;
+                listboxesSchedule[30].AllowDrop = false;
+                listboxesSchedule[60].AllowDrop = false;
+                listboxesSchedule[61].AllowDrop = false;
+
+                //Sprawdzamy, czy rok jest przestępny
+                int temp = Math.DivRem(currYear, 4, out int Rem);
+                if(Rem == 0)
+                {
+                    listboxesSchedule[28].AllowDrop = false;
+                    listboxesSchedule[59].AllowDrop = false;
+                }
+            }
+
         }
 
-        //Subskrybujemy eventy form1.
-        private void SubscribeToEvents()
+        //Wczytanie pracowników i grafiku. Subskrypcja zdarzeń.
+        public virtual void LoadAndSubscribe()
         {
             //Zdarzenie asynchroniczne po kliknięciu przycisku "Opt".
             buttonOptymalizacja.Click += async (sender, e) =>
@@ -353,19 +372,23 @@ namespace Funkcje_GA
                 UsunPodswietlenie();
 
                 //Dezaktywujemy wszystkie kontrolki z wyjątkiem etykiety labelRaport.
-                foreach (Control control in this.Controls)
-                {
-                    if (control != labelRaport)
-                        control.Enabled = false;
-                }
+                SetContolsEnabled(false);
 
-                //Uruchamiamy optymalizację.
-                await _viewOptimization.RunOptimizationAsync();
+                int liczbaOsobnikow = 100;          //Liczba osobników.
+                decimal tol = 0.0000003m;           //Jeśli wartość funkcji celu jest mniejsza lub równa tol, to przerywamy optymalizację.
+                decimal tolX = 0.00000000001m;      //Minimalna zmiana funkcji celu powodująca zresetowanie liczby iteracji bez poprawy.
+                int maxIterations = 200000;         //Maksymalna liczba iteracji.
+                int maxConsIterations = 40000;      //maksymalna liczba iteracji bez poprawy.
+
+                //Zdarzenie - prośba o przeprowadzenie optymalizacji.
+                if (OptimizationRequested != null)
+                    await OptimizationRequested.Invoke(liczbaOsobnikow, tol, tolX, maxIterations, maxConsIterations);
+
+                //Po skończonej optymalizacji zapisujemy grafik.
+                SaveOptimalSchedule?.Invoke();
 
                 //Po skończonej optymalizacji aktywujemy kontrolki.
-                foreach (Control control in this.Controls)
-                    if (control != labelRaport)
-                        control.Enabled = true;
+                SetContolsEnabled(true);
             };
 
             //Usunięcia zaznaczenia i podświetlenia po kliknięciu form1.
@@ -378,35 +401,88 @@ namespace Funkcje_GA
                 }
             };
 
-            //Wyświetlenie wiadomości dla użytkownika. 
-            _viewFile.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            _viewOptimization.UserNotificationRaise += message => MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //Wybrany aktualnie miesiąc i rok.
+            currentMonth = months[DateTime.Now.Month];
+            currentYear = DateTime.Now.Year;
 
-            //Subskrybujemy event odświeżono etykietę pracownika.
-            _viewEmployee.EmployeeLabelChanged += (id, info) =>
+            //ComboBox dla miesięcy.
+            comboBoxMonth.Items.Clear();
+            for (int m = 1; m <= 12; m++)
+                comboBoxMonth.Items.Add(months[m]);
+
+            comboBoxMonth.SelectedItem = months[DateTime.Now.Month];
+
+            //ComboBox dla lat.
+            comboBoxYear.Items.Clear();
+            for (int y = 2001; y <= 2099; y++)
+                comboBoxYear.Items.Add(y);
+
+            comboBoxYear.SelectedItem = DateTime.Now.Year;
+
+            //Podajemy do wiadomości obecną datę, uaktulaniamy listboxy. Subskrybujemy zdarzenia wyboru innej daty.
+            ListBoxesDropable(currentMonth, currentYear);
+            DateChanged?.Invoke(comboBoxMonth.SelectedItem.ToString(), comboBoxYear.SelectedItem.ToString());
+            comboBoxMonth.SelectedIndexChanged += (s, e) =>
             {
-                //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
-                labelsPracownicy[id].Text = info.Item1;
-                labelsPracownicy[id].ForeColor = info.Item2 == 0 ? Color.Black : Color.Orange;
+                //Usuwamy grafik.
+                ScheduleCleared?.Invoke();
+                currentMonth = comboBoxMonth.SelectedItem.ToString();
+                ListBoxesDropable(currentMonth, currentYear);
+                DateChanged?.Invoke(comboBoxMonth.SelectedItem.ToString(), comboBoxYear.SelectedItem.ToString());
+            };
+            comboBoxYear.SelectedIndexChanged += (s, e) =>
+            {   
+                //Usuwamy grafik.
+                ScheduleCleared?.Invoke();
+                currentYear = Convert.ToInt32(comboBoxYear.SelectedItem);
+                ListBoxesDropable(currentMonth, currentYear);
+                DateChanged?.Invoke(comboBoxMonth.SelectedItem.ToString(), comboBoxYear.SelectedItem.ToString());
             };
 
-            //Subskrybujemy zdarzenie nowych informacji o optymalizacji.
-            _viewOptimization.ProgressUpdated += raport =>
+            //Wczytujemy pracowników i grafik z pliku tekstowego przy starcie programu.
+            LoadAtStart?.Invoke();
+        }
+
+        //Wzywamy subskrybenta OnUserNotification.
+        public virtual void RaiseUserNotification(string message)
+        {
+            MessageBox.Show(message, "Informacja", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        //Aktywujemy/dezaktywujemy kontrolki (oprócz labelRaport).
+        public virtual void SetContolsEnabled(bool enable)
+        {
+            foreach (Control control in this.Controls)
             {
+                if (control != labelRaport)
+                    control.Enabled = enable;
+            }
+        }
+
+        //Odświeżanie etykiet.
+        public virtual void UpdateEmployeeLabel(int employeeId, (string data, EmployeeLabelStatus status) info, bool tag)
+        {
+            //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
+            labelsPracownicy[employeeId].Text = info.Item1;
+            labelsPracownicy[employeeId].ForeColor = info.Item2 == EmployeeLabelStatus.Normal ? Color.Black : Color.Orange;
+            
+            //Uaktulaniamy tag.
+            if(tag)
+                labelsPracownicy[employeeId].Tag = employeeId;
+
+            else
+                labelsPracownicy[employeeId].Tag = null;
+        }
+
+        //Uaktualniamy etykietę z raportem.
+        public virtual void UdpateOptimizationProgress(string raport)
+        {
                 //Odświeżamy UI bezpośrednio w bezpieczny sposób.
                 if (labelRaport.InvokeRequired)
                     labelRaport.Invoke(new Action(() => { labelRaport.Text = raport; }));
 
                 else
                     labelRaport.Text = raport;
-            };
-
-            //Informacja, gdy wystąpił warning podczas optymalizacji.
-            _viewOptimization.UserNotificationRaiseWarning += message =>
-            {
-                Log.Error(message);
-                MessageBox.Show(message, "Ostrzeżenie", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            };
         }
 
         //Odświeżanie listboxów.
@@ -415,6 +491,13 @@ namespace Funkcje_GA
             listboxesSchedule[shiftId].Items.Clear();
             foreach (var item in lista)
                 listboxesSchedule[shiftId].Items.Add(item);
+        }
+
+        //Informacja, gdy wystąpił warning podczas optymalizacji.
+        public virtual void RaiseUserNotificationWarning(string message)
+        {
+            Log.Error(message);
+            MessageBox.Show(message, "Ostrzeżenie", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         //Usuwamy podświetlenie.

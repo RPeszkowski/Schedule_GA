@@ -6,19 +6,16 @@ using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    //Ten interfejś odpowiada za połączenie optymalizacji z view.
-    public interface IViewOptimization
+    //Interfejs łączący UI z prezenterem optymalizacji.
+    public interface IViewOptimization : IUserNotifier
     {
-        //Powiadomienie użytkownika.
-        event Action<string> ProgressUpdated;
+        //Wywołano optymalizację.
+        event Func<int, decimal, decimal, int, int, Task> OptimizationRequested;
 
-        //Powiadomienie użytkownika.
-        event Action<string> UserNotificationRaise;
+        //Informacja, gdy wystąpił warning.
+        void RaiseUserNotificationWarning(string message);
 
-        //Powiadomienie użytkownika - warning.
-        event Action<string> UserNotificationRaiseWarning;
-
-        //Przeprowadzamy optymalizację.
-        Task RunOptimizationAsync();
+        //Uaktualniamy etykietę z raportem.
+        void UdpateOptimizationProgress(string raport);
     }
 }

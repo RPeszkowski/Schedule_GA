@@ -25,7 +25,15 @@ namespace Funkcje_GA
                 schedule.Add(newShift);
             }
 
-            this._employeeManager = EmpManager;  
+            this._employeeManager = EmpManager;
+
+            //Subskrybujemy event - usunięcie pracownika.
+            _employeeManager.EmployeeDeleted += (employeeId) =>
+            {
+                var shifts = GetShiftsForEmployee(employeeId);
+                foreach (var shift in shifts)
+                    RemoveFromShift(shift.shiftId, employeeId);
+            };
         }
 
         //Event wywoływany przy zmianie grafiku.
@@ -246,9 +254,9 @@ namespace Funkcje_GA
         }
 
         //Zwraca zmiany i pełnione na nich funkcje danego pracownika.
-        public IEnumerable<(int shiftId, int function)> GetShiftsForEmployee(int employeeId)
+        public IEnumerable<(int shiftId, FunctionTypes function)> GetShiftsForEmployee(int employeeId)
         {
-            var result = new List<(int, int)>();                        //Lista zmian i pełnionych funkcji.
+            var result = new List<(int, FunctionTypes function)> ();                        //Lista zmian i pełnionych funkcji.
 
             //Sprawdzamy, czy Id jest poprawne.
             if (employeeId < 1 || employeeId > MAX_LICZBA_OSOB)
@@ -262,15 +270,15 @@ namespace Funkcje_GA
                 //Sprawdzamy, czy pracownik występuje.
                 if (shift.PresentEmployees.Any(e => e.Numer == employeeId))
                 {
-                    int function = (int)FunctionTypes.Bez_Funkcji;          //Funkcja pracownika.
+                    FunctionTypes function = FunctionTypes.Bez_Funkcji;          //Funkcja pracownika.
 
                     //Sprawdzamy, czy pracownik ma salę.
                     if (shift.SalaEmployees.Any(e => e.Numer == employeeId))
-                        function = (int)FunctionTypes.Sala;
+                        function = FunctionTypes.Sala;
 
                     //Sprawdzamy, czy pracownik ma triaż.
                     if (shift.TriazEmployees.Any(e => e.Numer == employeeId))
-                        function = (int)FunctionTypes.Triaz;
+                        function = FunctionTypes.Triaz;
 
                     result.Add((shift.Id, function));
                 }

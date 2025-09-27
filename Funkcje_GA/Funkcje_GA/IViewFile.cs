@@ -6,23 +6,25 @@ using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    //Intrefejs prezentera do zarządzania plikami.
-    public interface IViewFile
+    //Interfejs pośredniczący między UI a prezenterem obsługującym pliki.
+    public interface IViewFile : IUserNotifier
     {
+        //Zdarzenie - zmiana daty.
+        event Action<string, string> DateChanged;
 
-        //Powiadomienie użytkownika.
-        event Action<string> UserNotificationRaise;
+        //Zdarzenie - załaduj grafik i pracowników przy starcie programu.
+        event Action LoadAtStart;
 
-        //Wczytywanie pracowników.
-        void LoadEmployees(string filePath);
+        //Zdarzenie - załadowanie grafiku.
+        event Action ViewLoadSchedule;
 
-        //Wczytywanie grafiku.
-        void LoadSchedule(string filePath);
+        //Zdarzenie - zapisanie grafiku po optymalizacji.
+        event Action SaveOptimalSchedule;
 
-        //Zapisz pracowników.
-        void SaveEmployees(string filePath);
+        //Zdarzenie - zapisanie grafiku.
+        event Action ViewSaveSchedule;
 
-        //Zapisywanie grafiku.
-        void SaveSchedule(string filepath);
+        //Pytamy użytkownika.
+        bool AskUserConfirmation(string message);
     }
 }

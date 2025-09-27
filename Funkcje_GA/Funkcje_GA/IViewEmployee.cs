@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    //Intrefejs prezentera do zarządzania etykietami pracowników.
-    public interface IViewEmployee
+    //Ten interfejs odpowiada za połączenie presenterEmployee z UI.
+    public interface IViewEmployee : IUserNotifier
     {
-        //Akcja zmiana danych pracownika.
-        event Action<int, (string, int)> EmployeeLabelChanged;
+        //Zdarzenie zgłaszające, że uzytkownik kliknął na etykietę pracownika.
+        event Action<int> EmployeeLabelMouseDown;
 
-        //Usuwanie danych pracownika.
-        void ClearEmployeeLabel(int id);
+        //Obsługa drag and drop - podświetlenie kontrolek.
+        void HandleEmployeeMouseDown(IEnumerable<(int shiftId, FunctionTypes function)> highlights);
 
-        //Drag and drop etykiety pracownika.
-        IEnumerable<(int shiftId, Color color)> HandleEmployeeMouseDown(int employeeId);
-
-        //Wyświetlamy dane wybranej zmiany.
-        void UpdateEmployeeLabel(Employee employee);
+        //Odświeżanie etykiet
+        void UpdateEmployeeLabel(int employeeId, (string data, EmployeeLabelStatus status) info, bool tag);
     }
 }

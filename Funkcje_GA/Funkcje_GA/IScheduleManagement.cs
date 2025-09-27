@@ -25,7 +25,7 @@ namespace Funkcje_GA
         Shift GetShiftById(int id);
 
         //Zwraca zmiany pracownika i pełnione funkcje.
-        IEnumerable<(int shiftId, int function)> GetShiftsForEmployee(int employeeId);
+        IEnumerable<(int shiftId, FunctionTypes function)> GetShiftsForEmployee(int employeeId);
 
         //Czyści wszystkie zmiany.
         void RemoveAll();

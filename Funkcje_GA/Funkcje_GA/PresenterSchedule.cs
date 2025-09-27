@@ -13,17 +13,18 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za zarządzanie wyświetlaniem grafiku na UI.
-    public class PresenterSchedule : IPresenterSchedule
+    public class PresenterSchedule
     {
         private readonly Dictionary<int, List<string>> uiScheduleControls;      //Tu przechowywane są kontrolki z danymi grafiku.
 
         private readonly IScheduleManagement _scheduleManager;                  //Instancja do zarządzania grafikiem.
-        private readonly IViewForm1 _viewForm1;                                     //Instancja widoku.
+        private readonly IViewSchedule _viewSchedule;                           //Interfejs do wyświetlania grafiku na UI.
+        
         //Konstruktor.
-        public PresenterSchedule(IScheduleManagement scheduleManager, IViewForm1 viewForm1)
+        public PresenterSchedule(IScheduleManagement scheduleManager, IViewSchedule viewSchedule)
         {
             this._scheduleManager = scheduleManager;
-            this._viewForm1 = viewForm1;
+            this._viewSchedule = viewSchedule;
 
             uiScheduleControls = new Dictionary<int, List<string>> (2 * LICZBA_DNI);                               //Inicjalizujemy zestaw kontrolek grafiku.
 
@@ -33,41 +34,27 @@ namespace Funkcje_GA
                 uiScheduleControls[i] = list;
             }
 
+            //Subskrybujemy event - modyfikacja zmiany.
+            _scheduleManager.ShiftChanged += shift => UpdateScheduleControl(shift);
+
             //Subskrybujemy event - dodanie pracownika do zmiany.
-            _viewForm1.EmployeeAddedToShift += (shiftId, employeeId) => AddEmployeeToShift(shiftId, employeeId);
+            _viewSchedule.EmployeeAddedToShift += (shiftId, employeeId) =>
+            {
+                AddEmployeeToShift(shiftId, employeeId);
+            };
 
             //Subskrybujemy event - grafik wyczyszczony.
-            _viewForm1.ScheduleCleared += () => ClearSchedule();
+            _viewSchedule.ScheduleCleared += () => _scheduleManager.RemoveAll();
 
             //Subskrybujemy event - ustawienie funkcji.
-            _viewForm1.SelectedShiftsAssigned += (selected, ft) => SetSelectedShifts(selected, ft);
+            _viewSchedule.SelectedShiftsAssigned += (selected, ft) => SetSelectedShifts(selected, ft);
 
             //Subskrybujemy event - usunięcie pracownika ze zmiany.
-            _viewForm1.SelectedShiftsRemoved += (selected) => RemoveSelectedShifts(selected);
+            _viewSchedule.SelectedShiftsRemoved += (selected) => RemoveSelectedShifts(selected);
         }
-
-
-        //Akcja zmiana kontrolki grafiku.
-        public event Action<int, List<string>> ScheduleControlChanged;
 
         //Dodawanie pracownika do zmiany.
         private void AddEmployeeToShift(int shiftId, int employeeId) => _scheduleManager.AddToShift(shiftId, employeeId);
-
-        //Czyszczenie grafiku.
-        private void ClearSchedule()
-        {
-            //Usuwamy grafik.
-            _scheduleManager.RemoveAll();
-
-            //Odświeżamy wszystkie kontrolki grafiku.
-            for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
-            {
-                ScheduleControlChanged?.Invoke(shiftId, new List<string>());
-            }
-
-            //Powiadamiamy Form1.
-            _viewForm1.RaiseUserNotification("Grafik usunięty");
-        }
 
         //Usuwamy zaznaczone dyżury.
         private void RemoveSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected)
@@ -133,7 +120,7 @@ namespace Funkcje_GA
             }
 
             //Zmiana kontrolki.
-            _viewForm1.UpdateShift(shift.Id, uiScheduleControls[shift.Id]);
+            _viewSchedule.UpdateShift(shift.Id, uiScheduleControls[shift.Id]);
         }
     }
 }

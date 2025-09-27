@@ -201,6 +201,10 @@ namespace Funkcje_GA
             //Wczytujemy dane pracowników z pliku "Pracownicy.txt".
             public void WczytajPracownikow(string plik)
             {
+                //Usuwamy wszytskich pracowników
+                foreach (var emp in _employeeManager.GetAllActive())
+                    _employeeManager.EmployeeDelete(emp.Numer);
+
                 //Próbujemy wczytać plik.
                 try
                 {

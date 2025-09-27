@@ -147,6 +147,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmployeeLabelStatus.cs" />
     <Compile Include="EnumFunctionTypes.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="CustomExceptions.cs" />
@@ -165,28 +166,31 @@
     <Compile Include="Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
     </Compile>
+    <Compile Include="IEmployeeForm.cs" />
     <Compile Include="IEmployeeManagement.cs" />
     <Compile Include="IEmployeesFileService.cs" />
     <Compile Include="IScheduleFileService.cs" />
     <Compile Include="IOptimization.cs" />
     <Compile Include="IScheduleManagement.cs" />
-    <Compile Include="IViewForm1.cs" />
-    <Compile Include="IPresenterSchedule.cs" />
+    <Compile Include="IUserNotifier.cs" />
     <Compile Include="IViewEmployee.cs" />
     <Compile Include="IViewFile.cs" />
+    <Compile Include="IViewForm2.cs" />
     <Compile Include="IViewOptimization.cs" />
+    <Compile Include="IViewSchedule.cs" />
     <Compile Include="ListBoxGrafik.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Optimization.cs" />
+    <Compile Include="Paths.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScheduleManagement.cs" />
     <Compile Include="Shift.cs" />
     <Compile Include="PresenterSchedule.cs" />
-    <Compile Include="ViewEmployee.cs" />
-    <Compile Include="ViewFile.cs" />
-    <Compile Include="ViewOptimization.cs" />
+    <Compile Include="PresenterEmployee.cs" />
+    <Compile Include="PresenterFile.cs" />
+    <Compile Include="PresenterOptimization.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -235,8 +239,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>echo "Pliki Pracownicy.txt i Grafik.txt powinny być w folderze bin/Debug"
+copy "$(SolutionDir)\Funkcje_GA\Pracownicy.txt" "$(TargetDir)\Pracownicy.txt"
+copy "$(SolutionDir)\Funkcje_GA\Grafik.txt" "$(TargetDir)\Grafik.txt"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Serilog.4.3.0\build\Serilog.targets" Condition="Exists('..\packages\Serilog.4.3.0\build\Serilog.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

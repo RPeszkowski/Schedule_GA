@@ -35,27 +35,23 @@ namespace Funkcje_GA
                 rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            IEmployeeManagement _employeeManager = new EmployeeManagement();                             //Instancja do zarządzania pracownikami. 
-            IScheduleManagement _scheduleManager = new ScheduleManagement(_employeeManager);            //Instancja do zarządzania grafikiem.
-            IScheduleFileService _fileManagerGrafik = new FileManagementGrafik(_employeeManager, _scheduleManager);//Instancja do zarządzania plikiem grafiku.
-            IEmployeesFileService _fileManagerPracownicy = new FileManagementPracownicy(_employeeManager);     //Instancja do zarządzania plikiem pracowników.
-            IOptimization _optimization = new Optimization(_employeeManager, _scheduleManager); //Instancja do optymalizacji.
-            
-            IViewFile _viewFile = new ViewFile(_fileManagerPracownicy, _fileManagerGrafik);                 //Instancja do zarządzania plikami grafiku i pracowników w warstwie prezentera.
-            IViewEmployee _viewEmployee = new ViewEmployee(_employeeManager, _scheduleManager);         //Instancja do zarządzania etykietami pracowników w warstwie prezentera.
-            IViewOptimization _viewOptimization = new ViewOptimization(_optimization, _scheduleManager, _viewFile); //Instanjca do zarządzania optymalizacją w warstwie prezentera.
+            IEmployeeManagement _employeeManager = new EmployeeManagement();                                        //Instancja do zarządzania pracownikami. 
+            IScheduleManagement _scheduleManager = new ScheduleManagement(_employeeManager);                        //Instancja do zarządzania grafikiem.
+            IScheduleFileService _fileManagerGrafik = new FileManagementGrafik(_employeeManager, _scheduleManager); //Instancja do zarządzania plikiem grafiku.
+            IEmployeesFileService _fileManagerPracownicy = new FileManagementPracownicy(_employeeManager);          //Instancja do zarządzania plikiem pracowników.
+            IOptimization _optimization = new Optimization(_employeeManager, _scheduleManager);                     //Instancja do optymalizacji.
 
-            _employeeManager.EmployeeChanged += (emp) => _viewEmployee.UpdateEmployeeLabel(emp);           //Zdarzenie: dodanie lub zmiana danych pracownika.
-            _employeeManager.EmployeeDeleted += (id) => _viewEmployee.ClearEmployeeLabel(id);               //Zdarzenie: usunięcie pracownika.
+            var _viewForm2 = new Form2();                       //Tworzymy Form2.
+            var _viewForm1 = new Form1(_viewForm2);             //Tworzymy Form1.
 
-            var _viewForm1 = new Form1(_employeeManager, _viewFile, _viewEmployee, _viewOptimization); //Tworzymy Form1.
+            var _presenterFile = new PresenterFile(_fileManagerPracownicy, _fileManagerGrafik, _viewForm1, _viewForm2);      //Instancja do zarządzania plikami grafiku i pracowników w warstwie prezentera.
+            var _presenterOptimization = new PresenterOptimization(_optimization, _scheduleManager, _viewForm1);      //Instancja do zarządzania optymalizacją w warstwie prezentera.
+            var _presenterEmployee = new PresenterEmployee(_employeeManager, _scheduleManager, _viewForm1, _viewForm2);  //Instancja do zarządzania etykietami pracowników w warstwie prezentera.
+            var _presenterSchedule = new PresenterSchedule(_scheduleManager, _viewForm1);                                //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
 
-            IPresenterSchedule _viewSchedule = new PresenterSchedule(_scheduleManager, _viewForm1);  //Instancja do zarządzania kontrolkami wyświetlającymi grafik.
-            
-            _scheduleManager.ShiftChanged += (shift) => _viewSchedule.UpdateScheduleControl(shift);       //Zdarzenie: modyfikacja zmiany.
-            _viewForm1.LoadEmployeeAndSchedule();                  //Wczytanie pracowników, grafiku.
-
-            Application.Run(_viewForm1);
+            _viewForm1.LoadAndSubscribe();      //Wczytanie pracowników, grafiku.
+            Application.Run(_viewForm1);        //Startujemy aplikację.
+            Log.CloseAndFlush();                //Zamykamy plik log.
         }
     }
 }

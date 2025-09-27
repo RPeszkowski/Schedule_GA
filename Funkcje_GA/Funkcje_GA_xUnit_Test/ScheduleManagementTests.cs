@@ -349,9 +349,9 @@ namespace Funkcje_GA_xUnit_Test
 
             // Assert
             Assert.Equal(3, result.Count); // powinno być 3 zmiany
-            Assert.Contains(result, r => r.shiftId == 0 && r.function == (int)FunctionTypes.Bez_Funkcji);
-            Assert.Contains(result, r => r.shiftId == 1 && r.function == (int)FunctionTypes.Sala);
-            Assert.Contains(result, r => r.shiftId == 2 && r.function == (int)FunctionTypes.Triaz);
+            Assert.Contains(result, r => r.shiftId == 0 && r.function == FunctionTypes.Bez_Funkcji);
+            Assert.Contains(result, r => r.shiftId == 1 && r.function == FunctionTypes.Sala);
+            Assert.Contains(result, r => r.shiftId == 2 && r.function == FunctionTypes.Triaz);
         }
 
         //Pobieranie zmian danego pracownika - id poza zakresem.
