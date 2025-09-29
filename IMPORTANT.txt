@@ -1,0 +1,1 @@
+To be able to use default after compilation schedules copy the folders "Employees" and "Schedules" from src/Files to bin/Debug.

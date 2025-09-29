@@ -1,0 +1,50 @@
+1 D. Br. 0 True True
+2 E. Mł. 0 True True
+3 K. Bi -1 True True
+4 A. Dr -1 True True
+5 K. Ka 1 True True
+6 A. Zo-Krk -3 True True
+7 J. Ję -2 True True
+8 A. Ga 0 True True
+9 K. Us -1 True False
+10 K. Sz 0 True True
+11 A. Pł 2 True False
+12 K. Kn 0 True True
+13 A. Ws. 0 True True
+14 M. Ka 0 True True
+15 P. Sk 0 True True
+16 A. Ko 0 True True
+17 K. Ma -1 True True
+18 K. Tr -1 True True
+19 S. Sza 0 True True
+20 S. Szc 0 True True
+21 R. Pe -1 True True
+22 M. Sz 3 True True
+23 K. Wł -1 True False
+24 R. Ba 0 True True
+25 K. Ła 3 True True
+26 M. Bi 0 True True
+27 A. Łą -1 True True
+28 A. Ul -1 True True
+29 A. Ko 2 True False
+30 A. Br -1 True False
+31 I. Me -1 True True
+32 M. Pi -1 True True
+33 J. Ru 1 True True
+34 P. Mą 0 True True
+35 S. Św 2 True True
+36 W. Sz -4 False False
+37 G. Fr 2 True True
+38 B. Wi 0 True True
+39 E. Tu 0 True False
+40 K. Le 2 True True
+41 M. Sp 0 True True
+42 P. Ko -1 False False
+43 M. Fi-Rą 0 True True
+
+
+
+
+
+
+
