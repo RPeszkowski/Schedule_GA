@@ -107,3 +107,4 @@ Pełniejszy opis w zakładce Wiki.
 * .Net: 4.7.2
 * MS Visual Studio: 17.14.13
 * C#: 7.3
+
