@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funkcje_GA", "Funkcje_GA\Fu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funkcje_GA_xUnit_Test", "Funkcje_GA_xUnit_Test\Funkcje_GA_xUnit_Test.csproj", "{BB1310AC-3521-4071-9AFC-2FFA110DDED5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main", "src\Main.csproj", "{24F04F08-30B5-47DD-A4DB-CE11FF20D6B8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB1310AC-3521-4071-9AFC-2FFA110DDED5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{24F04F08-30B5-47DD-A4DB-CE11FF20D6B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{24F04F08-30B5-47DD-A4DB-CE11FF20D6B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{24F04F08-30B5-47DD-A4DB-CE11FF20D6B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{24F04F08-30B5-47DD-A4DB-CE11FF20D6B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
