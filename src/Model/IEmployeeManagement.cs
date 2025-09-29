@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Ten interfejs odpowiada za połączenie klasy EmployeeManagement z resztą kodu.
-    internal interface IEmployeeManagement
+    public interface IEmployeeManagement
     {
         //Event, który zostaje wywołany gdy zmienią się dane pracownika.
         event Action<Employee> EmployeeChanged;

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Funkcje_GA\Funkcje_GA.csproj" />
+    <ProjectReference Include="..\src\Funkcje_GA.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,7 +11,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za zarządzanie pracownikami.
-    internal class EmployeeManagement : IEmployeeManagement
+    public class EmployeeManagement : IEmployeeManagement
     {
         private readonly Dictionary<int, Employee> employees;                                 //Deklaracja listy pracowników.
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Klasa zawiera zmienne stałowartościowe.
-    internal class Constants
+    public class Constants
     {
         public const int LICZBA_DNI = 31;                                                          //Największa liczba dni w miesiącu.
         public const int LICZBA_ZMIENNYCH = 2 * LICZBA_DNI * 3 * MAX_LICZBA_BITOW;                 //Liczba zmiennych w zadaniu optymalizacji. 

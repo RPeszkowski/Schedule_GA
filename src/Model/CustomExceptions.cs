@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    internal class CustomExceptions
+    public class CustomExceptions
     {
         //Wyjątek rzucany, gdy próbujemy dodać pracownika o numerze, który jest już zajęty.
         public class EmployeeAlreadyExistException : Exception
