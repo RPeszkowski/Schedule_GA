@@ -4,6 +4,7 @@
 *.vs
 Funkcje_GA.exe.config
 Funkcje_GA_TemporaryKey.pfx
+releases/
 
 # User-specific files
 *.suo
