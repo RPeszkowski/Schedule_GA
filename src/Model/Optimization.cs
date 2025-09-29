@@ -12,7 +12,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa zajmuje się przeprowadzaniem optymalizacji genetycznej.
-    public class Optimization : IOptimization
+    internal class Optimization : IOptimization
     {
         //Obiekty tej klasy są wykorzystywane w optymalizacji genetycznej.
         private class Osobnik

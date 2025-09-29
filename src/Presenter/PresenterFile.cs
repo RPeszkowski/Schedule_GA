@@ -11,7 +11,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klas odpowiada za połączenie View z menadżerami plików.
-    public class PresenterFile
+    internal class PresenterFile
     {
         private readonly IScheduleFileService _fileManagerGrafik;               //Instancja do zarządzania plikiem grafiku.
         private readonly IEmployeesFileService _fileManagerPracownicy;          //Instancja do zarządzania plikiem pracowników

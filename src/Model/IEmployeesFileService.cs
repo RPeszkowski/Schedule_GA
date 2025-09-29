@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfesjs wczytywania/zapisywania danych pracowników..
-    public interface IEmployeesFileService
+    internal interface IEmployeesFileService
     {
         //Wczytywanie paacowników.
         void WczytajPracownikow(string plik);

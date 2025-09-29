@@ -13,7 +13,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za zarządzanie wyświetlaniem grafiku na UI.
-    public class PresenterSchedule
+    internal class PresenterSchedule
     {
         private readonly Dictionary<int, List<string>> uiScheduleControls;      //Tu przechowywane są kontrolki z danymi grafiku.
 

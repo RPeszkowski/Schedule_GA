@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfejs pośredniczący między UI a prezenterem obsługującym pliki.
-    public interface IViewFile : IUserNotifier
+    internal interface IViewFile : IUserNotifier
     {
         //Zdarzenie - zmiana daty.
         event Action<string, string> DateChanged;

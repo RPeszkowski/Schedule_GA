@@ -29,7 +29,7 @@ using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
-    public partial class Form1 : Form, IViewSchedule, IViewEmployee, IViewOptimization, IViewFile
+    internal partial class Form1 : Form, IViewSchedule, IViewEmployee, IViewOptimization, IViewFile
     {
         private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];             //Tworzenie etykiet wyświetlających numer dziennej zmiany.
         private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
@@ -460,11 +460,11 @@ namespace Funkcje_GA
         }
 
         //Odświeżanie etykiet.
-        public virtual void UpdateEmployeeLabel(int employeeId, (string data, EmployeeLabelStatus status) info, bool tag)
+        public virtual void UpdateEmployeeLabel(int employeeId, (string data, EnumLabelStatus status) info, bool tag)
         {
             //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
             labelsPracownicy[employeeId].Text = info.Item1;
-            labelsPracownicy[employeeId].ForeColor = info.Item2 == EmployeeLabelStatus.Normal ? Color.Black : Color.Orange;
+            labelsPracownicy[employeeId].ForeColor = info.Item2 == EnumLabelStatus.Normal ? Color.Black : Color.Orange;
             
             //Uaktulaniamy tag.
             if(tag)

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfejs łączący UI z prezenterem optymalizacji.
-    public interface IViewOptimization : IUserNotifier
+    internal interface IViewOptimization : IUserNotifier
     {
         //Wywołano optymalizację.
         event Func<int, decimal, decimal, int, int, Task> OptimizationRequested;

@@ -8,7 +8,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Wczytywanie/zapis grafiku.
-    public interface IScheduleFileService
+    internal interface IScheduleFileService
     {
         //Wczytywanie grafiku.
         void WczytajGrafik(string plik);

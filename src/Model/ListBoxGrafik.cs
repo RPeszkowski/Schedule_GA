@@ -9,7 +9,7 @@ using System.Windows.Forms;
 namespace Funkcje_GA
 {
     //Ta klasa zawiera ListBoxy przedstawiające grafik.
-    public class ListBoxGrafik : ListBox
+    internal class ListBoxGrafik : ListBox
     {
         public int Id { get; }                 //Numer listBoxa.
 

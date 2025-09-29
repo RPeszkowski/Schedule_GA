@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    public interface IOptimization
+    internal interface IOptimization
     {
         //Informacja o przebiegu optymalizacji.
         event Action<string> ProgressUpdated;

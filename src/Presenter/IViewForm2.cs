@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Funkcje_GA
 {
-    public interface IViewForm2 : IUserNotifier
+    internal interface IViewForm2 : IUserNotifier
     {      
         //Zdarzenie zgłaszające, że użytkownik chce dodać pracownika do repozytorium.
         event Action<string, string, int, bool, bool> EmployeeAddedFromUI;

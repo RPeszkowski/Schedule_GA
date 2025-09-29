@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfejs do wyświetlania grafiku na UI.
-    public interface IViewSchedule : IUserNotifier
+    internal interface IViewSchedule : IUserNotifier
     {
         //Zdarzenie zgłaszające, że użytkownik chce dodać pracownika do zmiany.
         event Action<int, int> EmployeeAddedToShift;

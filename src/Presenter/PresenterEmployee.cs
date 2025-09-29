@@ -14,9 +14,9 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klas odpowiada za wyświetlanie informacji o pracownikach.
-    public class PresenterEmployee
+    internal class PresenterEmployee
     {
-        private readonly Dictionary<int, (string, EmployeeLabelStatus)> uiEmployeesControls;           //Tu przechowywane są kontrolki z danymi pracowników.
+        private readonly Dictionary<int, (string, EnumLabelStatus)> uiEmployeesControls;           //Tu przechowywane są kontrolki z danymi pracowników.
 
         private readonly IEmployeeManagement _employeeManager;                          //Instancja do zarządzania pracownikami.
         private readonly IScheduleManagement _scheduleManager;                          //Instancja do zarządzania grafikiem.
@@ -31,7 +31,7 @@ namespace Funkcje_GA
             this._viewEmployee = viewEmployee;
             this._viewForm2 = viewForm2;
 
-            uiEmployeesControls = new Dictionary<int, (string, EmployeeLabelStatus)>(MAX_LICZBA_OSOB);
+            uiEmployeesControls = new Dictionary<int, (string, EnumLabelStatus)>(MAX_LICZBA_OSOB);
 
             for (int i = 1; i <= MAX_LICZBA_OSOB; i++)
                 uiEmployeesControls[i] = ("", 0);
@@ -138,7 +138,7 @@ namespace Funkcje_GA
             //Sprawdzamy, czy id kontrolki jest poprawne. Jeśli tak, to resetujemy tekst.
             if (id < 1 || id > MAX_LICZBA_OSOB) throw new UIInvalidEmployeeControlIdException("Wybrano niepoprawny numer kontrolki");
 
-            uiEmployeesControls[id] = ("", (int)EmployeeLabelStatus.Normal);
+            uiEmployeesControls[id] = ("", (int)EnumLabelStatus.Normal);
 
             //Uaktualniamy opis pracownika.
             _viewEmployee.UpdateEmployeeLabel(id, uiEmployeesControls[id], false);
@@ -193,10 +193,10 @@ namespace Funkcje_GA
             //Jeśli osoba jest nie jest stazystą i może być na triażu w dzień i w nocy to jest wyświetlana na czarno.
             //Jeśli jest stażystą i nie może być na triażu w za dnia i/lub w nocy to jest podświetlana na pomarańczowo.
             if (employee.CzyTriazDzien && employee.CzyTriazNoc)
-                uiEmployeesControls[employee.Numer] = (employeeData, EmployeeLabelStatus.Normal);
+                uiEmployeesControls[employee.Numer] = (employeeData, EnumLabelStatus.Normal);
 
             else
-                uiEmployeesControls[employee.Numer] = (employeeData, EmployeeLabelStatus.Intern);
+                uiEmployeesControls[employee.Numer] = (employeeData, EnumLabelStatus.Intern);
 
             //Wywołujemy zdarzenie auktualniono opis pracownika.
             _viewEmployee.UpdateEmployeeLabel(employee.Numer, uiEmployeesControls[employee.Numer], true);

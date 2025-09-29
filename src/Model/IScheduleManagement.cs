@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Ten interfejs odpowiada za połączenie klasy ShiftManagement z resztą kodu.
-    public interface IScheduleManagement
+    internal interface IScheduleManagement
     {
         //Event wywoływany przy zmianie grafiku.
         event Action<Shift> ShiftChanged;

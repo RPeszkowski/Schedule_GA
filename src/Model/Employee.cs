@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Obiekty tej klasy to pracownicy.
-    public class Employee
+    internal class Employee
     {
         public int Numer { get; set; }                  //Numer osoby.
         public string Imie { get; set; }                //Imię osoby.

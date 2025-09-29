@@ -18,7 +18,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Form2 do dodawania/edytowania/usuwania osób.
-    public partial class Form2 : Form, IViewForm2, IEmployeeForm
+    internal partial class Form2 : Form, IViewForm2, IEmployeeForm
     {
         //Konstruktor. Aktualizacja listboxa z numerami aktywnych pracowników.
         public Form2()

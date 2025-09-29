@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfejs onka z dodawaniem/edycją/usuwaniem pracowników.
-    public interface IEmployeeForm
+    internal interface IEmployeeForm
     {
         //Pokaż okno.
         void ShowForm();

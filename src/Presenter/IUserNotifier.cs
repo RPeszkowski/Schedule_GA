@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Funkcje_GA
 {
     //Interfejs do powiadamiania użytkownika.
-    public interface IUserNotifier
+    internal interface IUserNotifier
     {
         //Powiadomienie użytkownika.
         void RaiseUserNotification(string message);

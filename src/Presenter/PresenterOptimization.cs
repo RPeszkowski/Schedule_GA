@@ -10,7 +10,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za połączenie optymalizacji z warstwy modelu z view.
-    public class PresenterOptimization
+    internal class PresenterOptimization
     {
         private readonly IViewOptimization _viewOptimization;
         private readonly IOptimization _optimization;           //Instancja do zarządzania optymzalizacją.

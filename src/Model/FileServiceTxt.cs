@@ -12,7 +12,7 @@ using static Funkcje_GA.CustomExceptions;
 namespace Funkcje_GA
 {
     //Ta klasa odpowiada za operacje na plikach.
-    public class FileServiceTxt
+    internal class FileServiceTxt
     {
         //Klasa odpowiada za zapis i odczyt danych grafiku do pliku "Grafik.txt".
         public class FileManagementGrafik : IScheduleFileService
@@ -21,7 +21,7 @@ namespace Funkcje_GA
             private readonly IScheduleManagement _scheduleManager;         //Instancja do zarządzania grafikiem.
 
             //Konstruktor
-            public FileManagementGrafik(IEmployeeManagement empManager, IScheduleManagement scheduleManager)
+            internal FileManagementGrafik(IEmployeeManagement empManager, IScheduleManagement scheduleManager)
             {
                 //Przypisanie instancji.
                 this._employeeManager = empManager;
@@ -181,7 +181,7 @@ namespace Funkcje_GA
         }
 
         //Klasa odpowiada za zapis i odczyt danych pracowników do pliku "Pracownicy.txt".
-        public class FileManagementPracownicy : IEmployeesFileService
+        internal class FileManagementPracownicy : IEmployeesFileService
         {
             private readonly IEmployeeManagement _employeeManager;               //Instancja do zarządzania pracownikami.
 

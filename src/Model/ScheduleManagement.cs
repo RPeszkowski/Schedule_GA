@@ -9,7 +9,7 @@ using static Funkcje_GA.CustomExceptions;
 
 namespace Funkcje_GA
 {
-    public class ScheduleManagement : IScheduleManagement
+    internal class ScheduleManagement : IScheduleManagement
     {
         private IEmployeeManagement _employeeManager;                   //Instancja menadżera pracowników.
         private readonly List<Shift> schedule;                                     //Lista przechowuje grafik.
