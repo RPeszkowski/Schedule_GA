@@ -1,6 +1,9 @@
 [PL]
 # Aplikacja do tworzenia grafiku pracowników szpitala z wykorzystaniem algorytmu genetycznego
 <i>C#, WinForms, VisualStudio.</i>
+
+[![.NET Build & Test](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml/badge.svg)](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml)
+
 <p align="justify"> Najważniejszym zadaniem aplikacji jest umożliwienie automatycznego rozdzielania funkcji (sala, triaż) zgodnie z grafikiem pomiędzy pracownikami Szpitalnego Oddziału Ratunkowego. W celu automatyzacji zadania wykorzystano specjalnie zaimplementowany algorytm optymalizacji genetycznej (GA), którego zadaniem jest przydzielenie funkcji zgodnie z przyjętymi założeniami. Instrukcję korzystania z aplikacji oraz dokładny opis działania algorytmu genetycznego i stawianych przed nim wymagań można zobaczyć w zakładce wiki repozytorium.</p>
 
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
@@ -95,10 +98,6 @@ Pełniejszy opis w zakładce Wiki.
 | ViewOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
 
 </div>
-
-## Testy
-
-![.NET](https://github.com/<twoje-użytkownik>/<repozytorium>/actions/workflows/dotnet-tests.yml/badge.svg)
 
 ## Wykorzystane technologie
 
