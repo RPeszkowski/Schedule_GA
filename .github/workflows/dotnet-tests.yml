@@ -39,4 +39,4 @@ jobs:
 
     # 5. Uruchom testy jednostkowe
     - name: Run tests
-      run: dotnet vstest ./tests/Funkcje_GA_xUnit_Test/bin/Release/Funkcje_GA_xUnit_Test.dll
+      run: dotnet vstest ./tests/Funkcje_GA_xUnit_Test/bin/Release/net9.0/Funkcje_GA_xUnit_Test.dll
