@@ -108,3 +108,10 @@ Pełniejszy opis w zakładce Wiki.
 * MS Visual Studio: 17.14.13
 * C#: 7.3
 
+## Zrzeczenie odpowiedzialności
+
+Projekt Schedule_GA udostępniany jest w formie „as-is” (takiej, jaka jest) i bez żadnych gwarancji, zarówno wyraźnych, jak i dorozumianych.  
+
+Korzystanie z tego oprogramowania odbywa się na własne ryzyko użytkownika. Autor nie ponosi odpowiedzialności za jakiekolwiek szkody, utratę danych, przestoje w pracy, ani jakiekolwiek inne konsekwencje wynikające z użycia tego projektu.  
+
+Zaleca się wykonywanie kopii zapasowych danych przed użyciem oraz testowanie oprogramowania w środowisku kontrolowanym.
