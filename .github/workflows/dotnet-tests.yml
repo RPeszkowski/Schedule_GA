@@ -37,6 +37,10 @@ jobs:
     - name: Build project with MSBuild
       run: msbuild Funkcje_GA.sln /p:Configuration=Release /p:SignManifests=false
 
+    # 4.5 Zbuduj projekt z testami
+    - name: Build test project
+      run: msbuild ./tests/Funkcje_GA_xUnit_Test/Funkcje_GA_xUnit_Test.csproj /p:Configuration=Release /p:SignManifests=false
+
     # 5. Uruchom testy jednostkowe
     - name: Run tests
       run: dotnet vstest ./tests/Funkcje_GA_xUnit_Test/bin/Release/net9.0/Funkcje_GA_xUnit_Test.dll
