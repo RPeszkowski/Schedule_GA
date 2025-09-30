@@ -35,7 +35,7 @@ jobs:
   
     # 4. Zbuduj projekt
     - name: Build project with MSBuild
-      run: msbuild Funkcje_GA.sln /p:Configuration=Release
+      run: msbuild Funkcje_GA.sln /p:Configuration=Release /p:SignManifests=false
 
     # 5. Uruchom testy jednostkowe
     - name: Run tests
