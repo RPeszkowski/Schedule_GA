@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Xunit;
 using Funkcje_GA;
 using static Funkcje_GA.Constants;
@@ -291,4 +292,5 @@ namespace Funkcje_GA_xUnit_Test
         }
     }
 }
+
 
