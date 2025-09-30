@@ -1,0 +1,21 @@
+# Changelog
+Wszystkie istotne zmiany w tym projekcie będą dokumentowane w tym pliku.
+
+Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/),  
+a wersjonowanie zgodne z [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+### Dodane
+
+### Zmienione
+
+### Usunięte
+
+---
+
+## [1.0.0] - 2025-09-29
+### Dodane
+- Pierwsze stabilne wydanie projektu Schedule_GA.
+- GUI umożliwiające dodawanie/edytowanie/usuwanie pracowników, przypisywanie pracowników do zmian i rozdzielanie funkcji.
+- Możliwość automatycznego rozdzielenia funkcji z wykorzystaniem algorytmu genetycznego.
+- Zapis/odczyt bazy pracowników i grafiku na kazdy miesiąc.
