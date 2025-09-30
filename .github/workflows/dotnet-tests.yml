@@ -1,6 +1,5 @@
 name: .NET Build & Test
 
-# Uruchamiaj workflow przy pushu lub pull request do głównej gałęzi
 on:
   push:
     branches: [ main ]
@@ -15,32 +14,29 @@ jobs:
     # 1. Pobierz repozytorium
     - uses: actions/checkout@v3
 
-    # 2. Zainstaluj .NET SDK
+    # 2. Zainstaluj .NET SDK (tylko jeśli potrzebujesz np. do analyzers)
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '9.0.x'
 
     # 3. Przywróć zależności
-    - name: Restore dependencies
-      run: dotnet restore
-
-    # 3,5. Dodaj pakiety nuget
     - name: Restore NuGet packages
       run: nuget restore Funkcje_GA.sln
-    
-    # 3,75 Setup MSBuild
+
+    # 4. Setup MSBuild
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.1
-  
-    # 4. Zbuduj projekt
+      uses: microsoft/setup-msbuild@v2
+
+    # 5. Setup VSTest
+    - name: Setup VSTest
+      uses: darenm/Setup-VSTest@v1
+
+    # 6. Zbuduj solution
     - name: Build project with MSBuild
       run: msbuild Funkcje_GA.sln /p:Configuration=Release /p:SignManifests=false
 
-    # 4.5 Zbuduj projekt z testami
-    - name: Build test project
-      run: msbuild ./tests/Funkcje_GA_xUnit_Test.csproj /p:Configuration=Release /p:SignManifests=false
-
-    # 5. Uruchom testy jednostkowe
+    # 7. Uruchom testy jednostkowe
     - name: Run tests
-      run: dotnet test ./tests/Funkcje_GA_xUnit_Test.csproj --configuration Release
+      run: |
+        vstest.console.exe .\tests\Funkcje_GA_xUnit_Test\bin\Release\net472\Funkcje_GA_xUnit_Test.dll
