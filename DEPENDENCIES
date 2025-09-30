@@ -4,7 +4,7 @@ Projekt **Schedule_GA** korzysta z następujących bibliotek NuGet:
 |--------|--------|----------|-------------------------|
 | Castle.Core | 5.1.1 | Apache 2.0 | TAK |
 | Microsoft.TestPlatform.ObjectModel | 17.13.0 | MIT | TAK |
-| Moq | 4.20.72 | MIT | TAK |
+| Moq | 4.20.72 | BSD-3-Clause | TAK |
 | Serilog | 4.3.0 | Apache 2.0 | TAK |
 | Serilog.Sinks.File | 7.0.0 | Apache 2.0 | TAK |
 | System.Buffers | 4.5.1 | MIT | TAK |
