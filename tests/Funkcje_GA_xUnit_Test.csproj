@@ -18,10 +18,7 @@
     <ProjectReference Include="..\src\Funkcje_GA.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
-
 </Project>
+
 
 
