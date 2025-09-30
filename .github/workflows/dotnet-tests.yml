@@ -43,4 +43,4 @@ jobs:
 
     # 5. Uruchom testy jednostkowe
     - name: Run tests
-      run: vstest.console.exe ./tests/Funkcje_GA_xUnit_Test/bin/Release/Funkcje_GA_xUnit_Test.dll
+      run: dotnet test ./tests/Funkcje_GA_xUnit_Test/Funkcje_GA_xUnit_Test.csproj --configuration Release
