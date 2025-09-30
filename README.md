@@ -100,7 +100,7 @@ Pełniejszy opis w zakładce Wiki.
 
 Projekt korzysta z bibliotek open-source:
 * Serilog – Apache 2.0
-* Moq – MIT
+* Moq – BSD-3-Clause
 * xUnit – Apache 2.0
 
 ## Informacje o wersji:
