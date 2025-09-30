@@ -25,6 +25,10 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
+    # 3,5. Dodaj pakiety nuget
+    - name: Restore NuGet packages
+      run: nuget restore ./src/Funkcje_GA.csproj
+
     # 4. Zbuduj projekt
     - name: Build
       run: dotnet build --no-restore --configuration Release
