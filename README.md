@@ -96,6 +96,10 @@ Pełniejszy opis w zakładce Wiki.
 
 </div>
 
+## Testy
+
+![.NET](https://github.com/<twoje-użytkownik>/<repozytorium>/actions/workflows/dotnet-tests.yml/badge.svg)
+
 ## Wykorzystane technologie
 
 Projekt korzysta z bibliotek open-source:
