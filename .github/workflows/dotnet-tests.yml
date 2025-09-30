@@ -30,8 +30,8 @@ jobs:
       run: nuget restore Funkcje_GA.sln
 
     # 4. Zbuduj projekt
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+    - name: Build project with MSBuild
+      run: msbuild Funkcje_GA.sln /p:Configuration=Release
 
     # 5. Uruchom testy jednostkowe
     - name: Run tests
