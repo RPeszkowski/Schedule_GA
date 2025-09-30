@@ -39,7 +39,7 @@ jobs:
 
     # 4.5 Zbuduj projekt z testami
     - name: Build test project
-      run: msbuild ./tests/Funkcje_GA_xUnit_Test/Funkcje_GA_xUnit_Test.csproj /p:Configuration=Release /p:SignManifests=false
+      run: msbuild ./tests/Funkcje_GA_xUnit_Test.csproj /p:Configuration=Release /p:SignManifests=false
 
     # 5. Uruchom testy jednostkowe
     - name: Run tests
