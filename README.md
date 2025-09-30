@@ -98,10 +98,10 @@ Pełniejszy opis w zakładce Wiki.
 
 ## Wykorzystane technologie
 
-* C#, WinForms.
-* Moq - do testów jednostkowych.
-* Serilog - do logowania zdarzeń.
-* xUnit - do testów jednostkowych.
+Projekt korzysta z bibliotek open-source:
+* Serilog – Apache 2.0
+* Moq – MIT
+* xUnit – Apache 2.0
 
 ## Informacje o wersji:
 * .Net: 4.7.2
