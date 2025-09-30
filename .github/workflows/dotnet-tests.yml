@@ -39,4 +39,4 @@ jobs:
     # 7. Uruchom testy jednostkowe
     - name: Run tests
       run: |
-        vstest.console.exe .\tests\Funkcje_GA_xUnit_Test\bin\Release\net472\Funkcje_GA_xUnit_Test.dll
+        vstest.console.exe .\tests\bin\Release\net472\Funkcje_GA_xUnit_Test.dll
