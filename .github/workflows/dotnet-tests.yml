@@ -27,7 +27,7 @@ jobs:
 
     # 3,5. Dodaj pakiety nuget
     - name: Restore NuGet packages
-      run: nuget restore ./Schedule_GA.sln
+      run: nuget restore Funkcje_GA.sln
 
     # 4. Zbuduj projekt
     - name: Build
