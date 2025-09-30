@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Funkcje_GA;
 using Moq;
 using Xunit;
@@ -502,3 +503,4 @@ namespace Funkcje_GA_xUnit_Test
         }
     }
 }
+
