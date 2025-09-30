@@ -18,4 +18,4 @@ a wersjonowanie zgodne z [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Pierwsze stabilne wydanie projektu Schedule_GA.
 - GUI umożliwiające dodawanie/edytowanie/usuwanie pracowników, przypisywanie pracowników do zmian i rozdzielanie funkcji.
 - Możliwość automatycznego rozdzielenia funkcji z wykorzystaniem algorytmu genetycznego.
-- Zapis/odczyt bazy pracowników i grafiku na kazdy miesiąc.
+- Zapis/odczyt bazy pracowników i grafiku na każdy miesiąc.
