@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Funkcje_GA.Model;
 using Xunit.Sdk;
 using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
@@ -12,16 +13,16 @@ namespace Funkcje_GA
     public class ScheduleManagement : IScheduleManagement
     {
         private IEmployeeManagement _employeeManager;                   //Instancja menadżera pracowników.
-        private readonly List<Shift> schedule;                                     //Lista przechowuje grafik.
+        private readonly List<IShift> schedule;                                     //Lista przechowuje grafik.
 
         //Konstruktor
         public ScheduleManagement(IEmployeeManagement EmpManager)
         {
             //Tworzymy pusty grafik i instancję employeeManager.
-            schedule = new List<Shift>(2 * LICZBA_DNI);
+            schedule = new List<IShift>(2 * LICZBA_DNI);
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
-                Shift newShift = new Shift(i);
+                IShift newShift = new Shift(i);
                 schedule.Add(newShift);
             }
 
@@ -37,7 +38,7 @@ namespace Funkcje_GA
         }
 
         //Event wywoływany przy zmianie grafiku.
-        public event Action<Shift> ShiftChanged;
+        public event Action<IEnumerable<IShift>> ShiftChanged;
 
         //Dodawanie pracownika do grafiku.
         public void AddToShift(int shiftId, int employeeId)
@@ -46,25 +47,27 @@ namespace Funkcje_GA
             ShiftValidate(shiftId, employeeId);
 
             Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
-            Shift shift = schedule[shiftId];        //Zmiana.                           //Zmiana.
+            var shift = schedule[shiftId];                                 //Zmiana.
+            var result = new List<IShift>();            //Zmiany, do których dodano pracownika.
 
             //Jeżeli pracownika nie ma na zmianie to go dodajemy, inkrementujemy wymiar etatu i odświeżamy listboxa.
-            if (!shift.PresentEmployees.Contains(employee))
+            if (shift.AddEmployeeToShift(employee))
             {
-                //Próbujemy dodać pracownika do zmiany.
-                shift.PresentEmployees.Add(employee);
                 try
                 {
+                    //Zmieniamy wymiar etatu.
                     _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu + 1.0);
+                    result.Add(shift);
                 }
 
-                //Jeśli się nie uda to rzucamy wyjatek.
+                //Jeśli się nie uda to rzucamy wyjątek.
                 catch(Exception ex)
                 {
                     throw new ScheduleEmployeeManagerException($"Nie udało się dodać pracownika do zmiany {ex.Message}.", ex);
                 }
 
-                ShiftChanged?.Invoke(shift);
+                //Wołamy subskrybenta.
+                ShiftChanged?.Invoke(result);
             }
         }
 
@@ -76,7 +79,7 @@ namespace Funkcje_GA
             int nrTriaz1;                                   //Numer pierwszego pracownika, który ma triaż.
             int nrTriaz2;                                   //Numer drugiego pracownika, który ma triaż.
             bool[] numerOsoby = new bool[MAX_LICZBA_BITOW]; //Numer osoby binarnie.
-            Shift shift;                                    //Zmiana.
+            IShift shift;                                    //Zmiana.
 
             //Dla każdej zmiany zdekoduj i dodaj funkcje.
             for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
@@ -84,132 +87,70 @@ namespace Funkcje_GA
                 shift = schedule[nrZmiany];             //Zmiana.
 
                 //Sprawdzamy, czy w danym miesiącu istnieje ta zmiana.
-                if (shift.PresentEmployees.Count == 0)
+                if (shift.GetEmployees().Count() == 0)
                     continue;
 
-                //Sprawdzamy, czy danego dnia są dyzury.
-                if (schedule[nrZmiany].PresentEmployees.Count > 0)
+                //Pobieramy zapisany binarnie numer osoby, która ma salę i dekodujemy.
+                Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany, numerOsoby, 0, MAX_LICZBA_BITOW);
+                nrSala = DecodeEmployeeNumber(numerOsoby);
+
+                //Pobieramy zapisany binarnie numer pierwszej osoby, która ma triaż i dekodujemy.
+                Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
+
+                //Dekodujemy numer.
+                nrTriaz1 = DecodeEmployeeNumber(numerOsoby);
+
+                //Pobieramy zapisany binarnie numer drugiej osoby, która ma triaż i dekodujemy.
+                Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + 2 * MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
+                nrTriaz2 = DecodeEmployeeNumber(numerOsoby);
+
+                //Pobieramy numer zmiany i sprawdzamy, czy dane z optymalizacji są poprawne.            
+                if (nrSala >= shift.GetEmployees().Count()
+                    || nrTriaz1 >= shift.GetEmployees().Count()
+                    || nrTriaz2 >= shift.GetEmployees().Count())
                 {
-                    //Pobieramy zapisany binarnie numer osoby, która ma salę i dekodujemy.
-                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany, numerOsoby, 0, MAX_LICZBA_BITOW);
-                    nrSala = DecodeEmployeeNumber(numerOsoby);
-
-                    //Pobieramy zapisany binarnie numer pierwszej osoby, która ma triaż i dekodujemy.
-                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
-
-                    //Dekodujemy numer.
-                    nrTriaz1 = DecodeEmployeeNumber(numerOsoby);
-
-                    //Pobieramy zapisany binarnie numer drugiej osoby, która ma triaż i dekodujemy.
-                    Array.Copy(optymalneRozwiazanie, 3 * MAX_LICZBA_BITOW * nrZmiany + 2 * MAX_LICZBA_BITOW, numerOsoby, 0, MAX_LICZBA_BITOW);
-                    nrTriaz2 = DecodeEmployeeNumber(numerOsoby);
-
-                    //Pobieramy numer zmiany i sprawdzamy, czy dane z optymalizacji są poprawne.            
-                    if (nrSala >= shift.PresentEmployees.Count
-                        || nrTriaz1 >= shift.PresentEmployees.Count
-                        || nrTriaz2 >= shift.PresentEmployees.Count)
-                    {
-                        throw new ScheduleFunctionEncodingException(
-                            $"Jeden z numerów: {nrSala}, {nrTriaz1} lub {nrTriaz2} jest większy bądź równy liczbie pracowników");
-                    }
-
-                    //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
-                    if (nrSala == nrTriaz1)
-                        throw new ScheduleFunctionEncodingException(
-                            $"Numer: {nrSala}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
-
-                    //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
-                    if (nrSala == nrTriaz2)
-                        throw new ScheduleFunctionEncodingException(
-                            $"Numer: {nrSala}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
-
-                    //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
-                    if (nrTriaz2 == nrTriaz1)
-                        throw new ScheduleFunctionEncodingException(
-                            $"Numer: {nrTriaz1}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
-
-                    //Przypisanie funkcji.
-                    AssignFunctionToEmployee(shift.Id, shift.PresentEmployees[nrSala].Numer, FunctionTypes.Sala);
-                    AssignFunctionToEmployee(shift.Id, shift.PresentEmployees[nrTriaz1].Numer, FunctionTypes.Triaz);
-                    AssignFunctionToEmployee(shift.Id, shift.PresentEmployees[nrTriaz2].Numer, FunctionTypes.Triaz);
+                    throw new ScheduleFunctionEncodingException(
+                        $"Jeden z numerów: {nrSala}, {nrTriaz1} lub {nrTriaz2} jest większy bądź równy liczbie pracowników");
                 }
+
+                //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
+                if (nrSala == nrTriaz1)
+                    throw new ScheduleFunctionEncodingException(
+                        $"Numer: {nrSala}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
+
+                //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
+                if (nrSala == nrTriaz2)
+                    throw new ScheduleFunctionEncodingException(
+                        $"Numer: {nrSala}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
+
+                //Sprawdzamy, czy dana osoba nie ma dwóch funkcji.
+                if (nrTriaz2 == nrTriaz1)
+                    throw new ScheduleFunctionEncodingException(
+                        $"Numer: {nrTriaz1}, na zmianie {nrZmiany} ma przypisane dwie funkcje");
+
+                //Przypisanie funkcji.
+                AssignFunctionToEmployee(nrZmiany, shift.GetEmployees().ToList()[nrSala].Numer, FunctionTypes.Sala);
+                AssignFunctionToEmployee(nrZmiany, shift.GetEmployees().ToList()[nrTriaz1].Numer, FunctionTypes.Triaz);
+                AssignFunctionToEmployee(nrZmiany, shift.GetEmployees().ToList()[nrTriaz2].Numer, FunctionTypes.Triaz);
             }
         }
 
         //Zmieniamy funkcje pracownika.
         public void AssignFunctionToEmployee(int shiftId, int employeeId, FunctionTypes function)
         {
-            bool flagInvoke = false;                         //Oznacza konieczność odświeżenia kontrolki grafiku.
-
             //Sprawdzamy, czy Id jest poprawne.
             ShiftValidate(shiftId, employeeId);
 
             Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
-            Shift shift = schedule[shiftId];        //Zmiana.
+            var shift = schedule[shiftId];        //Zmiana.
+            var result = new List<IShift>();            //Zmiany, do których dodano pracownika.
 
-            //Sprawdzamy, czy pracownik jest na zmianie.
-            if (!shift.PresentEmployees.Contains(employee)) return;
+            //Przypisujemy funkcje i w razie czego wzywamy presentera.
+            if (shift.AssignFunction(employee, function))
+                result.Add(shift);            //Zmiany, do których przypisano funkcje.
 
-            //Przypisujemy funkcje.
-            switch (function)
-            {
-                //Przypisanie do bez funkcji.
-                case FunctionTypes.Bez_Funkcji:
-                    //Jeśli miał salę to usuwamy i wzywamy.
-                    if (shift.SalaEmployees.Contains(employee))
-                    {
-                        shift.SalaEmployees.Remove(employee);
-                        flagInvoke = true;
-                    }
-
-                    //Jeśli miał triaż to usuwamy i wzywamy.
-                    if (shift.TriazEmployees.Contains(employee))
-                    {
-                        shift.TriazEmployees.Remove(employee);
-                        flagInvoke = true;
-                    }
-                    break;
-
-                //Przypisanie do sali.
-                case FunctionTypes.Sala:
-                    //Jeśli miał triaż to zamieniamy na salę i wzywamy.
-                    if (shift.TriazEmployees.Contains(employee))
-                    {
-                        shift.TriazEmployees.Remove(employee);
-                        shift.SalaEmployees.Add(employee);
-                        flagInvoke = true;
-                    }
-
-                    //Jeśli był bez funkcji do dopisujemy salę i wzywamy.
-                    else if (!shift.SalaEmployees.Contains(employee))
-                    {
-                        shift.SalaEmployees.Add(employee);
-                        flagInvoke = true;
-                    }
-                    break;
-
-                //Przypisanie do triazu.
-                case FunctionTypes.Triaz:
-                    //Jeśli miał salę to zamieniamy na triaż i wzywamy.
-                    if (shift.SalaEmployees.Contains(employee))
-                    {
-                        shift.SalaEmployees.Remove(employee);
-                        shift.TriazEmployees.Add(employee);
-                        flagInvoke = true;
-                    }
-
-                    //Jeśli był bez funkcji do dopisujemy salę i wzywamy.
-                    else if (!shift.TriazEmployees.Contains(employee))
-                    {
-                        shift.TriazEmployees.Add(employee);
-                        flagInvoke = true;
-                    }
-                    break;
-            }
-
-            //Wywołanie po zmianie funkcji.
-            if (flagInvoke)
-                ShiftChanged?.Invoke(shift);
+            //Event.
+            ShiftChanged?.Invoke(result);
         }
 
         //Dekodujemy numer pracownika na podstawie danych z rozwiązania problemu optymalizacji.
@@ -229,7 +170,7 @@ namespace Funkcje_GA
         }
 
         //Pobierz zmianę o określonym Id.
-        public Shift GetShiftById(int id)
+        public IShift GetShiftById(int id)
         {
             //Sprawdzamy, czy Id jest poprawne.
             if (id < 0 || id >= schedule.Count)
@@ -253,7 +194,7 @@ namespace Funkcje_GA
             if(schedule[shiftId] == null) throw new ArgumentNullException("Zmiana nie została utworzona.");        //Zmiana.
         }
 
-        //Zwraca zmiany i pełnione na nich funkcje danego pracownika.
+        //Zwraca numery zmian i pełnione na nich funkcje danego pracownika.
         public IEnumerable<(int shiftId, FunctionTypes function)> GetShiftsForEmployee(int employeeId)
         {
             var result = new List<(int, FunctionTypes function)> ();                        //Lista zmian i pełnionych funkcji.
@@ -265,22 +206,24 @@ namespace Funkcje_GA
             if (_employeeManager.GetEmployeeById(employeeId) == null) throw new ArgumentNullException("Osoba nie istnieje.");     //Pracownik - sprawdzamy null.
 
             //Sprawdzamy po kolei każdą zmianę.
-            foreach (var shift in schedule)
+            for (int nrZmiany = 0; nrZmiany < 2*LICZBA_DNI; nrZmiany++)
             {
+                var shift = schedule[nrZmiany];                            //Pobieramy zmianę.
+
                 //Sprawdzamy, czy pracownik występuje.
-                if (shift.PresentEmployees.Any(e => e.Numer == employeeId))
+                if (shift.GetEmployees().Any(e => e.Numer == employeeId))
                 {
                     FunctionTypes function = FunctionTypes.Bez_Funkcji;          //Funkcja pracownika.
 
                     //Sprawdzamy, czy pracownik ma salę.
-                    if (shift.SalaEmployees.Any(e => e.Numer == employeeId))
+                    if (shift.GetEmployeesByFunction(FunctionTypes.Sala).Any(e => e.Numer == employeeId))
                         function = FunctionTypes.Sala;
 
                     //Sprawdzamy, czy pracownik ma triaż.
-                    if (shift.TriazEmployees.Any(e => e.Numer == employeeId))
+                    if (shift.GetEmployeesByFunction(FunctionTypes.Triaz).Any(e => e.Numer == employeeId))
                         function = FunctionTypes.Triaz;
 
-                    result.Add((shift.Id, function));
+                    result.Add((nrZmiany, function));
                 }
             }
 
@@ -290,14 +233,17 @@ namespace Funkcje_GA
         //Usuwanie całego grafiku.
         public void RemoveAll()
         {
+            var result = new List<IShift>();            //Zmiany wyczyszczone.
+
             //Czyścimy wszystkie zmiany i odświeżamy kontrolki.
-            foreach (Shift shift in schedule)
+            foreach (var shift in schedule)
             {
-                shift.PresentEmployees.Clear();
-                shift.SalaEmployees.Clear();
-                shift.TriazEmployees.Clear();
-                ShiftChanged?.Invoke(shift);
+                if(shift.ClearShift())
+                    result.Add(shift);
             }
+
+            //Event.
+            ShiftChanged?.Invoke(result);
 
             //Usuwamy dane o wymiarze etatu.
             foreach (Employee employee in _employeeManager.GetAllActive())
@@ -311,19 +257,18 @@ namespace Funkcje_GA
             ShiftValidate(shiftId, employeeId);
 
             Employee employee = _employeeManager.GetEmployeeById(employeeId);       //Pracownik.
-            Shift shift = schedule[shiftId];        //Zmiana.
+            var shift = schedule[shiftId];        //Zmiana.
+            var result = new List<IShift>();            //Zmiany, z których usunięto pracownika.
 
-            //Jeśli pracownik był na zmianie to go usuwamy.
-            if (shift.PresentEmployees.Contains(employee))
+            //Jeśli pracownik był na zmianie to dekrementujemy wymiar etatu.
+            if (shift.RemoveEmployeeFromShift(employee))
             {
-                shift.PresentEmployees.Remove(employee);
-                shift.SalaEmployees.Remove(employee);
-                shift.TriazEmployees.Remove(employee);
-
                 //Próbujemy usunąć pracownika.
                 try
                 {
+                    //Edytujemy wymiar etatu.
                     _employeeManager.EmployeeEdit(employee, employee.WymiarEtatu - 1.0);
+                    result.Add(shift);
                 }
 
                 //Jeśli się nie udało rzucamy wyjątek.
@@ -331,7 +276,9 @@ namespace Funkcje_GA
                 {
                     throw new ScheduleEmployeeManagerException($"Nie udało się dodać pracownika do zmiany {ex.Message}.", ex);
                 }
-                ShiftChanged?.Invoke(shift);
+
+                //Event.
+                ShiftChanged?.Invoke(result);
             }
         }
     }

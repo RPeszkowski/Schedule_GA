@@ -16,6 +16,6 @@ namespace Funkcje_GA
         void RaiseUserNotificationWarning(string message);
 
         //Uaktualniamy etykietę z raportem.
-        void UdpateOptimizationProgress(string raport);
+        void UpdateOptimizationProgress(string raport);
     }
 }

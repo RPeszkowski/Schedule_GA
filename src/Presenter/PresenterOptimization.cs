@@ -24,7 +24,7 @@ namespace Funkcje_GA
             this._viewOptimization = viewOptimization;
 
             //Subskrybujemy postęp optymalizacji.
-            _optimization.ProgressUpdated += (raport) => _viewOptimization.UdpateOptimizationProgress(raport);
+            _optimization.ProgressUpdated += (raport) => _viewOptimization.UpdateOptimizationProgress(raport);
 
             //Subskrybujemy pojawienie się warningu.
             _optimization.WarningRaised += (message) => _viewOptimization.RaiseUserNotificationWarning(message);

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Funkcje_GA.Presenter;
 using Serilog;
 using static Funkcje_GA.FileServiceTxt;
 using static Funkcje_GA.Form1;
@@ -41,8 +42,10 @@ namespace Funkcje_GA
             IEmployeesFileService _fileManagerPracownicy = new FileManagementPracownicy(_employeeManager);          //Instancja do zarządzania plikiem pracowników.
             IOptimization _optimization = new Optimization(_employeeManager, _scheduleManager);                     //Instancja do optymalizacji.
 
+            IScheduleRendererWinforms _scheduleRenderer = new ScheduleRendererListBox();                                     //Instancja do generowania kontrolek grafiku.
+           
             var _viewForm2 = new Form2();                       //Tworzymy Form2.
-            var _viewForm1 = new Form1(_viewForm2);             //Tworzymy Form1.
+            var _viewForm1 = new Form1(_viewForm2, _scheduleRenderer);             //Tworzymy Form1.
 
             var _presenterFile = new PresenterFile(_fileManagerPracownicy, _fileManagerGrafik, _viewForm1, _viewForm2);      //Instancja do zarządzania plikami grafiku i pracowników w warstwie prezentera.
             var _presenterOptimization = new PresenterOptimization(_optimization, _scheduleManager, _viewForm1);      //Instancja do zarządzania optymalizacją w warstwie prezentera.

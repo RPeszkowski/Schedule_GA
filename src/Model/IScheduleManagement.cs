@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Funkcje_GA.Model;
 
 namespace Funkcje_GA
 {
@@ -10,7 +11,7 @@ namespace Funkcje_GA
     public interface IScheduleManagement
     {
         //Event wywoływany przy zmianie grafiku.
-        event Action<Shift> ShiftChanged;
+        event Action<IEnumerable<IShift>> ShiftChanged;
 
         //Dodawanie pracownika do zmiany.
         void AddToShift(int shiftId, int employeeId);
@@ -22,7 +23,7 @@ namespace Funkcje_GA
         void AssignFunctionToEmployee(int shiftId, int employeeId, FunctionTypes function);
 
         //Zwraca zmianę.
-        Shift GetShiftById(int id);
+        IShift GetShiftById(int id);
 
         //Zwraca zmiany pracownika i pełnione funkcje.
         IEnumerable<(int shiftId, FunctionTypes function)> GetShiftsForEmployee(int employeeId);

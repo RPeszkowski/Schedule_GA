@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Funkcje_GA.Model;
 using Serilog;
 using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
@@ -35,7 +36,7 @@ namespace Funkcje_GA
             }
 
             //Subskrybujemy event - modyfikacja zmiany.
-            _scheduleManager.ShiftChanged += shift => UpdateScheduleControl(shift);
+            _scheduleManager.ShiftChanged += shifts => UpdateScheduleControl(shifts);
 
             //Subskrybujemy event - dodanie pracownika do zmiany.
             _viewSchedule.EmployeeAddedToShift += (shiftId, employeeId) =>
@@ -59,68 +60,83 @@ namespace Funkcje_GA
         //Usuwamy zaznaczone dyżury.
         private void RemoveSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected)
         {
+            var result = new List<IShift>();                               //Lista dyżurów do usunięcia.
             foreach (var (shiftId, employeeId) in selected)
             {
+                //Usuwamy pracownika.
                 _scheduleManager.RemoveFromShift(shiftId, employeeId);
-                UpdateScheduleControl(_scheduleManager.GetShiftById(shiftId));
+                result.Add(_scheduleManager.GetShiftById(shiftId));
             }
+
+            //Uaktualniamy kontrolkę.
+            UpdateScheduleControl(result);
         }
 
         //Przypisujemy funkcje.
         private void SetSelectedShifts(IEnumerable<(int ShiftId, int EmployeeId)> selected, FunctionTypes function)
         {
+            var result = new List<IShift>();                               //Lista dyżurów do zmiany.
+
             //Przypisujemy w oparciu o argument function.
             foreach (var (shiftId, employeeId) in selected)
             {
+                //Zmieniamy dyżury.
                 _scheduleManager.AssignFunctionToEmployee(shiftId, employeeId, function);
-                UpdateScheduleControl(_scheduleManager.GetShiftById(shiftId));
+                result.Add(_scheduleManager.GetShiftById(shiftId));
             }
+
+            //Uaktualniamy kontrolki.
+            UpdateScheduleControl(result);
         }
 
         //Wyświetlamy dane wybranej zmiany.
-        public void UpdateScheduleControl(Shift shift)
+        public void UpdateScheduleControl(IEnumerable<IShift> shifts)
         {
-            //Czyścimy kontrolkę.
-            if (uiScheduleControls.TryGetValue(shift.Id, out List<string> list))
+            foreach (var shift in shifts)
             {
-                list.Clear();
-            }
-
-            else return;
-
-            //Wyświetlamy pracowników
-            if (shift.PresentEmployees.Count > 0)
-            {
-                //Próbujemy dodać pracowników do kontrolki.
-                try
+                //Czyścimy kontrolkę.
+                if (uiScheduleControls.TryGetValue(shift.Id, out List<string> list))
                 {
-                    for (int nrOsoby = 0; nrOsoby < shift.PresentEmployees.Count; nrOsoby++)
+                    list.Clear();
+                }
+
+                else return;
+
+                var employees = shift.GetEmployees();       //Pobieramy pracowników.
+
+                //Wyświetlamy pracowników
+                if (shift.GetEmployees().Count() > 0)
+                {
+                    //Próbujemy dodać pracowników do kontrolki.
+                    try
                     {
-                        //Dopisujemy pracownika, jeśli ma salę.
-                        if (shift.SalaEmployees.Any(emp => (shift.PresentEmployees[nrOsoby].Numer == emp.Numer)))
-                            uiScheduleControls[shift.Id].Add(shift.PresentEmployees[nrOsoby].Numer.ToString() + "s");
+                        for (int nrOsoby = 0; nrOsoby < employees.Count(); nrOsoby++)
+                        {
+                            //Dopisujemy pracownika, jeśli ma salę.
+                            if (shift.GetEmployeesByFunction(FunctionTypes.Sala).Any(emp => (employees.ToList()[nrOsoby].Numer == emp.Numer)))
+                                uiScheduleControls[shift.Id].Add(employees.ToList()[nrOsoby].Numer.ToString() + "s");
 
-                        //Dopisujemy pracownika, jeśli ma triaż.
-                        else if (shift.TriazEmployees.Any(emp => (shift.PresentEmployees[nrOsoby].Numer == emp.Numer)))
-                            uiScheduleControls[shift.Id].Add(shift.PresentEmployees[nrOsoby].Numer.ToString() + "t");
+                            //Dopisujemy pracownika, jeśli ma triaż.
+                            else if (shift.GetEmployeesByFunction(FunctionTypes.Triaz).Any(emp => (employees.ToList()[nrOsoby].Numer == emp.Numer)))
+                                uiScheduleControls[shift.Id].Add(employees.ToList()[nrOsoby].Numer.ToString() + "t");
 
-                        //Dopisujemy pracownika, jeśli nie ma funkcji.
-                        else
-                            uiScheduleControls[shift.Id].Add(shift.PresentEmployees[nrOsoby].Numer.ToString());
-
+                            //Dopisujemy pracownika, jeśli nie ma funkcji.
+                            else
+                                uiScheduleControls[shift.Id].Add(employees.ToList()[nrOsoby].Numer.ToString());
+                        }
                     }
+
+                    //Jeśli się nie udało to rzucamy wyjatek.
+                    catch (Exception ex)
+                    {
+                        throw new FormatException($"Kontrolka: {shift.Id} ma niepoprawne dane {ex.Message}.", ex);
+                    }
+                    ;
                 }
 
-                //Jeśli się nie udało to rzucamy wyjatek.
-                catch (Exception ex)
-                {
-                    throw new FormatException($"Kontrolka: {shift.Id} ma niepoprawne dane {ex.Message}.", ex);
-                }
-                ;
+                //Zmiana kontrolki.
+                _viewSchedule.UpdateShift(shift.Id, uiScheduleControls[shift.Id]);
             }
-
-            //Zmiana kontrolki.
-            _viewSchedule.UpdateShift(shift.Id, uiScheduleControls[shift.Id]);
         }
     }
 }

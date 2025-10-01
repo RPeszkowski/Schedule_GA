@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Funkcje_GA.Presenter;
 using Serilog;
 using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
@@ -158,7 +159,7 @@ namespace Funkcje_GA
         }
 
         //Funkcja realizowana po naciśnięciu etykiety pracownika.
-        public IEnumerable<(int shiftId, FunctionTypes function)> HandleEmployeeMouseDown(int employeeId)
+        public IEnumerable<(int shiftId, Color color)> HandleEmployeeMouseDown(int employeeId)
         {
             //Pobieramy pracownika.
             var employee = _employeeManager.GetEmployeeById(employeeId);
@@ -172,7 +173,28 @@ namespace Funkcje_GA
 
             foreach (var (shiftId, function) in shifts)
             {
-                yield return (shiftId, function);
+                Color color;                     //Kolor kontrolki.
+
+                switch (function)
+                {
+                    case FunctionTypes.Bez_Funkcji:
+                        color = Color.Red;
+                        break;
+
+                    case FunctionTypes.Sala:
+                        color = Color.Green;
+                        break;
+
+                    case FunctionTypes.Triaz:
+                        color = Color.Blue;
+                        break;
+
+                    default:
+                        color = Color.White;
+                        break;
+                }
+
+                yield return (shiftId, color);
             }
         }
 

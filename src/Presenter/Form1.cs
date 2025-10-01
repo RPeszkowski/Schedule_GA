@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using Funkcje_GA.Presenter;
 using Serilog;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using static Funkcje_GA.Constants;
@@ -31,11 +32,10 @@ namespace Funkcje_GA
 {
     internal partial class Form1 : Form, IViewSchedule, IViewEmployee, IViewOptimization, IViewFile
     {
-        private readonly System.Windows.Forms.Label[] labelsDzien = new System.Windows.Forms.Label[LICZBA_DNI];             //Tworzenie etykiet wyświetlających numer dziennej zmiany.
         private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
-        private readonly ListBoxGrafik[] listboxesSchedule = new ListBoxGrafik[2 * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
         
         private readonly IEmployeeForm _form2;                                              //Form2.
+        private readonly IScheduleRendererWinforms _scheduleRenderer;                               //Renderer do grafiku.
         protected readonly Dictionary<int, string> months = new Dictionary<int, string>(12)   //Miesiące.
         {
             {1, "Styczeń" }, {2, "Luty" }, {3, "Marzec" },
@@ -48,10 +48,11 @@ namespace Funkcje_GA
         private int currentYear;                                 //Obecny rok.
 
         //Konstruktor.
-        public Form1(IEmployeeForm form2)
+        public Form1(IEmployeeForm form2, IScheduleRendererWinforms scheduleRenderer)
         {
             //Przypisujemy menadżery.
             this._form2 = form2;
+            this._scheduleRenderer = scheduleRenderer;
 
             //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
@@ -61,6 +62,9 @@ namespace Funkcje_GA
 
             //Tworzymy etykiety pracowników.
             InitializeEmployeeControls();
+
+            //Tworzymy kontrolki daty.
+            InitializeDateControls();
         }
 
         //Zdarzenie - zmiana daty.
@@ -97,7 +101,7 @@ namespace Funkcje_GA
         public event Action ViewSaveSchedule;
 
         //Pytamy użytkownika.
-        public bool AskUserConfirmation(string message)
+        public virtual bool AskUserConfirmation(string message)
         {
             //Wyświetlamy MessageBox.
             var result = MessageBox.Show(message, "Potwierdzenie", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
@@ -109,10 +113,10 @@ namespace Funkcje_GA
         private void buttonBezFunkcji_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Zamieniamy zaznaczone dyżury na bez funkcji.
-            var selected = GetAllSelectedEmployeeIds();
+            var selected = _scheduleRenderer.GetAllSelectedEmployeeIds();
             SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Bez_Funkcji);
         }
 
@@ -120,7 +124,7 @@ namespace Funkcje_GA
         private void buttonClearAll_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Usuwamy grafik i wyświetlamy powiadomienie.
             ScheduleCleared?.Invoke();
@@ -130,7 +134,7 @@ namespace Funkcje_GA
         private void buttonDodajOsoby_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Wyświetlamy Form2.
             _form2.ShowForm();
@@ -140,10 +144,10 @@ namespace Funkcje_GA
         private void buttonSala_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Zamieniamy zaznaczone dyżury na sale.
-            var selected = GetAllSelectedEmployeeIds();
+            var selected = _scheduleRenderer.GetAllSelectedEmployeeIds();
             SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Sala);
         }
 
@@ -151,10 +155,10 @@ namespace Funkcje_GA
         private void buttonTriaz_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Zamieniamy zaznaczone dyżury na triaż.
-            var selected = GetAllSelectedEmployeeIds();
+            var selected = _scheduleRenderer.GetAllSelectedEmployeeIds();
             SelectedShiftsAssigned?.Invoke(selected, FunctionTypes.Triaz);
         }
 
@@ -162,10 +166,10 @@ namespace Funkcje_GA
         private void buttonUsunDyzur_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
 
             //Próbujemy usunąć zaznaczone dyżury.
-            var selected = GetAllSelectedEmployeeIds();
+            var selected = _scheduleRenderer.GetAllSelectedEmployeeIds();
             SelectedShiftsRemoved?.Invoke(selected);
         }
 
@@ -173,7 +177,7 @@ namespace Funkcje_GA
         private void buttonWczytajGrafik_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie i wczytujemy grafik.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
             ViewLoadSchedule?.Invoke();
         }
 
@@ -181,226 +185,24 @@ namespace Funkcje_GA
         private void buttonZapiszGrafik_Click(object sender, EventArgs e)
         {
             //Usuwamy podświetlenie i zapisujemy grafk.
-            UsunPodswietlenie();
+            _scheduleRenderer.UsunPodswietlenie();
             ViewSaveSchedule?.Invoke();
         }
 
         //Załadowanie Form1.
         public void Form1_Load(object sender, EventArgs e) { }
 
-        //Pobieramy numery zaznaczonych pracowników na wszytskich zmianach.
-        protected virtual IEnumerable<(int ShiftId, int EmployeeId)> GetAllSelectedEmployeeIds()
-        {
-            var result = new List<(int ShiftId, int EmployeeId)>();     //Zwracamy pracy element pracownik.
-
-            //Sprawdzamy po kolei którzy pracownicy i które zmiany są wybrane.
-            for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
-            {
-                int selectedIndex = listboxesSchedule[shiftId].SelectedIndex;  //Sprawdzamy zaznaczony indeks w danej kontrolce.
-
-                //Jeśli kontrolka ma zaznaczony element to pobieramy numer zaznaczonego pracownika.
-                if (selectedIndex != -1)
-                {
-                    try
-                    {
-                        int employeeId = listboxesSchedule[shiftId].GetNumber(selectedIndex);
-                        result.Add((shiftId, employeeId));
-                    }
-
-                    catch (Exception ex)
-                    {
-                        throw new FormatException($"Kontrolka: {shiftId} ma niepoprawne dane {ex.Message}.", ex);
-                    };
-                }
-            }
-
-            return result;
-        }
-
         //Wyświetlanie kolorów.
-        public virtual void HandleEmployeeMouseDown(IEnumerable<(int shiftId, FunctionTypes function)> highlights)
+        public virtual void HandleEmployeeMouseDown(IEnumerable<(int shiftId, Color color)> highlights)
         {
             //Wyświetlamy kolory.
-            foreach (var (shiftId, function) in highlights)
-            {
-                switch (function)
-                {
-                    case FunctionTypes.Bez_Funkcji:
-                        listboxesSchedule[shiftId].BackColor = Color.Red;
-                        break;
-
-                    case FunctionTypes.Sala:
-                        listboxesSchedule[shiftId].BackColor = Color.Green;
-                        break;
-
-                    case FunctionTypes.Triaz:
-                        listboxesSchedule[shiftId].BackColor = Color.Blue;
-                        break;
-                }
-            }
+            foreach (var (shiftId, color) in highlights)
+                _scheduleRenderer.GetControlById(shiftId).BackColor = color;
         }
 
-        //Tworzymy etykiety pracowników.
-        protected virtual void InitializeEmployeeControls()
+        //Inicjalizacja kontrolek związanych z wyborem daty.
+        protected virtual void InitializeDateControls()
         {
-            //Dodajemy etykiety wyświetlające dane pracowników do furmularza.
-            for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
-            {
-                //Dodawanie etykiet.
-                labelsPracownicy[nrOsoby] = new System.Windows.Forms.Label();
-                labelsPracownicy[nrOsoby].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                labelsPracownicy[nrOsoby].Size = new System.Drawing.Size(340, 40);
-                labelsPracownicy[nrOsoby].Text = "";
-
-                //Przypisujemy lambdy do zdarzeń drag and drop.
-                int _nrOsoby = nrOsoby;
-                labelsPracownicy[nrOsoby].MouseDown += (sender, e) =>
-                {
-                    //Usuwamy podświetlenie.
-                    UsunPodswietlenie();
-
-                    //Sprawdzamy, czy etykieta nie jest pusta.
-                    if (labelsPracownicy[_nrOsoby].Tag == null)
-                        return;
-
-                    //Wywołujemy event w presenterze.
-                    EmployeeLabelMouseDown?.Invoke(_nrOsoby);
-
-                    //Rozpoczynamy drag & drop.
-                    labelsPracownicy[_nrOsoby].DoDragDrop(labelsPracownicy[_nrOsoby].Tag.ToString(), DragDropEffects.Copy | DragDropEffects.Move);
-                };
-
-                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
-            }
-        }
-
-        //Tworzymy listboxy i etykiety grafiku.
-        protected virtual void InitializeScheduleControls()
-        {
-            //Tworzenie etykiet i dodawanie kontrolek grafiku.
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-            {
-                listboxesSchedule[nrZmiany] = new ListBoxGrafik(nrZmiany);
-                listboxesSchedule[nrZmiany].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                listboxesSchedule[nrZmiany].Size = new System.Drawing.Size(40, 400);
-                listboxesSchedule[nrZmiany].AllowDrop = true;
-
-                //Przypisujemy delegaty do zdarzeń drag and drop.
-                int _nrZmiany = nrZmiany;
-                listboxesSchedule[nrZmiany].DragEnter += (sender, e) =>
-                {
-                    //Jeśli etykieta nie była pusta, to kopiujemy numer osoby.
-                    if (e.Data.GetDataPresent(DataFormats.Text) && e.Data.GetData(DataFormats.Text).ToString().Length != 0)
-                        e.Effect = DragDropEffects.Copy;
-                    else
-                        e.Effect = DragDropEffects.None;
-                };
-
-                listboxesSchedule[nrZmiany].DragDrop += (sender, e) =>
-                {
-                    //Pobieramy dane i dodajemy osobę do zmiany.
-                    string pom = e.Data.GetData(DataFormats.Text).ToString();
-                    EmployeeAddedToShift?.Invoke(_nrZmiany, Convert.ToInt32(pom));
-                };
-
-                //Tworzymy etykiety dla dyżurów dziennych.
-                if (nrZmiany < LICZBA_DNI)
-                {
-                    //Tworzenie etykiet.
-                    labelsDzien[nrZmiany] = new System.Windows.Forms.Label();
-                    labelsDzien[nrZmiany].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                    labelsDzien[nrZmiany].Size = new System.Drawing.Size(340, 40);
-                    labelsDzien[nrZmiany].Text = (nrZmiany + 1).ToString();
-
-                    //Dodawanie kontrolek do formularza.
-                    tableLayoutPanel2.Controls.Add(labelsDzien[nrZmiany], nrZmiany, 0);
-                    tableLayoutPanel2.Controls.Add(listboxesSchedule[nrZmiany], nrZmiany, 1);
-                }
-
-                //Dodajemy listboxy dla dyżurów nocnych.
-                else
-                    tableLayoutPanel2.Controls.Add(listboxesSchedule[nrZmiany], nrZmiany - LICZBA_DNI, 2);
-            }
-        }
-
-        //Zmieniamy atrybut listboxów w zależności od miesiąca.
-        private void ListBoxesDropable(string currMonth, int currYear)
-        {
-            //Odblokowujemy allow drop we wszystkich listboxach.
-            foreach (var ctrl in listboxesSchedule)
-                ctrl.AllowDrop = true;
-
-            //Sprawdzamy, czy miesiąc ma 31 dni.
-            if (currMonth == "Styczeń" || currMonth == "Marzec" || currMonth == "Maj" || currMonth == "Lipiec"
-             || currMonth == "Sierpień" || currMonth == "Październik" || currMonth == "Grudzień")
-                return;
-
-            //Sprawdzamy, czy miesiąc ma 30 dni
-            if (currMonth == "Kwiecień" || currMonth == "Czerwiec" || currMonth == "Wrzesień" || currMonth == "Listopad")
-            {
-                listboxesSchedule[30].AllowDrop = false;
-                listboxesSchedule[61].AllowDrop = false;
-                return;
-            }
-
-            //Sprawdzamy, czy wybralismy luty.
-            if(currMonth == "Luty")
-            {
-                listboxesSchedule[29].AllowDrop = false;
-                listboxesSchedule[30].AllowDrop = false;
-                listboxesSchedule[60].AllowDrop = false;
-                listboxesSchedule[61].AllowDrop = false;
-
-                //Sprawdzamy, czy rok jest przestępny
-                int temp = Math.DivRem(currYear, 4, out int Rem);
-                if(Rem == 0)
-                {
-                    listboxesSchedule[28].AllowDrop = false;
-                    listboxesSchedule[59].AllowDrop = false;
-                }
-            }
-
-        }
-
-        //Wczytanie pracowników i grafiku. Subskrypcja zdarzeń.
-        public virtual void LoadAndSubscribe()
-        {
-            //Zdarzenie asynchroniczne po kliknięciu przycisku "Opt".
-            buttonOptymalizacja.Click += async (sender, e) =>
-            {
-                //Usuwamy podświetlenie.
-                UsunPodswietlenie();
-
-                //Dezaktywujemy wszystkie kontrolki z wyjątkiem etykiety labelRaport.
-                SetContolsEnabled(false);
-
-                int liczbaOsobnikow = 100;          //Liczba osobników.
-                decimal tol = 0.0000003m;           //Jeśli wartość funkcji celu jest mniejsza lub równa tol, to przerywamy optymalizację.
-                decimal tolX = 0.00000000001m;      //Minimalna zmiana funkcji celu powodująca zresetowanie liczby iteracji bez poprawy.
-                int maxIterations = 200000;         //Maksymalna liczba iteracji.
-                int maxConsIterations = 40000;      //maksymalna liczba iteracji bez poprawy.
-
-                //Zdarzenie - prośba o przeprowadzenie optymalizacji.
-                if (OptimizationRequested != null)
-                    await OptimizationRequested.Invoke(liczbaOsobnikow, tol, tolX, maxIterations, maxConsIterations);
-
-                //Po skończonej optymalizacji zapisujemy grafik.
-                SaveOptimalSchedule?.Invoke();
-
-                //Po skończonej optymalizacji aktywujemy kontrolki.
-                SetContolsEnabled(true);
-            };
-
-            //Usunięcia zaznaczenia i podświetlenia po kliknięciu form1.
-            this.Click += (sender, e) =>
-            {
-                for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-                {
-                    listboxesSchedule[nrZmiany].ResetBackColor();
-                    listboxesSchedule[nrZmiany].ClearSelected();
-                }
-            };
-
             //Wybrany aktualnie miesiąc i rok.
             currentMonth = months[DateTime.Now.Month];
             currentYear = DateTime.Now.Year;
@@ -431,13 +233,149 @@ namespace Funkcje_GA
                 DateChanged?.Invoke(comboBoxMonth.SelectedItem.ToString(), comboBoxYear.SelectedItem.ToString());
             };
             comboBoxYear.SelectedIndexChanged += (s, e) =>
-            {   
+            {
                 //Usuwamy grafik.
                 ScheduleCleared?.Invoke();
                 currentYear = Convert.ToInt32(comboBoxYear.SelectedItem);
                 ListBoxesDropable(currentMonth, currentYear);
                 DateChanged?.Invoke(comboBoxMonth.SelectedItem.ToString(), comboBoxYear.SelectedItem.ToString());
             };
+        }
+        
+        //Tworzymy etykiety pracowników.
+        protected virtual void InitializeEmployeeControls()
+        {
+            //Dodajemy etykiety wyświetlające dane pracowników do furmularza.
+            for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
+            {
+                //Dodawanie etykiet.
+                labelsPracownicy[nrOsoby] = new System.Windows.Forms.Label();
+                labelsPracownicy[nrOsoby].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+                labelsPracownicy[nrOsoby].Size = new System.Drawing.Size(340, 40);
+                labelsPracownicy[nrOsoby].Text = "";
+
+                //Przypisujemy lambdy do zdarzeń drag and drop.
+                int _nrOsoby = nrOsoby;
+                labelsPracownicy[nrOsoby].MouseDown += (sender, e) =>
+                {
+                    //Usuwamy podświetlenie.
+                    _scheduleRenderer.UsunPodswietlenie();
+
+                    //Sprawdzamy, czy etykieta nie jest pusta.
+                    if (labelsPracownicy[_nrOsoby].Tag == null)
+                        return;
+
+                    //Wywołujemy event w presenterze.
+                    EmployeeLabelMouseDown?.Invoke(_nrOsoby);
+
+                    //Rozpoczynamy drag & drop.
+                    labelsPracownicy[_nrOsoby].DoDragDrop(labelsPracownicy[_nrOsoby].Tag.ToString(), DragDropEffects.Copy | DragDropEffects.Move);
+                };
+
+                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
+            }
+        }
+
+        //Tworzymy listboxy i etykiety grafiku.
+        protected virtual void InitializeScheduleControls()
+        {
+            //Inicjalizacja kontrolek.
+            _scheduleRenderer.Initialize();
+
+            //Tworzenie etykiet i dodawanie kontrolek grafiku.
+            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+            {
+                //Tworzymy etykiety dla dyżurów dziennych.
+                if (nrZmiany < LICZBA_DNI)
+                {
+                    //Dodawanie kontrolek do formularza.
+                    tableLayoutPanel2.Controls.Add(_scheduleRenderer.GetLabel(nrZmiany), nrZmiany, 0);
+                    tableLayoutPanel2.Controls.Add(_scheduleRenderer.GetControlById(nrZmiany), nrZmiany, 1);
+                }
+
+                //Dodajemy listboxy dla dyżurów nocnych.
+                else
+                    tableLayoutPanel2.Controls.Add(_scheduleRenderer.GetControlById(nrZmiany), nrZmiany - LICZBA_DNI, 2);
+            }
+        }
+
+        //Zmieniamy atrybut listboxów w zależności od miesiąca.
+        private void ListBoxesDropable(string currMonth, int currYear)
+        {
+            //Odblokowujemy allow drop we wszystkich listboxach.
+            foreach (var ctrl in _scheduleRenderer.GetAll())
+                ctrl.AllowDrop = true;
+
+            //Sprawdzamy, czy miesiąc ma 31 dni.
+            if (currMonth == "Styczeń" || currMonth == "Marzec" || currMonth == "Maj" || currMonth == "Lipiec"
+             || currMonth == "Sierpień" || currMonth == "Październik" || currMonth == "Grudzień")
+                return;
+
+            //Sprawdzamy, czy miesiąc ma 30 dni
+            if (currMonth == "Kwiecień" || currMonth == "Czerwiec" || currMonth == "Wrzesień" || currMonth == "Listopad")
+            {
+                _scheduleRenderer.GetControlById(30).AllowDrop = false;
+                _scheduleRenderer.GetControlById(61).AllowDrop = false;
+                return;
+            }
+
+            //Sprawdzamy, czy wybralismy luty.
+            if(currMonth == "Luty")
+            {
+                _scheduleRenderer.GetControlById(29).AllowDrop = false;
+                _scheduleRenderer.GetControlById(30).AllowDrop = false;
+                _scheduleRenderer.GetControlById(60).AllowDrop = false;
+                _scheduleRenderer.GetControlById(61).AllowDrop = false;
+
+                //Sprawdzamy, czy rok jest przestępny
+                int temp = Math.DivRem(currYear, 4, out int Rem);
+                if(Rem == 0)
+                {
+                    _scheduleRenderer.GetControlById(28).AllowDrop = false;
+                    _scheduleRenderer.GetControlById(59).AllowDrop = false;
+                }
+            }
+
+        }
+
+        //Wczytanie pracowników i grafiku. Subskrypcja zdarzeń.
+        public virtual void LoadAndSubscribe()
+        {
+            //Zdarzenie asynchroniczne po kliknięciu przycisku "Opt".
+            buttonOptymalizacja.Click += async (sender, e) =>
+            {
+                //Usuwamy podświetlenie.
+                _scheduleRenderer.UsunPodswietlenie();
+
+                //Dezaktywujemy wszystkie kontrolki z wyjątkiem etykiety labelRaport.
+                SetControlsEnabled(false);
+
+                int liczbaOsobnikow = 100;          //Liczba osobników.
+                decimal tol = 0.0000003m;           //Jeśli wartość funkcji celu jest mniejsza lub równa tol, to przerywamy optymalizację.
+                decimal tolX = 0.00000000001m;      //Minimalna zmiana funkcji celu powodująca zresetowanie liczby iteracji bez poprawy.
+                int maxIterations = 200000;         //Maksymalna liczba iteracji.
+                int maxConsIterations = 40000;      //maksymalna liczba iteracji bez poprawy.
+
+                //Zdarzenie - prośba o przeprowadzenie optymalizacji.
+                if (OptimizationRequested != null)
+                    await OptimizationRequested.Invoke(liczbaOsobnikow, tol, tolX, maxIterations, maxConsIterations);
+
+                //Po skończonej optymalizacji zapisujemy grafik.
+                SaveOptimalSchedule?.Invoke();
+
+                //Po skończonej optymalizacji aktywujemy kontrolki.
+                SetControlsEnabled(true);
+            };
+
+            //Usunięcia zaznaczenia i podświetlenia po kliknięciu form1.
+            this.Click += (sender, e) =>
+            {
+                _scheduleRenderer.ClearSelected();
+                _scheduleRenderer.UsunPodswietlenie();
+            };
+
+            //Zdarzenie - dodano pracownika do zmiany.
+            _scheduleRenderer.Drop += (int shiftId, int employeeId) => EmployeeAddedToShift?.Invoke(shiftId, employeeId);
 
             //Wczytujemy pracowników i grafik z pliku tekstowego przy starcie programu.
             LoadAtStart?.Invoke();
@@ -450,7 +388,7 @@ namespace Funkcje_GA
         }
 
         //Aktywujemy/dezaktywujemy kontrolki (oprócz labelRaport).
-        public virtual void SetContolsEnabled(bool enable)
+        public virtual void SetControlsEnabled(bool enable)
         {
             foreach (Control control in this.Controls)
             {
@@ -475,7 +413,7 @@ namespace Funkcje_GA
         }
 
         //Uaktualniamy etykietę z raportem.
-        public virtual void UdpateOptimizationProgress(string raport)
+        public virtual void UpdateOptimizationProgress(string raport)
         {
                 //Odświeżamy UI bezpośrednio w bezpieczny sposób.
                 if (labelRaport.InvokeRequired)
@@ -485,12 +423,11 @@ namespace Funkcje_GA
                     labelRaport.Text = raport;
         }
 
-        //Odświeżanie listboxów.
+        //Odświeżanie kontrolek.
         public virtual void UpdateShift(int shiftId, List<string> lista)
         {
-            listboxesSchedule[shiftId].Items.Clear();
-            foreach (var item in lista)
-                listboxesSchedule[shiftId].Items.Add(item);
+            _scheduleRenderer.Clear(shiftId);
+            _scheduleRenderer.Add(shiftId, lista);
         }
 
         //Informacja, gdy wystąpił warning podczas optymalizacji.
@@ -498,15 +435,6 @@ namespace Funkcje_GA
         {
             Log.Error(message);
             MessageBox.Show(message, "Ostrzeżenie", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-
-        //Usuwamy podświetlenie.
-        protected virtual void UsunPodswietlenie()
-        {
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-            {
-                listboxesSchedule[nrZmiany].ResetBackColor();
-            }
         }
     }
 }

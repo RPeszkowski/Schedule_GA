@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Funkcje_GA.Model;
 using Serilog;
 using static Funkcje_GA.Constants;
 using static Funkcje_GA.CustomExceptions;
@@ -48,22 +49,22 @@ namespace Funkcje_GA
             }
 
             //Formatuje linię tekstu do zapisu do pliku.
-            private string FormatShiftLine(Shift shift)
+            private string FormatShiftLine(IShift shift)
             {
                 //Jeśli zmiana nie obsadzona zwracamy pusty string.
-                if (shift.PresentEmployees.Count == 0)
+                if (shift.GetEmployees().Count() == 0)
                     return string.Empty;
 
                 List <string> tokens = new List<string>();                        //Lista przechowuje numery pracowników na zmianie wraz z funkcjami.
 
                 //Dla każdego pracownika sprawdzamy funkcję i dopisujemy do listy.
-                foreach (Employee employee in shift.PresentEmployees)
+                foreach (Employee employee in shift.GetEmployees())
                 {
                     string entry = employee.Numer.ToString();
 
-                    if (shift.SalaEmployees.Contains(employee))
+                    if (shift.GetEmployeesByFunction(FunctionTypes.Sala).Contains(employee))
                         entry += "s";
-                    else if (shift.TriazEmployees.Contains(employee))
+                    else if (shift.GetEmployeesByFunction(FunctionTypes.Triaz).Contains(employee))
                         entry += "t";
 
                     tokens.Add(entry);
@@ -119,36 +120,32 @@ namespace Funkcje_GA
                         linijka = wszystkieLinie[nrLinii];
                         linijkaPodzielona = linijka.Split(' ');
 
-                        //Dla każdego dyzuru w linijce dodajemy zmianę do grafiku.
-                        for (int nrDyzuru = 0; nrDyzuru < linijkaPodzielona.Length; nrDyzuru++)
+                        //Pomijamy puste linijki.
+                        if(string.IsNullOrWhiteSpace(linijka)) continue;
+
+                        //Entries zawierają informacje o osobie i pełnionej funkcji (sufiks).
+                        var entries = ParseShiftLine(linijka);
+
+                        //Próbujemy dodać osobę do grafiku.
+                        try
                         {
-                            //Pomijamy puste linijki.
-                            if(string.IsNullOrWhiteSpace(linijka)) continue;
+                            ApplyShift(nrLinii, entries);
+                        }
 
-                            //Entries zawierają informacje o osobie i pełnionej funkcji (sufiks).
-                            var entries = ParseShiftLine(linijka);
+                        //Jeśli się nie uda rzucamy wyjątek.
+                        catch(Exception ex)
+                        {
+                            //Czyścimy grafik.
+                            foreach (Employee employee in _scheduleManager.GetShiftById(nrLinii).GetEmployees())
+                                _scheduleManager.RemoveFromShift(nrLinii, employee.Numer);
 
-                            //Próbujemy dodać osobę do grafiku.
-                            try
-                            {
-                                ApplyShift(nrLinii, entries);
-                            }
+                            //Wiadomość o błędzie.
+                            string info = nrLinii < LICZBA_DNI  
+                                        ? $"dnia {nrLinii + 1}, dyżur dzienny" 
+                                        : $"dnia {nrLinii + 1 - LICZBA_DNI}, dyżur nocny";
 
-                            //Jeśli się nie uda rzucamy wyjątek.
-                            catch(Exception ex)
-                            {
-                                //Czyścimy grafik.
-                                foreach (Employee employee in _scheduleManager.GetShiftById(nrLinii).PresentEmployees)
-                                    _scheduleManager.RemoveFromShift(nrLinii, employee.Numer);
-
-                                //Wiadomość o błędzie.
-                                string info = nrLinii < LICZBA_DNI  
-                                            ? $"dnia {nrLinii + 1}, dyżur dzienny" 
-                                            : $"dnia {nrLinii + 1 - LICZBA_DNI}, dyżur nocny";
-
-                                //Rzucamy wyjątek.
-                                throw new FileServiceInvalidScheduleFormat( $"Nie udało się wczytać grafiku dla {info}: {ex.Message}", ex);
-                            }
+                            //Rzucamy wyjątek.
+                            throw new FileServiceInvalidScheduleFormat( $"Nie udało się wczytać grafiku dla {info}: {ex.Message}", ex);
                         }
                     }
                 }
@@ -170,7 +167,7 @@ namespace Funkcje_GA
                 //Każdą linię formatujemy i dodajemy do listy.
                 for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
                 {
-                    Shift shift = _scheduleManager.GetShiftById(nrZmiany);
+                    var shift = _scheduleManager.GetShiftById(nrZmiany);
                     string linia = FormatShiftLine(shift);
                     linie.Add(linia);
                 }

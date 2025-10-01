@@ -344,7 +344,7 @@ namespace Funkcje_GA
             //Sprawdzamy, które dni są robocze.
             for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
             {
-                if (_scheduleManager.GetShiftById(shiftId).PresentEmployees.Count() > 0)
+                if (_scheduleManager.GetShiftById(shiftId).GetEmployees().Count() > 0)
                     liczbaDniRoboczych++;
             }
 
@@ -651,10 +651,10 @@ namespace Funkcje_GA
             //Sprawdzamy, czy liczba pracowników na każdej zmianie wynosi 0 lub od 3 do MAX_LICZBA_DYZUROW.
             for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
             {
-                if (_scheduleManager.GetShiftById(shiftId).PresentEmployees.Count() == 1 || _scheduleManager.GetShiftById(shiftId).PresentEmployees.Count() == 2)
+                if (_scheduleManager.GetShiftById(shiftId).GetEmployees().Count() == 1 || _scheduleManager.GetShiftById(shiftId).GetEmployees().Count() == 2)
                     throw new OptimizationInvalidScheduleException($"Za mało pracowników na zmianie: {shiftId}.");
 
-                if (_scheduleManager.GetShiftById(shiftId).PresentEmployees.Count() > MAX_LICZBA_DYZUROW)
+                if (_scheduleManager.GetShiftById(shiftId).GetEmployees().Count() > MAX_LICZBA_DYZUROW)
                     throw new OptimizationInvalidScheduleException($"Za dużo pracowników na zmianie: {shiftId}.");
             }
 
@@ -734,10 +734,10 @@ namespace Funkcje_GA
             for (int nrDyzuru = 0; nrDyzuru < 2 * LICZBA_DNI * MAX_LICZBA_DYZUROW; nrDyzuru++)
             {
                 nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));
-                if (_scheduleManager.GetShiftById(nrZmiany).PresentEmployees.Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
+                if (_scheduleManager.GetShiftById(nrZmiany).GetEmployees().Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
                 {
-                    _scheduleManager.AssignFunctionToEmployee(nrZmiany, _scheduleManager.GetShiftById(nrZmiany).PresentEmployees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer, FunctionTypes.Bez_Funkcji);
-                    dyzuryGrafik[nrDyzuru] = _scheduleManager.GetShiftById(nrZmiany).PresentEmployees[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
+                    _scheduleManager.AssignFunctionToEmployee(nrZmiany, _scheduleManager.GetShiftById(nrZmiany).GetEmployees().ToList()[nrDyzuru % MAX_LICZBA_DYZUROW].Numer, FunctionTypes.Bez_Funkcji);
+                    dyzuryGrafik[nrDyzuru] = _scheduleManager.GetShiftById(nrZmiany).GetEmployees().ToList()[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
                 }
 
                 else
