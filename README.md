@@ -63,7 +63,7 @@ Pełniejszy opis w zakładce Wiki.
 
 #### Obserwacje i wnioski
 
-<p align="justify">Przydzielanie funkcji trwa zaledwie kilkadziesiąt sekund, co stanowi duży zysk względem ręcznego przydzielania, które mogło trwać nawet 2 godziny. Ręczne przydzielanie pozwalało na spełnienie zwykle tylko warunków H1 - H4, a warunki S1 - S3 były często naruszane. Dodatkowo, konieczne były czasochłonne zmiany grafiku, gdy pracownicy zamieniali się dyżurami. Zaletą rozwiązania ręcznego jest natomiast to, że przydzielanie funkcji może uwzględnić personalne preferencje pracowników.</p>
+<p align="justify">Przydzielanie funkcji trwa zaledwie kilkadziesiąt sekund, co stanowi duży zysk względem ręcznego przydzielania, które było żmudne i mogło trwać nawet 2 godziny. Ręczne przydzielanie pozwalało na spełnienie zwykle tylko warunków H1 - H4, a warunki S1 - S3 były często naruszane. Dodatkowo, konieczne było ręczne zmienianie grafiku, gdy pracownicy zamieniali się dyżurami. Zaletą rozwiązania ręcznego jest natomiast to, że przydzielanie funkcji może uwzględnić personalne preferencje pracowników.</p>
  
 ## Kod
 
