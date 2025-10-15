@@ -83,7 +83,7 @@ Pełniejszy opis w zakładce Wiki.
 | FileServiceTxt | Klasa zawiera FileServiceGrafik i FileServicePracownicy do obsługi odpowiednich plików. |
 | ListBoxGrafik | Zmodyfikowane list boxy z dodatkowymi metodami. |
 | Optimization | Obiekt tej klasy odpowiada za przeprowadzanie optymalizacji. |
-| ScheduleManagement | Obiekt tej klasy przechowuje aktualny grafik (wraz z klasą do testów jednostkowych ScheduleManagementTests). |
+| ScheduleManagement | Obiekt tej klasy przechowuje aktualny grafik. |
 | Shift | Klasa przechowuje informacje na temat zmiany, tj. id zmiany, obecni pracownicy i pracownicy funkcyjni. |
 
 </div>
