@@ -50,7 +50,7 @@ Pełniejszy opis w zakładce Wiki.
 
 </div>
 
-<p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w myśl zasad powinien pełnić triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algorytmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe dla grafiku znajdującego się w pliku Grafik_test1.txt były nastepujące:</p>
+<p align="justify">Wymagano ścisłego spełnienia warunków H1 - H4 i S1. (Na tyle na ile pozwalał na to grafik. Zaistniała sytuacja, gdy na zmianie nocnej był tylko jeden pracownik, który w myśl zasad powinien pełnić triaż. W tym przypadku konieczne było przypisanie stażysty do nocnego triażu). Warunki S2 i S3 mogły być częściowo niespełnione. Wykonano testy algorytmu genetycznego na przykładowym grafiku (folder Tests). Wyniki wydajnościowe dla grafiku znajdującego się w pliku Grafik_test1.txt były następujące:</p>
 
 <div align="center">
 
