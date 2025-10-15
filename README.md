@@ -1,6 +1,10 @@
 [PL]
 # Aplikacja do tworzenia grafiku pracowników szpitala z wykorzystaniem algorytmu genetycznego
+<i>Wersja 1.0.1.</i>
 <i>C#, WinForms, VisualStudio.</i>
+
+<em> Od wersji 2.0.0 aplikacja będzie działać na serwerze web. (Wkrótce)
+<i> Angular, TypeScript, ASP.NET Web API, C#.</i></em>
 
 [![.NET Build & Test](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml/badge.svg)](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml)
 
@@ -9,10 +13,10 @@
 <p align="justify">Aby uruchomić aplikację pobierz najnowsze wydanie i uruchom plik Funkcje_GA.exe</p>
 
 <div align = center>
- <img src="https://github.com/user-attachments/assets/419952d2-d3f3-460d-82ff-158093b60690" alt="Main_UI" width="750">
+ <img src="https://github.com/user-attachments/assets/8a097a0b-aec0-4bd9-9dfd-c2ec912136f5" alt="Main_UI" width="750">
  <p><em>Rys. 1: Interfejs główny aplikacji przed przydzieleniem funkcji.</em></p><br>
 
- <img src="https://github.com/user-attachments/assets/461f78e5-4229-45ee-8e5f-d2b42c35dbd2" alt="Main_UI_functions_assigned" width="750">
+ <img src="https://github.com/user-attachments/assets/9ecb34d0-330f-423c-a558-fd58e1e28735" alt="Main_UI_functions_assigned" width="750">
  <p><em>Rys. 2: Interfejs główny aplikacji po przydzieleniu funkcji. Kolorami oznaczono dyżury wybranego pracownika.</em></p>
 </div>
 
@@ -52,8 +56,8 @@ Pełniejszy opis w zakładce Wiki.
 
 | **Metryka**     | **Wartość średnia** | **Najmniejsza wartość** | **Największa wartość** | **Odchylenie standardowe** |
 | --------------- | ------------------- | ----------------------- | ---------------------- | -------------------------- |
-| Liczba iteracji | 5461                | 2032                    | 11109                  | 2099                       |
-| Czas wykonania  | 00:00:26            | 00:00:10                | 00:00:54               | 00:00:10                   |
+| Liczba iteracji | 3318                | 542                     | 12109                  | 2312                       |
+| Czas wykonania  | 00:00:14            | 00:00:03                | 00:00:47               | 00:00:09                   |
 
 </div>
 
@@ -63,7 +67,7 @@ Pełniejszy opis w zakładce Wiki.
  
 ## Kod
 
-<p align="justify">Poniżej zamieszczono klasy wykorzystane w kodzie wraz z krótkim opisem ich odpowiedzialności.</p>
+<p align="justify">Poniżej zamieszczono wybrane klasy wykorzystane w kodzie wraz z krótkim opisem ich odpowiedzialności.</p>
 
 #### Model/logika
 
@@ -92,10 +96,10 @@ Pełniejszy opis w zakładce Wiki.
 |-------------|-----------------|
 | Form1 | Główny formularz aplikacji zawierający dane pracowników oraz grafik. |
 | Form2 | Formularz do dodawania, usuwania i edytowania pracowników. |
+| PresenterEmployee | Klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami. |
+| PresenterFile | Klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików. |
+| PresenterOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
 | PresenterSchedule | Klasa pośrednicząca pomiędzy UI a zarządzaniem grafikiem. |
-| ViewEmployee | Klasa odpowiadająca za obsługę UI związaną z zarządzaniem pracownikami. |
-| ViewFile | Klasa pośrednicząca pomiędzy UI a systemem zapisu/odczytu z plików. |
-| ViewOptimization | Klasa pośrednicząca pomiędzy UI a procesem optymalizacji. |
 
 </div>
 
