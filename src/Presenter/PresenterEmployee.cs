@@ -142,7 +142,7 @@ namespace Funkcje_GA
             uiEmployeesControls[id] = ("", (int)EnumLabelStatus.Normal);
 
             //Uaktualniamy opis pracownika.
-            _viewEmployee.UpdateEmployeeLabel(id, uiEmployeesControls[id], false);
+            _viewEmployee.UpdateEmployeeControl(id, uiEmployeesControls[id], false);
         }
 
         //Pobieramy numery aktywnych pracowników.
@@ -221,7 +221,7 @@ namespace Funkcje_GA
                 uiEmployeesControls[employee.Numer] = (employeeData, EnumLabelStatus.Intern);
 
             //Wywołujemy zdarzenie auktualniono opis pracownika.
-            _viewEmployee.UpdateEmployeeLabel(employee.Numer, uiEmployeesControls[employee.Numer], true);
+            _viewEmployee.UpdateEmployeeControl(employee.Numer, uiEmployeesControls[employee.Numer], true);
         }
     }
 }

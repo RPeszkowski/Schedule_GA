@@ -42,10 +42,11 @@ namespace Funkcje_GA
             IEmployeesFileService _fileManagerPracownicy = new FileManagementPracownicy(_employeeManager);          //Instancja do zarządzania plikiem pracowników.
             IOptimization _optimization = new Optimization(_employeeManager, _scheduleManager);                     //Instancja do optymalizacji.
 
-            IScheduleRendererWinforms _scheduleRenderer = new ScheduleRendererListBox();                                     //Instancja do generowania kontrolek grafiku.
-           
+            IScheduleRendererWinforms _scheduleRenderer = new ScheduleRendererWinforms();                                     //Instancja do generowania kontrolek grafiku.
+            IEmployeeRendererWinforms _employeeRenderer = new EmployeeRendererWinforms();                                   //Instancja do generowania etykiet pracowników.
+            
             var _viewForm2 = new Form2();                       //Tworzymy Form2.
-            var _viewForm1 = new Form1(_viewForm2, _scheduleRenderer);             //Tworzymy Form1.
+            var _viewForm1 = new Form1(_viewForm2, _scheduleRenderer, _employeeRenderer);             //Tworzymy Form1.
 
             var _presenterFile = new PresenterFile(_fileManagerPracownicy, _fileManagerGrafik, _viewForm1, _viewForm2);      //Instancja do zarządzania plikami grafiku i pracowników w warstwie prezentera.
             var _presenterOptimization = new PresenterOptimization(_optimization, _scheduleManager, _viewForm1);      //Instancja do zarządzania optymalizacją w warstwie prezentera.

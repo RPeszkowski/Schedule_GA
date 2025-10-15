@@ -9,24 +9,26 @@ using System.Windows.Forms;
 namespace Funkcje_GA.Presenter
 {
     //Adapter do tworzenia listboxów.
-    internal class WinformsShiftControlAdapter : IShiftControl
+    internal class ShiftListBoxAdapter : IShiftControl
     {
         private readonly ListBoxGrafik listBox;             //Listbox.
         private readonly int id;                            //Id.
-        private Action<int, int> dropCallback;              //Prywatny delegat do przekazywania przy drag and drop.
 
         public bool AllowDrop { get => listBox.AllowDrop; set => listBox.AllowDrop = value; }       //Allow drop.
         public int SelectedIndex => listBox.SelectedIndex;                                          //Wybrany indeks.
 
         //Konstruktor.
-        public WinformsShiftControlAdapter(int id, ListBoxGrafik listBox)
+        public ShiftListBoxAdapter(int id)
         {
             this.id = id;
-            this.listBox = listBox;
+            this.listBox = new ListBoxGrafik(id);
         }
 
         //Dodawanie pracowników.
         public void Add(string item) => listBox.Items.Add(item);
+
+        //Zwracamy jako control.
+        public Control AsControl => listBox;
 
         //Czyszczenie kontrolki.
         public void Clear() => listBox.Items.Clear();
@@ -43,8 +45,6 @@ namespace Funkcje_GA.Presenter
         //Inicjalizacja kontrolek i zdarzenia drag and drop.
         public void Initialize(Action<int, int> dropCallback)
         {
-            this.dropCallback = dropCallback;
-
             //Tworzenie kontrolek grafiku.
             listBox.Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             listBox.Size = new System.Drawing.Size(40, 400);
@@ -67,8 +67,5 @@ namespace Funkcje_GA.Presenter
                 dropCallback?.Invoke(listBox.Id, Convert.ToInt32(pom));
             };
         }
-
-        //Wrapper do Control.
-        public Control ListBoxAsControl => listBox;
     }
 }

@@ -63,126 +63,88 @@ namespace Funkcje_GA
         //Event do powiadamiania o ostrzeżeniach.
         public event Action<string> WarningRaised;
 
+        //Obliczamy funkcję celu dla danego rozwiązania.
         private decimal FunkcjaCelu(bool[] funkcje)
         {
-            decimal W = 0.0m;
-            decimal a = 0.0m;
-            int[] liczbaStazystowNaTriazu = new int[2 * LICZBA_DNI];
-            int[] liczbaSalOsobaDzien = new int[MAX_LICZBA_OSOB];
-            int[] liczbaSalOsobaNoc = new int[MAX_LICZBA_OSOB];
-            int[] liczbaTriazyOsobaDzien = new int[MAX_LICZBA_OSOB];
-            int[] liczbaTriazyOsobaNoc = new int[MAX_LICZBA_OSOB];
-            bool[] numerOsoby = new bool[MAX_LICZBA_BITOW];
-            int nrOsobySala;
-            int nrOsobyTriaz1;
-            int nrOsobyTriaz2;
-            bool[][] dyzuryRozstaw = new bool[MAX_LICZBA_OSOB][];
-            int[] nrDyzuru = new int[MAX_LICZBA_OSOB];
-            int liczbaKonsekwentnychBezFunkcji = 0;
+            decimal W = 0.0m;                                               //Funkcja celu.
+            decimal a = 0.0m;                                               //Funkcja kary.
+            int[] liczbaStazystowNaTriazu = new int[2 * LICZBA_DNI];        //Liczba stażystów na triażu danego dnia.      
+            int[][] liczbaFunkcji = new int[LICZBA_ZMIAN][];                //Liczba funkcji na dziennej zmianie (0) i nocnej zmianie (1)
+            bool[] numerOsoby = new bool[MAX_LICZBA_BITOW];                 //Indeks osoby na zmianie zakodowany binarnie.
+            int nrOsobySala;                                                //Indeks na zmianie osoby przypisanej do sali.
+            int nrOsobyTriaz1;                                              //Indeks na zmianie pierwszej osoby przypisanej do triażu.
+            int nrOsobyTriaz2;                                              //Indeks na zmianie drugiej osoby przypisanej do triażu.
+            int liczbaKonsekwentnychBezFunkcji;                             //Liczba następujących po sobie bezpośrednio dyżurów, w trakcie których osoba nie pełni funkcji.
+            bool[][] dyzuryRozstaw = new bool[MAX_LICZBA_OSOB][];           //Każdemu pracownikowi przypisujemy tablicę o długości równej liczbie zmian. Jeśli dana zmiana jest funkcyjna dajemy true, jeśli nie to false.       
+            int[] nrDyzuru = new int[MAX_LICZBA_OSOB];                      //Zawiera aktualne indeksy do tablicy dyzuryRozstaw. Jeśli w danym dniu osoba o indeksie i ma dyżur, to na koniec pętli for, w której odbywa się dekodowanie rozwiązania
+                                                                            //nrDyzuru[i] zostanie inkrementowane o 1. Przykład: na zmianie nr. 0 (dzień) osoba o indeksie 10 ma swój pierwszy dyżur (nrDyzuru[10] = 0) i jest to sala.
+                                                                            //dyzuryRozstaw[10][0] zostanie przypisane true, a na koniec iteracji dekodującej rozwiązanie dla pierwszej zmiany (czyli nrZmiany = 0) nrDyzuru[10] zostanie inkrementowane.
+                                                                            //Jeśli ta sama osoba ma następny dyżur na zmianie nocnej 3 dnia miesiąca (czyli nrZmiany = 33) i jest to zmiana bez funkcji, to dyzuryRozstaw[10][1] pozostanie false,
+                                                                            //a na koniec iteracji dla 33 zmiany nrDyzuru[10] zmieni się z 1 na 2.
+            int tempIndex;                                                  //Zmienna pomocnicza oznaczająca indeks w tablicy grafikDyzurow.
+            int tempNrOsoba;                                                //Numer osoby znajdujący się w grafikDyzurow[tempIndex].
 
-            for (int i = 0; i < MAX_LICZBA_OSOB; i++)
+            //Zerujemy zmienne lokalne przechowujące informacje o rozwiązaniu.
+            for (int nrZmiany = 0; nrZmiany < MAX_LICZBA_OSOB; nrZmiany++)
             {
-                dyzuryRozstaw[i] = new bool[Convert.ToInt32(wymiarEtatu[i])];
-                nrDyzuru[i] = 0;
-
-                liczbaSalOsobaDzien[i] = 0;
-                liczbaSalOsobaNoc[i] = 0;
-                liczbaTriazyOsobaDzien[i] = 0;
-                liczbaTriazyOsobaNoc[i] = 0;
+                dyzuryRozstaw[nrZmiany] = new bool[Convert.ToInt32(wymiarEtatu[nrZmiany])];
+                nrDyzuru[nrZmiany] = 0;
             }
 
-            for (int i = 0; i < 2 * LICZBA_DNI; i++)
-            {
-                liczbaStazystowNaTriazu[i] = 0;
-            }
+            //Inicjalizujemy liczbę funkcji.
+            for (int i = 0; i < LICZBA_ZMIAN; i++)
+                liczbaFunkcji[i] = new int[MAX_LICZBA_OSOB];
 
-            for (int i = 0; i < LICZBA_DNI; i++)
+            //Ciąg dalszy inicjalizowania zmiennych lokalnych.
+            for (int nrOsoby = 0; nrOsoby < 2 * LICZBA_DNI; nrOsoby++)
+                liczbaStazystowNaTriazu[nrOsoby] = 0;
+
+            //Wyznaczamy parametry dla danych indeksów i zmiany.
+            void WyznaczParametry(int[] indexes, int nrZmiany, int dzien_0_noc_1)
             {
-                nrOsobySala = 0;
-                nrOsobyTriaz1 = 0;
-                nrOsobyTriaz2 = 0;
-                // Dzien
-                if (liczbaDyzurow[i] > 0)
+                for (int nrIndeksu = 0; nrIndeksu < indexes.Length; nrIndeksu++)
                 {
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobySala = (nrOsobySala * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + j] ? 1 : 0);
+                    tempIndex = nrZmiany * MAX_LICZBA_DYZUROW + indexes[nrIndeksu];        //Indeks.
+                    tempNrOsoba = grafikDyzurow[tempIndex];                         //Osoba.
 
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobyTriaz1 = (nrOsobyTriaz1 * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j] ? 1 : 0);
-
-                    for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobyTriaz2 = (nrOsobyTriaz2 * 2) + (funkcje[3 * i * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j] ? 1 : 0);
-
-                    if (nrOsobySala == nrOsobyTriaz1)
+                    //Sprawdzamy, czy nie zakodowaliśmy indeksu, który nie oznacza żadnej osoby (mozliwe tylko, gdy liczba osób na zmianie < MAX_LICZBA_DYZUROW).
+                    if (tempNrOsoba == 0)
                         a += 1000000.0m;
 
-                    if (nrOsobySala == nrOsobyTriaz2)
-                        a += 1000000.0m;
-
-                    if (nrOsobyTriaz1 == nrOsobyTriaz2)
-                        a += 1000000.0m;
-
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
-                        a += 1000000.0m;
-
+                    //Jeśli zakodowaliśmy osobę to zwiększamy liczbę sal tej osoby i dyżur funkcyjny w dyzuryRozstaw.
                     else
                     {
-                        liczbaSalOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
-                        a += 1000000.0m;
-
-                    else
-                    {
-                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
-                        a += 1000000.0m;
-
-                    else
-                    {
-                        liczbaTriazyOsobaDzien[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
-                    }
-
-                    for (int j = 0; j < nieTriazDzien.Length; j++)
-                    {
-                        if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazDzien[j] || grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazDzien[j])
-                            a += 100.0m;
-                    }
-
-                    for (int j = 0; j < nieTriazNoc.Length; j++)
-                    {
-                        if (grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafikDyzurow[i * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
-                            liczbaStazystowNaTriazu[i]++;
-                    }
-
-                    for (int j = i * MAX_LICZBA_DYZUROW; j < (i + 1) * MAX_LICZBA_DYZUROW; j++)
-                    {
-                        if (grafikDyzurow[j] != 0)
-                            nrDyzuru[grafikDyzurow[j] - 1]++;
+                        liczbaFunkcji[dzien_0_noc_1][tempNrOsoba - 1]++;
+                        dyzuryRozstaw[tempNrOsoba - 1][nrDyzuru[tempNrOsoba - 1]] = true;
                     }
                 }
+            }
 
+            //Funkcja do dekodowania rozwiązania i wyznaczania niektórych kar.
+            void DekodujRozwiazanie(int nrZmiany, int dzien_0_noc_1)
+            {
+                //Zmiana dzienna.
+                //Zerujemy indeksy.
                 nrOsobySala = 0;
                 nrOsobyTriaz1 = 0;
                 nrOsobyTriaz2 = 0;
-                //Noc
-                if (liczbaDyzurow[i + LICZBA_DNI] > 0)
+
+                //Sprawdzamy, czy zmiana nie jest pusta.
+                if (liczbaDyzurow[nrZmiany] > 0)
                 {
+                    //Dekodujemy indeks osoby pełniącej funkcję salowej/salowego (indeks to liczba od 0 do MAX_LICZBA_DYZURÓW - 1).
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobySala = (nrOsobySala * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + j] ? 1 : 0);
+                        nrOsobySala = (nrOsobySala * 2) + (funkcje[3 * nrZmiany * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
+                    //Dekodujemy indeks pierwszej osoby pełniącej funkcję triaż (indeks to liczba od 0 do MAX_LICZBA_DYZURÓW - 1).
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobyTriaz1 = (nrOsobyTriaz1 * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j] ? 1 : 0);
+                        nrOsobyTriaz1 = (nrOsobyTriaz1 * 2) + (funkcje[3 * nrZmiany * MAX_LICZBA_BITOW + MAX_LICZBA_BITOW + j] ? 1 : 0);
 
+                    //Dekodujemy indeks drugiej osoby pełniącej funkcję triaż (indeks to liczba od 0 do MAX_LICZBA_DYZURÓW - 1).
                     for (int j = 0; j < MAX_LICZBA_BITOW; j++)
-                        nrOsobyTriaz2 = (nrOsobyTriaz2 * 2) + (funkcje[3 * (i + LICZBA_DNI) * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j] ? 1 : 0);
+                        nrOsobyTriaz2 = (nrOsobyTriaz2 * 2) + (funkcje[3 * nrZmiany * MAX_LICZBA_BITOW + 2 * MAX_LICZBA_BITOW + j] ? 1 : 0);
 
+                    //Sprawdzamy, czy jedna osoba nie ma przypisanych dwóch funkcji.
                     if (nrOsobySala == nrOsobyTriaz1)
                         a += 1000000.0m;
 
@@ -192,43 +154,45 @@ namespace Funkcje_GA
                     if (nrOsobyTriaz1 == nrOsobyTriaz2)
                         a += 1000000.0m;
 
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] == 0)
-                        a += 1000000.0m;
+                    //Wyznaczamy parametry dla wybranych osób.
+                    WyznaczParametry(new int[] { nrOsobySala, nrOsobyTriaz1, nrOsobyTriaz2}, nrZmiany, dzien_0_noc_1);
 
-                    else
+                    //Sprawdzamy, czy zmiana jest dzienna.
+                    if (dzien_0_noc_1 == 0)
                     {
-                        liczbaSalOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobySala] - 1]] = true;
-                    }
 
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == 0)
-                        a += 1000000.0m;
-
-                    else
-                    {
-                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] - 1]] = true;
-                    }
-
-                    if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == 0)
-                        a += 1000000.0m;
-
-                    else
-                    {
-                        liczbaTriazyOsobaNoc[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]++;
-                        dyzuryRozstaw[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1][nrDyzuru[grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] - 1]] = true;
-                    }
-
-                    for (int j = 0; j < nieTriazNoc.Length; j++)
-                    {
-                        if (grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafikDyzurow[(i + LICZBA_DNI) * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
+                        //Sprawdzamy, czy przypisaliśmy do triażu stażystę, który nie powinien być przypisany. Jeśli tak, to nakładamy karę.
+                        for (int j = 0; j < nieTriazDzien.Length; j++)
                         {
-                            liczbaStazystowNaTriazu[(i + LICZBA_DNI)]++;
-                            a += 100.0m;
+                            if (grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazDzien[j] || grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazDzien[j])
+                                a += 100.0m;
+                        }
+
+                        //Sprawdzamy liczbę stażystów na triażu. Zakładamy, że wszystkie osoby, które nie powinny pełnić triażu za dnia, nie powinno go pełnić również w nocy,
+                        //czyli zbiór osób nie mogących być na dziennym triażu zawiera się w zbiorze osób nie mogących być na nocnym triażu.
+                        for (int j = 0; j < nieTriazNoc.Length; j++)
+                        {
+                            if (grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
+                                liczbaStazystowNaTriazu[nrZmiany]++;
                         }
                     }
 
-                    for (int j = (i + LICZBA_DNI) * MAX_LICZBA_DYZUROW; j < (i + LICZBA_DNI + 1) * MAX_LICZBA_DYZUROW; j++)
+                    //Zmiana nocna.
+                    else
+                    {
+                        //Jeśli na triaży jest stażysta, to dodajemy karę i inkrementujemy liczbęstażystów na triażu.
+                        for (int j = 0; j < nieTriazNoc.Length; j++)
+                        {
+                            if (grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz1] == nieTriazNoc[j] || grafikDyzurow[nrZmiany * MAX_LICZBA_DYZUROW + nrOsobyTriaz2] == nieTriazNoc[j])
+                            {
+                                liczbaStazystowNaTriazu[nrZmiany]++;
+                                a += 100.0m;
+                            }
+                        }
+                    }
+
+                    //Zwiększamy nrDyzuru dla wszystkich pracowników obecnych na zmianie.
+                    for (int j = nrZmiany * MAX_LICZBA_DYZUROW; j < (nrZmiany + 1) * MAX_LICZBA_DYZUROW; j++)
                     {
                         if (grafikDyzurow[j] != 0)
                             nrDyzuru[grafikDyzurow[j] - 1]++;
@@ -236,46 +200,70 @@ namespace Funkcje_GA
                 }
             }
 
+            //Dekodujemy rozwiązanie dla kolejnych dni.
+            for (int nrZmiany = 0; nrZmiany < LICZBA_DNI; nrZmiany++)
+            {
+                //Dekodujemy rozwiązanie dla dziennej zmiany.
+                DekodujRozwiazanie(nrZmiany, 0);
+
+                //Dekodujemy rozwiązanie dla nocnej zmiany.
+                DekodujRozwiazanie(nrZmiany + LICZBA_DNI, 1);
+            }
+
+            //Sprawdzamy liczbę stażystów na danej zmianie. Jeśli jest więcej niż 1 to dopisujemy karę.
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
                 if (liczbaStazystowNaTriazu[i] >= 2)
                     a += 10000.0m;
             }
 
+            //Wyliczamy funkcję celu. Dotyczy warunków podziału proporcjonalnego do wymiaru etatu i zaległości, równego podziału pomiędzy zmiany nocne i dzienne
+            //oraz jednorodnego rozdzielenia funkcji na przestrzeni miesiąca.
             for (int i = 0; i < MAX_LICZBA_OSOB; i++)
             {
-                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 2)
-                    W += 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
+                //Sprawdzamy, czy różnica między przypisanymi funkcjami, a parametrem oczekiwana liczba funkcji jest większa lub równa 2.
+                if (Math.Abs(liczbaFunkcji[0][i] + liczbaFunkcji[1][i] - oczekiwanaLiczbaFunkcji[i]) >= 2)
+                    W += 0.01m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaFunkcji[0][i] + liczbaFunkcji[1][i] - oczekiwanaLiczbaFunkcji[i])));
 
-                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i]) >= 1)
-                    W += 0.0000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] + liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i] - oczekiwanaLiczbaFunkcji[i])));
+                //Sprawdzamy, czy różnica między przypisanymi funkcjami, a parametrem oczekiwana liczba funkcji jest większa lub równa 1 i mniejsza od 2.
+                else if (Math.Abs(liczbaFunkcji[0][i] + liczbaFunkcji[1][i] - oczekiwanaLiczbaFunkcji[i]) >= 1)
+                    W += 0.0000001m * Convert.ToDecimal(Math.Floor(Math.Abs(liczbaFunkcji[0][i] + liczbaFunkcji[1][i] - oczekiwanaLiczbaFunkcji[i])));
 
-                if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) > 2)
-                    W += 1.0m * Convert.ToDecimal(Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])));
-
-                else if (Math.Abs(liczbaSalOsobaDzien[i] + liczbaTriazyOsobaDzien[i] - (liczbaSalOsobaNoc[i] + liczbaTriazyOsobaNoc[i])) == 2)
+                //Sprawdzamy czy dysproporcja pomiędzy funkcjami nocnymi i dziennymi jest większa od 2.
+                if (Math.Abs(liczbaFunkcji[0][i] - liczbaFunkcji[1][i]) > 2)
+                    W += 1.0m * Convert.ToDecimal(Math.Abs(liczbaFunkcji[0][i] - liczbaFunkcji[1][i]));
+                
+                //Sprawdzamy czy dysproporcja pomiędzy funkcjami nocnymi i dziennymi jest dokładnie równa 2.
+                else if (Math.Abs(liczbaFunkcji[0][i] - liczbaFunkcji[1][i]) == 2)
                     W += 0.0002m;
 
-                liczbaKonsekwentnychBezFunkcji = 0;
+                liczbaKonsekwentnychBezFunkcji = 0; //Zerujemy konsekwentną liczbę dyżurów bez funkcji.
+
+                //Sprawdzamy warunek jednorodnego rozłożenia dyżurów funkcyjnych.
                 for (int j = 0; j < dyzuryRozstaw[i].Length; j++)
                 {
+                    //Jeśli dyżur jest bezfunkcyjny to inkrementujemy.
                     if (!dyzuryRozstaw[i][j])
                         liczbaKonsekwentnychBezFunkcji++;
 
+                    //Jeśli dyzur jest funkcyjny i były minimum 4 kolejne dyżury bez funkcji to naliczamy karę.
                     else if (dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji > 3)
                     {
                         W += 0.00000001m * Convert.ToDecimal(liczbaKonsekwentnychBezFunkcji);
                         liczbaKonsekwentnychBezFunkcji = 0;
                     }
 
+                    //Jeśli dyzur jest funcyjny i były maksimum 3 kolejne dyżury bez funkcji to nie naliczamy kary.
                     else if (dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji <= 3)
                         liczbaKonsekwentnychBezFunkcji = 0;
 
+                    //Jeśli to ostatni dyżur danej osoby i były minimum 4 dyżury bez funkcji to naliczamy karę.
                     if (j == dyzuryRozstaw[i].Length - 1 && !dyzuryRozstaw[i][j] && liczbaKonsekwentnychBezFunkcji > 3)
                         W += 0.00000001m * Convert.ToDecimal(liczbaKonsekwentnychBezFunkcji);
                 }
             }
 
+            //Dodajemy funkcję kary do funkcji celu i zwracamy funkcję celu.
             W += a;
             return W;
         }
@@ -687,17 +675,24 @@ namespace Funkcje_GA
             stopienZdegenerowania = StopienZdegenerowania();                    //Wyznaczamy stopień zdegenerowania.
         }
 
+        //Określa poniżej jakiej wartości funkcji celu nie można zejść ze względu na grafik.
         private decimal StopienZdegenerowania()
         {
-            decimal stopienZdegenerowania = 0.0m;
-            int liczbaStazystowDzien;
-            int liczbaStazystowNoc;
+            decimal stopienZdegenerowania = 0.0m;                       //Stopień zdegenerowania grafiku.
+            int liczbaStazystowDzien;                                   //Liczba stażystów, którzy nie mogą pełnić triażu za dnia.
+            int liczbaStazystowNoc;                                     //Liczba stażystów, którzy nie mogą pełnić triażu w nocy.
+
+            //Dla każdej zmiany sprawdzamy, czy grafik uniemożliwia uzyskanie rozwiązania dopuszczalnego.
             for (int i = 0; i < 2 * LICZBA_DNI; i++)
             {
+                //Sprawdzamy, czy na zmianie są pracownicy.
                 if (liczbaDyzurow[i] > 0)
                 {
+                    //Zerujemy liczby stażystów.
                     liczbaStazystowDzien = 0;
                     liczbaStazystowNoc = 0;
+
+                    //Sprawdzamy ilu stażystów danego typu jest na danej zmianie
                     for (int j = 0; j < MAX_LICZBA_DYZUROW; j++)
                     {
                         if (nieTriazDzien.Contains(grafikDyzurow[j + i * MAX_LICZBA_DYZUROW]))
@@ -707,43 +702,62 @@ namespace Funkcje_GA
                             liczbaStazystowNoc++;
                     }
 
+                    //Jeśli na danej zmianie są tylko stażyści to naliczamy dużą karę.
+                    //Zakładamy, że każda osoba nie mogąca pełnić triażu za dnia nie może go też pełnić w nocy.
                     if (liczbaDyzurow[i] == liczbaStazystowNoc)
                         stopienZdegenerowania += 10000.0m;
 
+                    //Jeżeli zmiana jest dzienna i mamy tylko stażystów, którrzy nie mogą pełnić triażu na dziennej zmianie to naliczamy dwie mniejsze kary.
                     if ((liczbaDyzurow[i] == liczbaStazystowDzien) && i < LICZBA_DNI)
                         stopienZdegenerowania += +200.0m;
 
+                    //Jeśli zmiana jest dzienna i jet tylko jedna osoba, która może pełnić triaż to naliczamy mniejszą karę.
                     else if ((liczbaDyzurow[i] - liczbaStazystowDzien == 1) && i < LICZBA_DNI)
                         stopienZdegenerowania += +100.0m;
 
+                    //Jeżeli zmiana jest nocna i mamy tylko stażystów, którrzy nie mogą pełnić triażu na nocnej zmianie to naliczamy dwie mniejsze kary.
                     if ((liczbaDyzurow[i] == liczbaStazystowNoc) && i >= LICZBA_DNI)
                         stopienZdegenerowania += +200.0m;
 
+                    //Jeśli zmiana jest nocna i jet tylko jedna osoba, która może pełnić triaż to naliczamy mniejszą karę.
                     else if ((liczbaDyzurow[i] - liczbaStazystowNoc == 1) && i >= LICZBA_DNI)
                         stopienZdegenerowania += +100.0m;
                 }
             }
+
+            //Zwracamy stopień zdegenerowania.
             return stopienZdegenerowania;
         }
 
+        //Tworzymy tablicę z grafikiem dyzurów i usuwamy przypisane funkcje, jeśli jakieś były przed startem optymalizacji.
         private int[] UtworzGrafik()
         {
-            int nrZmiany;
-            int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];
-
+            int nrZmiany;                                                           //Numer zmiany.
+            int[] dyzuryGrafik = new int[2 * LICZBA_DNI * MAX_LICZBA_DYZUROW];      //Grafik. Tablica zawiera numery pracowników. Pierwsze MAX_LICZBA_DYZUROW pól
+                                                                                    //zawiera numery pracowników na zmianie dziennej 1 dnia, kolejne na zmianie dziennej 2 dnia itd.
+                                                                                    //Jeśli liczba pracowników jest mniejsza niż maksymalna, to pozostałe pola są zerowane.
+            
+            //Dla każdego zmiany dyżuru pobieramy numer i wpisujemy we właściwe miejsce tablicy.
             for (int nrDyzuru = 0; nrDyzuru < 2 * LICZBA_DNI * MAX_LICZBA_DYZUROW; nrDyzuru++)
             {
-                nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));
+                nrZmiany = Convert.ToInt32(Math.Floor(Convert.ToDouble(nrDyzuru) / MAX_LICZBA_DYZUROW));        //Numer zmiany. Od 0 do LICZBA_ZMIAN * LICZBA_DNI - 1.
+                
+                //Pobieramy numery pracowników z danej zmiany.
                 if (_scheduleManager.GetShiftById(nrZmiany).GetEmployees().Count() > nrDyzuru % MAX_LICZBA_DYZUROW)
                 {
+                    //Czyścimy funkcje pracowników na danej zmianie, jeśli rozpoczęto optymalizację bez usunięcia funkcji.
                     _scheduleManager.AssignFunctionToEmployee(nrZmiany, _scheduleManager.GetShiftById(nrZmiany).GetEmployees().ToList()[nrDyzuru % MAX_LICZBA_DYZUROW].Numer, FunctionTypes.Bez_Funkcji);
+                    
+                    //Wpisujemy numer pracownika do tablicy.
                     dyzuryGrafik[nrDyzuru] = _scheduleManager.GetShiftById(nrZmiany).GetEmployees().ToList()[nrDyzuru % MAX_LICZBA_DYZUROW].Numer;
                 }
 
+                //Jeśli nie ma już pracowników na zmianie to wpisujemy 0.
                 else
                     dyzuryGrafik[nrDyzuru] = 0;
             }
 
+            //Zwracamy grafik.
             return dyzuryGrafik;
         }
     }

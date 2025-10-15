@@ -32,10 +32,12 @@ namespace Funkcje_GA
 {
     internal partial class Form1 : Form, IViewSchedule, IViewEmployee, IViewOptimization, IViewFile
     {
-        private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
+       // private readonly Dictionary<int, System.Windows.Forms.Label> labelsPracownicy = new Dictionary<int, System.Windows.Forms.Label>(MAX_LICZBA_OSOB);   //Tworzenie etykiet pracowników.
         
         private readonly IEmployeeForm _form2;                                              //Form2.
         private readonly IScheduleRendererWinforms _scheduleRenderer;                               //Renderer do grafiku.
+        private readonly IEmployeeRendererWinforms _employeeRenderer;                                //Renderer do etykiet pracowników.
+
         protected readonly Dictionary<int, string> months = new Dictionary<int, string>(12)   //Miesiące.
         {
             {1, "Styczeń" }, {2, "Luty" }, {3, "Marzec" },
@@ -48,11 +50,12 @@ namespace Funkcje_GA
         private int currentYear;                                 //Obecny rok.
 
         //Konstruktor.
-        public Form1(IEmployeeForm form2, IScheduleRendererWinforms scheduleRenderer)
+        public Form1(IEmployeeForm form2, IScheduleRendererWinforms scheduleRenderer, IEmployeeRendererWinforms employeeRenderer)
         {
             //Przypisujemy menadżery.
             this._form2 = form2;
             this._scheduleRenderer = scheduleRenderer;
+            this._employeeRenderer = employeeRenderer;
 
             //Generuje większość kontrolek. Metoda stworzona przez Designera.
             InitializeComponent();
@@ -245,35 +248,12 @@ namespace Funkcje_GA
         //Tworzymy etykiety pracowników.
         protected virtual void InitializeEmployeeControls()
         {
-            //Dodajemy etykiety wyświetlające dane pracowników do furmularza.
+            //Inicjalizacja kontrolek pracowników.
+            _employeeRenderer.Initialize();
+
+            //Dodajemy etykiety wyświetlające dane pracowników do formularza.
             for (int nrOsoby = 1; nrOsoby <= MAX_LICZBA_OSOB; nrOsoby++)
-            {
-                //Dodawanie etykiet.
-                labelsPracownicy[nrOsoby] = new System.Windows.Forms.Label();
-                labelsPracownicy[nrOsoby].Font = new System.Drawing.Font("Times New Roman", 12.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-                labelsPracownicy[nrOsoby].Size = new System.Drawing.Size(340, 40);
-                labelsPracownicy[nrOsoby].Text = "";
-
-                //Przypisujemy lambdy do zdarzeń drag and drop.
-                int _nrOsoby = nrOsoby;
-                labelsPracownicy[nrOsoby].MouseDown += (sender, e) =>
-                {
-                    //Usuwamy podświetlenie.
-                    _scheduleRenderer.UsunPodswietlenie();
-
-                    //Sprawdzamy, czy etykieta nie jest pusta.
-                    if (labelsPracownicy[_nrOsoby].Tag == null)
-                        return;
-
-                    //Wywołujemy event w presenterze.
-                    EmployeeLabelMouseDown?.Invoke(_nrOsoby);
-
-                    //Rozpoczynamy drag & drop.
-                    labelsPracownicy[_nrOsoby].DoDragDrop(labelsPracownicy[_nrOsoby].Tag.ToString(), DragDropEffects.Copy | DragDropEffects.Move);
-                };
-
-                tableLayoutPanel1.Controls.Add(labelsPracownicy[nrOsoby], (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
-            }
+                tableLayoutPanel1.Controls.Add(_employeeRenderer.GetControlById(nrOsoby), (nrOsoby - 1) / 10, (nrOsoby - 1) % 10);
         }
 
         //Tworzymy listboxy i etykiety grafiku.
@@ -283,7 +263,7 @@ namespace Funkcje_GA
             _scheduleRenderer.Initialize();
 
             //Tworzenie etykiet i dodawanie kontrolek grafiku.
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+            for (int nrZmiany = 0; nrZmiany < LICZBA_ZMIAN * LICZBA_DNI; nrZmiany++)
             {
                 //Tworzymy etykiety dla dyżurów dziennych.
                 if (nrZmiany < LICZBA_DNI)
@@ -377,6 +357,13 @@ namespace Funkcje_GA
             //Zdarzenie - dodano pracownika do zmiany.
             _scheduleRenderer.Drop += (int shiftId, int employeeId) => EmployeeAddedToShift?.Invoke(shiftId, employeeId);
 
+            //Zdarzenie - naciśnięcie etykiety pracownika.
+            _employeeRenderer.EmployeeLabelMouseDown += (int employeeId) =>
+            {
+                _scheduleRenderer.UsunPodswietlenie();
+                EmployeeLabelMouseDown?.Invoke(employeeId);
+            };
+
             //Wczytujemy pracowników i grafik z pliku tekstowego przy starcie programu.
             LoadAtStart?.Invoke();
         }
@@ -398,18 +385,10 @@ namespace Funkcje_GA
         }
 
         //Odświeżanie etykiet.
-        public virtual void UpdateEmployeeLabel(int employeeId, (string data, EnumLabelStatus status) info, bool tag)
+        public virtual void UpdateEmployeeControl(int employeeId, (string data, EnumLabelStatus status) info, bool tag)
         {
-            //Id - numer kontrolki, Item1 - tekst, Item2 - kolor.
-            labelsPracownicy[employeeId].Text = info.Item1;
-            labelsPracownicy[employeeId].ForeColor = info.Item2 == EnumLabelStatus.Normal ? Color.Black : Color.Orange;
-            
-            //Uaktulaniamy tag.
-            if(tag)
-                labelsPracownicy[employeeId].Tag = employeeId;
-
-            else
-                labelsPracownicy[employeeId].Tag = null;
+            //Wywołujemy metodę renderera
+            _employeeRenderer.UpdateEmployeeControl(employeeId, info, tag);
         }
 
         //Uaktualniamy etykietę z raportem.

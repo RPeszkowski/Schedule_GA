@@ -77,11 +77,14 @@ namespace Funkcje_GA
                     }
 
                     //Jeśli był bez funkcji do dopisujemy salę.
-                    else
+                    else if (!SalaEmployees.Contains(employee))
                     {
                         SalaEmployees.Add(employee);
                         return true;
                     }
+
+                    //Jeśli miał już salę to nic nie robimy.
+                    else return true;
 
                 //Przypisanie do triazu.
                 case FunctionTypes.Triaz:
@@ -94,15 +97,17 @@ namespace Funkcje_GA
                     }
 
                     //Jeśli był bez funkcji do dopisujemy salę.
-                    else
+                    else if (!TriazEmployees.Contains(employee))
                     {
                         TriazEmployees.Add(employee);
                         return true;
                     }
 
+                    //Jeśli miał już triaż to nic nie robimy.
+                    else return true;
+
                 //Jeśli wybrano default, to nic nie robimy.
-                default:
-                    return false;
+                default: return false;
             }
         }
 

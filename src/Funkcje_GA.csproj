@@ -173,7 +173,11 @@
     <Compile Include="Model\Program.cs" />
     <Compile Include="Model\ScheduleManagement.cs" />
     <Compile Include="Model\Shift.cs" />
+    <Compile Include="Presenter\AbstractEmployeeRenderer.cs" />
     <Compile Include="Presenter\AbstractShiftRenderer.cs" />
+    <Compile Include="Presenter\EmployeeColor.cs" />
+    <Compile Include="Presenter\EmployeeLabelAdapter.cs" />
+    <Compile Include="Presenter\EmployeeRendererWinforms.cs" />
     <Compile Include="Presenter\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -186,7 +190,10 @@
     <Compile Include="Presenter\Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Presenter\IEmployeeControl.cs" />
     <Compile Include="Presenter\IEmployeeForm.cs" />
+    <Compile Include="Presenter\IEmployeeRenderer.cs" />
+    <Compile Include="Presenter\IEmployeeRendererWinforms.cs" />
     <Compile Include="Presenter\IScheduleRenderer.cs" />
     <Compile Include="Presenter\IScheduleRendererWinforms.cs" />
     <Compile Include="Presenter\IShiftControl.cs" />
@@ -200,8 +207,8 @@
     <Compile Include="Presenter\PresenterFile.cs" />
     <Compile Include="Presenter\PresenterOptimization.cs" />
     <Compile Include="Presenter\PresenterSchedule.cs" />
-    <Compile Include="Presenter\ScheduleRendererListBox.cs" />
-    <Compile Include="Presenter\WinformsShiftControlAdapter.cs" />
+    <Compile Include="Presenter\ScheduleRendererWinforms.cs" />
+    <Compile Include="Presenter\ShiftListBoxAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Presenter\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

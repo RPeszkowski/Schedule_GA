@@ -8,27 +8,24 @@ using static Funkcje_GA.Constants;
 
 namespace Funkcje_GA.Presenter
 {
-    //Klasa odpowiada za stworzenie listboxów grafiku na Winforms.
-    internal class ScheduleRendererListBox : AbstractShiftRenderer, IScheduleRendererWinforms
+    //Klasa odpowiada za stworzenie elementów UI grafiku na Winforms.
+    internal class ScheduleRendererWinforms : AbstractShiftRenderer, IScheduleRendererWinforms
     {
         private readonly Label[] labelsDzien = new Label[LICZBA_DNI];           //Etykiety grafiku.
         
         //Konstruktor
-        public ScheduleRendererListBox() 
+        public ScheduleRendererWinforms() 
         {
             //Tworzymy kontrolki.
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
-            {
-                var listBox = new ListBoxGrafik(nrZmiany);
-                elementSchedule[nrZmiany] = new WinformsShiftControlAdapter(nrZmiany, listBox);
-            }
+            for (int nrZmiany = 0; nrZmiany < LICZBA_ZMIAN * LICZBA_DNI; nrZmiany++)
+                elementSchedule[nrZmiany] = new ShiftListBoxAdapter(nrZmiany);
         }
 
         //Pobieramy wszystkie.
-        public IEnumerable<Control> GetAll() => elementSchedule.OfType<WinformsShiftControlAdapter>().Select(a => a.ListBoxAsControl);
+        public IEnumerable<Control> GetAll() => elementSchedule.OfType<ShiftListBoxAdapter>().Select(a => a.AsControl);
 
         //Pobieramy kontrolkę
-        public Control GetControlById(int id) => ((WinformsShiftControlAdapter)elementSchedule[id]).ListBoxAsControl;
+        public Control GetControlById(int id) => ((ShiftListBoxAdapter)elementSchedule[id]).AsControl;
 
         //Pobieramy etykietę.
         public Control GetLabel(int id) => labelsDzien[id];
@@ -37,9 +34,9 @@ namespace Funkcje_GA.Presenter
         public override void Initialize()
         {
             //Tworzenie etykiet i dodawanie kontrolek grafiku.
-            for (int nrZmiany = 0; nrZmiany < 2 * LICZBA_DNI; nrZmiany++)
+            for (int nrZmiany = 0; nrZmiany < LICZBA_ZMIAN * LICZBA_DNI; nrZmiany++)
             {
-                ((WinformsShiftControlAdapter)elementSchedule[nrZmiany]).Initialize(DropHandler);
+                ((ShiftListBoxAdapter)elementSchedule[nrZmiany]).Initialize(DropHandler);
 
                 //Tworzymy etykiety dla dyżurów dziennych.
                 if (nrZmiany < LICZBA_DNI)

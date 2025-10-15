@@ -17,6 +17,6 @@ namespace Funkcje_GA
         void HandleEmployeeMouseDown(IEnumerable<(int shiftId, Color color)> highlights);
 
         //Odświeżanie etykiet
-        void UpdateEmployeeLabel(int employeeId, (string data, EnumLabelStatus status) info, bool tag);
+        void UpdateEmployeeControl(int employeeId, (string data, EnumLabelStatus status) info, bool tag);
     }
 }

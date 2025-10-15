@@ -11,10 +11,7 @@ namespace Funkcje_GA.Presenter
     //Abstrakcyjna klasa zajmująca się tworzeniem neutralnych obiektów, na których wyświetlany będzie grafik.
     internal abstract class AbstractShiftRenderer : IScheduleRenderer
     {
-        protected readonly IShiftControl[] elementSchedule = new IShiftControl[2 * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
-
-        //Konstruktor
-        public AbstractShiftRenderer() { }
+        protected readonly IShiftControl[] elementSchedule = new IShiftControl[LICZBA_ZMIAN * LICZBA_DNI];                             //Tworzenie listboxów grafiku.
 
         //Prywatny delegat, który możemy przekazywać.
         protected Action<int, int> DropHandler => (shiftId, employeeId) => Drop?.Invoke(shiftId, employeeId);
@@ -35,8 +32,8 @@ namespace Funkcje_GA.Presenter
         //Czyścimy wybrane indeksy.
         public void ClearSelected()
         {
-            foreach (var ctrl in elementSchedule)
-                ctrl.ClearSelected();
+            foreach (var element in elementSchedule)
+                element.ClearSelected();
         }
 
         //Pobieramy numery zaznaczonych pracowników na wszytskich zmianach.
@@ -45,7 +42,7 @@ namespace Funkcje_GA.Presenter
             var result = new List<(int ShiftId, int EmployeeId)>();     //Zwracany element.
 
             //Sprawdzamy po kolei którzy pracownicy i które zmiany są wybrane.
-            for (int shiftId = 0; shiftId < 2 * LICZBA_DNI; shiftId++)
+            for (int shiftId = 0; shiftId < LICZBA_ZMIAN * LICZBA_DNI; shiftId++)
             {
                 int selectedIndex = elementSchedule[shiftId].SelectedIndex;  //Sprawdzamy zaznaczony indeks w danej kontrolce.
 
@@ -60,7 +57,7 @@ namespace Funkcje_GA.Presenter
 
                     catch (Exception ex)
                     {
-                        throw new FormatException($"Kontrolka: {shiftId} ma niepoprawne dane {ex.Message}.", ex);
+                        throw new InvalidOperationException($"Kontrolka: {shiftId} ma niepoprawne dane {ex.Message}.", ex);
                     }
                     ;
                 }
