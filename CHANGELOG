@@ -9,8 +9,10 @@ a wersjonowanie zgodne z [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Zmienione
 - Projekt z testami został przesunięty do wersji .Net 4.7.2 w celu uzyskania kompatybilności z projektem głównym.
+- Przydzielanie funkcji odbywa się teraz szybciej.
 
 ### Usunięte
+- Usinięto testy jednostkowe dla klasy ScheduleManagement.
 
 ### Poprawione
 - Usunięto błąd podczas ładowania pracowników z plików, w których występowały puste linie.
