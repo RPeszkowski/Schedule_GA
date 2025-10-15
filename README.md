@@ -3,7 +3,7 @@
 <i>Wersja 1.0.1.</i>
 <i>C#, WinForms, VisualStudio.</i>
 
-<em> Od wersji 2.0.0 aplikacja będzie działać na serwerze web. (Wkrótce)
+<em> Od wersji 2.0.0 aplikacja będzie działać na serwerze web. (Wkrótce)<br>
 <i> Angular, TypeScript, ASP.NET Web API, C#.</i></em>
 
 [![.NET Build & Test](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml/badge.svg)](https://github.com/RPeszkowski/Schedule_GA/actions/workflows/dotnet-tests.yml)
