@@ -12,6 +12,9 @@ a wersjonowanie zgodne z [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Usunięte
 
+### Poprawione
+- Usunięto błąd podczas ładowania pracowników z plików, w których występowały puste linie.
+
 ---
 
 ## [1.0.0] - 2025-09-29
