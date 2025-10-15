@@ -8,6 +8,17 @@ a wersjonowanie zgodne z [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Dodane
 
 ### Zmienione
+
+### Usunięte
+
+### Poprawione
+
+---
+
+## [1.0.1] 15.10.2025
+### Dodane
+
+### Zmienione
 - Projekt z testami został przesunięty do wersji .Net 4.7.2 w celu uzyskania kompatybilności z projektem głównym.
 - Przydzielanie funkcji odbywa się teraz szybciej.
 
